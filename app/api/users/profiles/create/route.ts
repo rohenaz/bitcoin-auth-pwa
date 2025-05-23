@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
     const { decryptedBackup, password } = body;
     
     if (!decryptedBackup || !password) {
+      console.error('Missing fields:', { hasBackup: !!decryptedBackup, hasPassword: !!password });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -52,13 +53,16 @@ export async function POST(request: NextRequest) {
 
     // Validate the backup structure
     const backup = decryptedBackup as BapMasterBackup;
+    console.log('Backup validation:', {
+      hasXprv: !!backup.xprv,
+      hasIds: !!backup.ids,
+      idsType: typeof backup.ids,
+      backupKeys: Object.keys(backup),
+      idsLength: backup.ids ? backup.ids.length : 0
+    });
+    
     if (!backup.xprv || !backup.ids || typeof backup.ids !== 'string') {
-      console.error('Invalid backup format:', {
-        hasXprv: !!backup.xprv,
-        hasIds: !!backup.ids,
-        idsType: typeof backup.ids,
-        idsValue: backup.ids
-      });
+      console.error('Invalid backup format - full backup:', JSON.stringify(backup));
       return NextResponse.json(
         { error: 'Invalid backup format' },
         { status: 400 }

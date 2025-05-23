@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { BAP } from 'bsv-bap';
 import { PrivateKey } from '@bsv/sdk';
 import type { BapMasterBackup } from 'bitcoin-backup';
+import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 interface Profile {
   idKey: string;
@@ -33,7 +34,7 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
   const loadProfiles = async () => {
     try {
       // Get decrypted backup from session storage
-      const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
+      const decryptedBackupStr = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
       if (!decryptedBackupStr) {
         setLoading(false);
         return;
@@ -115,12 +116,24 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
       }
 
       // Get decrypted backup
-      const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
+      const decryptedBackupStr = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
       if (!decryptedBackupStr) {
         throw new Error('No backup found');
       }
 
       const decryptedBackup = JSON.parse(decryptedBackupStr);
+      
+      // Validate backup structure before sending
+      if (!decryptedBackup.xprv || !decryptedBackup.ids) {
+        throw new Error('Invalid backup structure - missing required fields');
+      }
+      
+      console.log('Sending backup to API:', {
+        hasXprv: !!decryptedBackup.xprv,
+        hasIds: !!decryptedBackup.ids,
+        idsType: typeof decryptedBackup.ids,
+        backupKeys: Object.keys(decryptedBackup)
+      });
 
       // Create auth token
       const { getAuthToken } = await import('bitcoin-auth');
@@ -154,15 +167,15 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
       
       // Update local storage with new encrypted backup
       if (result.encryptedBackup) {
-        localStorage.setItem('encryptedBackup', result.encryptedBackup);
+        localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, result.encryptedBackup);
+        
+        // Decrypt the updated backup to get the complete state
+        const { decryptBackup } = await import('bitcoin-backup');
+        const updatedDecryptedBackup = await decryptBackup(result.encryptedBackup, password);
+        
+        // Store the properly updated backup
+        sessionStorage.setItem(STORAGE_KEYS.DECRYPTED_BACKUP, JSON.stringify(updatedDecryptedBackup));
       }
-
-      // Update session storage with new decrypted backup
-      const updatedBackup = {
-        ...decryptedBackup,
-        ids: [...decryptedBackup.ids, result.profile.idKey]
-      };
-      sessionStorage.setItem('decryptedBackup', JSON.stringify(updatedBackup));
 
       // Reload profiles
       await loadProfiles();

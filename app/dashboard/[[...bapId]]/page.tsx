@@ -72,7 +72,15 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
         const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
         const bap = new BAP(backup.xprv);
-        bap.importIds(backup.ids);
+        
+        try {
+          bap.importIds(backup.ids);
+        } catch (importError) {
+          console.error('Error importing IDs:', importError);
+          setError('Invalid backup format. Please sign in again.');
+          router.push('/signin');
+          return;
+        }
         
         const ids = bap.listIds();
         

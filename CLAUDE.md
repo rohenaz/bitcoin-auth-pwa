@@ -147,7 +147,8 @@ Users can create and manage multiple BAP profiles (identities) from a single mas
 1. **Profile Creation**: 
    - Call `/api/users/profiles/create` with decrypted backup and password
    - Uses `bap.newId()` to generate new identity with incremented derivation path
-   - Updates encrypted backup with new IDs array
+   - API returns complete updated encrypted backup
+   - Client must decrypt the returned backup to update sessionStorage
    - Syncs updated backup to cloud storage automatically
 
 2. **Profile Switching**:
@@ -205,4 +206,5 @@ When users attempt to link an OAuth account that's already associated with anoth
 - **Multi-Profile Sessions**: Active profile determined by URL path, not stored in session
 - **OAuth Conflict Handling**: Duplicate OAuth accounts can be resolved via transfer or account switching
 - **Multi-Profile Security**: Profile updates require both Bitcoin signature (proving key ownership) AND backup verification (proving profile ownership)
-- **Request Body Handling**: API routes clone requests before auth verification to avoid consuming body stream
+- **Request Body Handling**: API routes read body as text first, then create new Request for auth to avoid stream consumption issues
+- **Backup Updates**: When creating new profiles, always decrypt the returned backup to get the complete updated state with proper IDs encoding
