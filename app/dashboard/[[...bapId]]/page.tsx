@@ -1,56 +1,28 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import ProfileEditor from '@/components/ProfileEditor';
-import DeviceLinkQR from '@/components/DeviceLinkQR';
-import ProfileSwitcher from '@/components/ProfileSwitcher';
 import { BAP } from 'bsv-bap';
 import { PrivateKey } from '@bsv/sdk';
 import type { BapMasterBackup } from 'bitcoin-backup';
-
-interface BAPProfile {
-  idKey: string;
-  currentAddress: string;
-  identity: {
-    '@context': string;
-    '@type': string;
-    '@id'?: string;
-    name?: string;
-    alternateName?: string;
-    description?: string;
-    image?: string;
-    url?: string;
-    email?: string;
-    telephone?: string;
-    address?: {
-      '@type': string;
-      addressCountry?: string;
-      addressLocality?: string;
-    };
-  };
-  block?: number;
-  currentHeight?: number;
-}
+import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
+import ProfileEditor from '@/components/ProfileEditor';
+import ProfileSwitcher from '@/components/ProfileSwitcher';
+import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 interface DashboardPageProps {
-  params: Promise<{
-    bapId?: string[];
-  }>;
+  params: Promise<{ bapId?: string[] }>;
 }
 
 export default function DashboardPage({ params }: DashboardPageProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [bapProfile, setBapProfile] = useState<BAPProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [currentBapId, setCurrentBapId] = useState<string>('');
   const [currentAddress, setCurrentAddress] = useState<string>('');
   const [resolvedParams, setResolvedParams] = useState<{ bapId?: string[] } | null>(null);
+  const [initError, setInitError] = useState<string>('');
 
   // Resolve async params
   useEffect(() => {
@@ -64,7 +36,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     const initializeProfile = async () => {
       try {
         // Get decrypted backup
-        const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
+        const decryptedBackupStr = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
         if (!decryptedBackupStr) {
           router.push('/signin');
           return;
@@ -77,7 +49,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
           bap.importIds(backup.ids);
         } catch (importError) {
           console.error('Error importing IDs:', importError);
-          setError('Invalid backup format. Please sign in again.');
+          setInitError('Invalid backup format. Please sign in again.');
           router.push('/signin');
           return;
         }
@@ -89,14 +61,14 @@ export default function DashboardPage({ params }: DashboardPageProps) {
         const targetBapId = requestedBapId || ids[0];
         
         if (!targetBapId) {
-          setError('No identity found in backup');
+          setInitError('No identity found in backup');
           router.push('/signin');
           return;
         }
         
         // Verify user owns this BAP ID
         if (requestedBapId && !ids.includes(requestedBapId)) {
-          setError('You do not have access to this profile');
+          setInitError('You do not have access to this profile');
           router.push('/dashboard');
           return;
         }
@@ -116,61 +88,16 @@ export default function DashboardPage({ params }: DashboardPageProps) {
         setCurrentAddress(address);
       } catch (err) {
         console.error('Error initializing profile:', err);
-        setError('Failed to load profile');
+        setInitError('Failed to load profile');
       }
     };
     
     initializeProfile();
   }, [session, resolvedParams, router]);
 
-  const fetchBAPProfile = useCallback(async () => {
-    if (!currentAddress || !currentBapId) return;
-
-    try {
-      // First try to get BAP profile from blockchain cache
-      const bapResponse = await fetch(`/api/bap?address=${currentAddress}`);
-      let bapData = null;
-      
-      if (bapResponse.ok) {
-        const data = await bapResponse.json();
-        bapData = data.result;
-      }
-      
-      // Then get user profile data from Redis (this has the latest updates)
-      const profileResponse = await fetch('/api/users/profile');
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        
-        // Merge the data, with user profile taking precedence
-        setBapProfile({
-          idKey: currentBapId,
-          currentAddress: currentAddress,
-          identity: {
-            '@context': 'https://schema.org',
-            '@type': 'Person',
-            alternateName: profileData.alternateName || bapData?.identity?.alternateName || '',
-            image: profileData.image || bapData?.identity?.image || '',
-            description: profileData.description || bapData?.identity?.description || '',
-            ...bapData?.identity // Keep any other blockchain data
-          },
-          block: bapData?.block || 0,
-          currentHeight: bapData?.currentHeight || 0
-        });
-      } else if (bapData) {
-        setBapProfile(bapData);
-      } else {
-        setBapProfile(null);
-      }
-    } catch (err) {
-      console.error('Error fetching BAP profile:', err);
-      // Don't show error for expected cases
-      if (err instanceof Error && !err.message.includes('fetch')) {
-        setError('Failed to load profile');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [currentAddress, currentBapId]);
+  // Use React Query hooks
+  const { data: profileData, isLoading, error } = useProfile(currentBapId);
+  const updateProfileMutation = useUpdateProfile();
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -178,16 +105,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     }
   }, [status, router]);
 
-
-  useEffect(() => {
-    if (currentAddress) {
-      fetchBAPProfile();
-    }
-  }, [currentAddress, fetchBAPProfile]);
-
   const handleSignOut = async () => {
     // Only clear session storage, preserve encrypted backup in localStorage
-    sessionStorage.removeItem('decryptedBackup');
+    sessionStorage.removeItem(STORAGE_KEYS.DECRYPTED_BACKUP);
     
     // Sign out
     await signOut({ callbackUrl: '/' });
@@ -195,104 +115,65 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   const handleSaveProfile = async (profile: { alternateName: string; image: string; description: string }) => {
     try {
-      // Get auth token for current profile
-      const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
-      if (!decryptedBackupStr) {
-        throw new Error('No backup found');
-      }
-
-      const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
-      const bap = new BAP(backup.xprv);
-      bap.importIds(backup.ids);
-      
-      const master = bap.getId(currentBapId);
-      const memberBackup = master?.exportMemberBackup();
-      
-      if (!memberBackup?.derivedPrivateKey) {
-        throw new Error('Invalid profile');
-      }
-
-      const { getAuthToken } = await import('bitcoin-auth');
-      const requestBody = JSON.stringify({
-        ...profile,
+      await updateProfileMutation.mutateAsync({
         bapId: currentBapId,
-        address: currentAddress
+        data: profile
       });
       
-      const authToken = getAuthToken({
-        privateKeyWif: memberBackup.derivedPrivateKey,
-        requestPath: '/api/users/profile',
-        body: requestBody
-      });
-
-      const response = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Auth-Token': authToken,
-          'X-Decrypted-Backup': decryptedBackupStr
-        },
-        body: requestBody
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-
-      // Refresh the BAP profile
-      await fetchBAPProfile();
       setShowProfileEditor(false);
-      // Clear any errors
-      setError('');
-      
-      // Trigger a custom event to refresh the profile switcher
-      window.dispatchEvent(new CustomEvent('profileUpdated'));
-    } catch (err) {
-      console.error('Error saving profile:', err);
-      setError('Failed to save profile');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      throw error;
     }
   };
 
-  const handlePublishProfile = async () => {
-    // TODO: Implement blockchain publishing
-    console.log('Publishing profile to blockchain...');
-    alert('Publishing to blockchain will be implemented soon!');
-  };
-
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || !currentBapId) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-400">Loading your profile...</p>
+        <div className="animate-pulse text-center">
+          <div className="h-8 bg-gray-800 rounded w-48 mx-auto mb-4" />
+          <div className="h-4 bg-gray-800 rounded w-32 mx-auto" />
         </div>
       </div>
     );
   }
 
+  if (initError || error) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="bg-red-900/20 border border-red-600 rounded-lg p-8">
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p className="text-gray-300">{initError || (error as Error)?.message || 'Failed to load profile'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Merge BAP profile and user profile data
+  const profile = profileData ? {
+    idKey: currentBapId,
+    currentAddress: currentAddress,
+    identity: {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      alternateName: profileData.displayName || profileData.bapProfile?.identity?.alternateName || '',
+      image: profileData.avatar || profileData.bapProfile?.identity?.image || '',
+      description: profileData.description || profileData.bapProfile?.identity?.description || '',
+    }
+  } : null;
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="border-b border-gray-900">
+      <header className="border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-bold">Bitcoin Auth</h1>
-              <nav className="hidden sm:flex space-x-4">
-                <Link href="/dashboard" className="text-blue-500">
-                  Dashboard
-                </Link>
-                <Link href="/settings/security" className="text-gray-400 hover:text-white">
-                  Settings
-                </Link>
-              </nav>
-            </div>
+            <h1 className="text-xl font-semibold">Dashboard</h1>
             <div className="flex items-center space-x-4">
               <ProfileSwitcher currentBapId={currentBapId} />
               <button
-                type="button"
                 onClick={handleSignOut}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >
                 Sign Out
               </button>
@@ -303,164 +184,95 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Profile Card */}
-          <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Your Identity</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  setError('');
-                  setShowProfileEditor(true);
-                }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition-colors"
-              >
-                Edit Profile
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {bapProfile?.identity?.image && (
-                <div className="flex justify-center mb-6">
-                  <img 
-                    src={bapProfile.identity.image} 
-                    alt="Profile" 
-                    className="w-24 h-24 rounded-full border-2 border-gray-700"
+        <div className="bg-gray-900 rounded-xl p-8">
+          <div className="flex items-start justify-between mb-8">
+            <div className="flex items-center space-x-6">
+              {/* Profile Image */}
+              <div className="relative">
+                {profile?.identity.image ? (
+                  <img
+                    src={profile.identity.image}
+                    alt={profile.identity.alternateName || 'Profile'}
+                    className="w-24 h-24 rounded-full object-cover"
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-24 h-24 bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="text-3xl font-medium text-gray-400">
+                      {profile?.identity.alternateName?.charAt(0) || session?.user?.name?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                )}
+              </div>
 
+              {/* Profile Info */}
               <div>
-                <label className="text-sm text-gray-500">Display Name</label>
-                <p className="font-medium">{bapProfile?.identity?.alternateName || session?.user?.name || 'Not set'}</p>
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-500">Bio</label>
-                <p className="text-sm">{bapProfile?.identity?.description || 'No bio yet'}</p>
-              </div>
-
-              <div>
-                <label htmlFor="bitcoinAddress" className="text-sm text-gray-500">Bitcoin Address</label>
-                <p className="font-mono text-sm break-all">{currentAddress || 'Loading...'}</p>
-              </div>
-
-              <div>
-                <label htmlFor="identityKey" className="text-sm text-gray-500">Identity Key</label>
-                <p className="font-mono text-sm break-all">{currentBapId || 'Loading...'}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="space-y-6">
-            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              
-              <div className="space-y-3">
-                <Link
-                  href="/settings"
-                  className="block w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-center transition-colors"
-                >
-                  Manage Linked Accounts
-                </Link>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    const encryptedBackup = localStorage.getItem('encryptedBackup');
-                    if (encryptedBackup) {
-                      const blob = new Blob([encryptedBackup], { type: 'application/json' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `bitcoin-auth-pwa-backup-${new Date().toISOString().split('T')[0]}.json`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      URL.revokeObjectURL(url);
-                    } else {
-                      setError('No backup found to download');
-                    }
-                  }}
-                  className="block w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-center transition-colors"
-                >
-                  Download Backup
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => window.open('https://www.sigmaidentity.com/', '_blank')}
-                  className="block w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-center transition-colors"
-                >
-                  Edit BAP Profile ↗
-                </button>
-              </div>
-            </div>
-
-            {/* Status Card */}
-            <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold mb-4">Account Status</h2>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Authentication</span>
-                  <span className="text-sm text-green-500">Active</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Backup Status</span>
-                  <span className="text-sm text-green-500">Encrypted</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Session Type</span>
-                  <span className="text-sm">Bitcoin Signature</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Device Link QR */}
-            <DeviceLinkQR />
-
-            {/* Security Notice */}
-            <div className="bg-amber-900/20 border border-amber-900 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <title>Remember</title>
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <div className="text-sm">
-                  <p className="font-semibold text-amber-500 mb-1">Remember</p>
-                  <p className="text-amber-400/80">
-                    Your Bitcoin private key is your identity. Keep your encryption password safe and never share it.
+                <h2 className="text-2xl font-bold mb-1">
+                  {profile?.identity.alternateName || session?.user?.name || 'Bitcoin User'}
+                </h2>
+                <p className="text-gray-400 text-sm mb-3">
+                  BAP ID: {currentBapId}
+                </p>
+                {profile?.identity.description && (
+                  <p className="text-gray-300 max-w-2xl">
+                    {profile.identity.description}
                   </p>
-                </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {error && (
-          <div className="mt-6 bg-red-900/20 border border-red-900 rounded-lg p-3 text-red-400 text-sm">
-            {error}
+            {/* Edit Button */}
+            <button
+              onClick={() => setShowProfileEditor(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Edit Profile</span>
+            </button>
           </div>
-        )}
+
+          {/* Additional Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-gray-800">
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 mb-2">Bitcoin Address</h3>
+              <p className="text-sm font-mono bg-gray-800 p-3 rounded break-all">
+                {currentAddress}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 mb-2">Identity Key</h3>
+              <p className="text-sm font-mono bg-gray-800 p-3 rounded break-all">
+                {currentBapId}
+              </p>
+            </div>
+          </div>
+
+          {isLoading && (
+            <div className="mt-4 text-center text-gray-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400 mx-auto" />
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Profile Editor Modal */}
-      <ProfileEditor
-        isOpen={showProfileEditor}
-        onClose={() => setShowProfileEditor(false)}
-        profile={{
-          alternateName: bapProfile?.identity?.alternateName || '',
-          image: bapProfile?.identity?.image || '',
-          description: bapProfile?.identity?.description || ''
-        }}
-        onSave={handleSaveProfile}
-        onPublish={handlePublishProfile}
-      />
+      {showProfileEditor && profile && (
+        <ProfileEditor
+          isOpen={showProfileEditor}
+          profile={{
+            alternateName: profile.identity.alternateName || '',
+            image: profile.identity.image || '',
+            description: profile.identity.description || ''
+          }}
+          onSave={handleSaveProfile}
+          onClose={() => setShowProfileEditor(false)}
+          onPublish={async () => {
+            // Publishing to blockchain not implemented in this version
+            console.log('Publishing to blockchain not yet implemented');
+          }}
+        />
+      )}
     </div>
   );
-} 
+}

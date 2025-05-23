@@ -7,17 +7,13 @@ import Modal from "@/components/Modal";
 import OAuthConflictModal from "@/components/OAuthConflictModal";
 import { ENABLED_PROVIDERS, type EnabledProvider } from "@/lib/env";
 import { STORAGE_KEYS } from '@/lib/storage-keys';
-
-interface ConnectedAccount {
-  provider: string;
-  providerAccountId: string;
-  connected: boolean;
-}
+import { useConnectedAccounts, useDisconnectAccount } from '@/hooks/useConnectedAccounts';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
-  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: connectedAccounts = [], isLoading, refetch } = useConnectedAccounts();
+  const disconnectMutation = useDisconnectAccount();
+  
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ title: string; message: string; type: 'error' | 'warning' | 'info' }>({ 
     title: '', 
@@ -35,20 +31,6 @@ export default function SettingsPage() {
     setShowModal(true);
   }, []);
 
-  const fetchConnectedAccounts = useCallback(async () => {
-    try {
-      const response = await fetch('/api/users/connected-accounts');
-      if (response.ok) {
-        const accounts = await response.json();
-        setConnectedAccounts(accounts);
-      }
-    } catch (error) {
-      console.error('Failed to fetch connected accounts:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const handleTransferComplete = useCallback(async () => {
     if (!conflictModal || !session?.user?.id) return;
     
@@ -56,9 +38,9 @@ export default function SettingsPage() {
     setConflictModal(null);
     
     // OAuth link was transferred, refresh connected accounts
-    await fetchConnectedAccounts();
+    await refetch();
     showMessage('Success', `Your ${provider} account has been linked successfully.`, 'info');
-  }, [conflictModal, session, fetchConnectedAccounts, showMessage]);
+  }, [conflictModal, session, refetch, showMessage]);
 
   const handleSwitchAccount = useCallback(async () => {
     // User chose to switch to existing account - sign out and redirect
@@ -83,7 +65,7 @@ export default function SettingsPage() {
     if (linkedProvider) {
       window.history.replaceState({}, '', '/settings');
       showMessage('Success', `${linkedProvider.charAt(0).toUpperCase() + linkedProvider.slice(1)} account linked successfully!`, 'info');
-      fetchConnectedAccounts();
+      refetch();
       return;
     }
     
@@ -132,14 +114,13 @@ export default function SettingsPage() {
         }, 2000);
       }
     }
-  }, [fetchConnectedAccounts, showMessage]);
+  }, [refetch, showMessage]);
     
   useEffect(() => {
     if (session?.user) {
-      fetchConnectedAccounts();
       handleOAuthReturn();
     }
-  }, [session, fetchConnectedAccounts, handleOAuthReturn]);
+  }, [session, handleOAuthReturn]);
 
   const handleConnectAccount = async (provider: string) => {
     // IMPORTANT: We only support linking OAuth when signed in with credentials
@@ -169,17 +150,11 @@ export default function SettingsPage() {
 
   const handleDisconnectAccount = async (provider: string) => {
     try {
-      const response = await fetch('/api/users/disconnect-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider }),
-      });
-
-      if (response.ok) {
-        await fetchConnectedAccounts();
-      }
+      await disconnectMutation.mutateAsync(provider);
+      showMessage('Success', `${provider.charAt(0).toUpperCase() + provider.slice(1)} account disconnected.`, 'info');
     } catch (error) {
       console.error('Failed to disconnect account:', error);
+      showMessage('Error', 'Failed to disconnect account. Please try again.', 'error');
     }
   };
 
@@ -251,7 +226,7 @@ export default function SettingsPage() {
             Link multiple providers for redundancy.
           </p>
           
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto" />
             </div>
@@ -259,7 +234,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               {providers.map((provider) => {
                 const isConnected = connectedAccounts.some(
-                  account => account.provider === provider.id && account.connected
+                  account => account.provider === provider.id
                 );
                 
                 return (
@@ -281,9 +256,10 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={() => handleDisconnectAccount(provider.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                        disabled={disconnectMutation.isPending}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
                       >
-                        Disconnect
+                        {disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
                       </button>
                     ) : (
                       <button

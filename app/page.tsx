@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { siteConfig } from '@/site.config';
 
 export default function Home() {
   const router = useRouter();
@@ -67,17 +68,16 @@ export default function Home() {
           <div className="space-y-4">
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold">
               <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient bg-300%">
-                Bitcoin Auth
+                {siteConfig.name}
               </span>
             </h1>
             <p className="text-2xl sm:text-3xl text-gray-300 font-light">
-              Your keys. Your identity. Your sovereignty.
+              {siteConfig.tagline}
             </p>
           </div>
 
           <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Experience true digital ownership with Bitcoin-based authentication. 
-            No passwords. No intermediaries. Just cryptographic proof of who you are.
+            {siteConfig.description}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
