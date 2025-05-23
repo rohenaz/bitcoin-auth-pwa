@@ -20,6 +20,9 @@ function SignInPageContent() {
   const [hasLocalBackup, setHasLocalBackup] = useState(false);
   const [password, setPassword] = useState('');
   const [showOAuthProviders, setShowOAuthProviders] = useState(false);
+  const [importedDecryptedBackup, setImportedDecryptedBackup] = useState<BapMasterBackup | null>(null);
+  const [step, setStep] = useState<'signin' | 'setPassword' | 'confirmPassword'>('signin');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   useEffect(() => {
@@ -163,6 +166,135 @@ function SignInPageContent() {
     });
   };
 
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+    setError('');
+    setStep('confirmPassword');
+  };
+
+  const handleConfirmPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (!importedDecryptedBackup) {
+      setError('No backup data found');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Import encryptBackup
+      const { encryptBackup } = await import('bitcoin-backup');
+      
+      // Encrypt the backup
+      const encrypted = await encryptBackup(importedDecryptedBackup, password);
+      
+      // Store in localStorage
+      localStorage.setItem(ENCRYPTED_BACKUP_KEY, encrypted);
+      
+      // Store decrypted in sessionStorage
+      sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(importedDecryptedBackup));
+      
+      // Get private key for auth
+      const bap = new BAP(importedDecryptedBackup.xprv);
+      bap.importIds(importedDecryptedBackup.ids);
+      const ids = bap.listIds();
+      
+      if (ids.length === 0) {
+        throw new Error('No identities in backup');
+      }
+      
+      const firstId = ids[0];
+      if (!firstId) {
+        throw new Error('No identity found');
+      }
+      
+      const identityInstance = bap.getId(firstId);
+      if (!identityInstance) {
+        throw new Error('Could not get identity instance');
+      }
+      
+      const memberBackup = identityInstance.exportMemberBackup();
+      if (!memberBackup || !memberBackup.derivedPrivateKey) {
+        throw new Error('Could not derive private key');
+      }
+
+      // Get address for user creation
+      const pubkey = PrivateKey.fromWif(memberBackup.derivedPrivateKey).toPublicKey();
+      const address = pubkey.toAddress();
+
+      // Create auth token
+      const authToken = getAuthToken({
+        privateKeyWif: memberBackup.derivedPrivateKey,
+        requestPath: '/api/auth/signin',
+        body: ''
+      });
+
+      // Try to sign in
+      const result = await signIn('credentials', {
+        token: authToken,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // If user doesn't exist, create from backup
+        if (result.error.includes('User not found')) {
+          const createUserToken = getAuthToken({
+            privateKeyWif: memberBackup.derivedPrivateKey,
+            requestPath: '/api/users/create-from-backup',
+            body: JSON.stringify({ bapId: firstId, address, encryptedBackup: encrypted })
+          });
+          
+          const createResult = await fetch('/api/users/create-from-backup', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-Auth-Token': createUserToken
+            },
+            body: JSON.stringify({ 
+              bapId: firstId, 
+              address,
+              encryptedBackup: encrypted
+            })
+          });
+          
+          if (!createResult.ok) {
+            const errorData = await createResult.json();
+            throw new Error(errorData.error || 'Failed to create user');
+          }
+          
+          // Try signing in again
+          const retryResult = await signIn('credentials', {
+            token: authToken,
+            redirect: false,
+          });
+          
+          if (retryResult?.error) {
+            throw new Error(retryResult.error);
+          }
+        } else {
+          throw new Error(result.error);
+        }
+      }
+
+      // Success - redirect to dashboard
+      window.location.href = callbackUrl;
+    } catch (err) {
+      console.error('Password confirmation error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to complete import');
+      setLoading(false);
+    }
+  };
+
   const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -185,97 +317,13 @@ function SignInPageContent() {
       }
       
       if (isUnencrypted && decryptedBackup) {
-        // Handle unencrypted backup
+        // Handle unencrypted backup - prompt for password
         setError('');
-        setLoading(true);
-        
-        try {
-          // Store in session storage
-          sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(decryptedBackup));
-          
-          // Get private key for auth using BAP
-          const bap = new BAP(decryptedBackup.xprv);
-          bap.importIds(decryptedBackup.ids);
-          const ids = bap.listIds();
-          
-          if (ids.length === 0) {
-            throw new Error('Imported backup has no identities');
-          }
-          
-          const firstId = ids[0];
-          if (!firstId) {
-            throw new Error('No identity found in backup');
-          }
-          
-          const identityInstance = bap.getId(firstId);
-          
-          if (!identityInstance) {
-            throw new Error('Could not get identity instance from imported backup');
-          }
-          
-          // Use exportMemberBackup to get the WIF for the identity instance
-          const memberBackup = identityInstance.exportMemberBackup();
-          
-          if (!memberBackup || !memberBackup.derivedPrivateKey) {
-            throw new Error('Could not derive private key from imported backup identity');
-          }
-
-          // Create auth token
-          const authToken = getAuthToken({
-            privateKeyWif: memberBackup.derivedPrivateKey,
-            requestPath: '/api/auth/signin',
-            body: ''
-          });
-
-          // Sign in
-          const result = await signIn('credentials', {
-            token: authToken,
-            redirect: false,
-          });
-
-          if (result?.error) {
-            // If user doesn't exist, create from backup
-            if (result.error.includes('User not found')) {
-              const createResult = await fetch('/api/users/create-from-backup', {
-                method: 'POST',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'X-Auth-Token': authToken
-                },
-                body: JSON.stringify({})
-              });
-              
-              if (createResult.ok) {
-                // Try signing in again
-                const retryResult = await signIn('credentials', {
-                  token: authToken,
-                  redirect: false,
-                });
-                
-                if (retryResult?.error) {
-                  throw new Error(retryResult.error);
-                }
-              } else {
-                throw new Error('Failed to create user from backup');
-              }
-            } else {
-              throw new Error(result.error);
-            }
-          }
-
-          // For unencrypted imports, we should prompt user to set a password
-          // and create an encrypted backup
-          alert('Successfully imported unencrypted backup. Please go to Security Settings to create an encrypted backup with a password.');
-          
-          // Redirect to dashboard
-          router.push('/dashboard');
-          return;
-        } catch (err) {
-          console.error('Import error:', err);
-          setError(err instanceof Error ? err.message : 'Failed to import backup');
-          setLoading(false);
-          return;
-        }
+        setImportedDecryptedBackup(decryptedBackup);
+        setStep('setPassword');
+        setHasLocalBackup(false);
+        setShowOAuthProviders(false);
+        return;
       }
       
       // If not unencrypted, validate it's an encrypted backup
@@ -310,6 +358,121 @@ function SignInPageContent() {
     }
   };
 
+  // Handle password creation flow for imported decrypted backups
+  if (step === 'setPassword' && importedDecryptedBackup) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-2">Set Your Password</h1>
+            <p className="text-gray-400">
+              Create a password to encrypt your imported wallet
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-900/20 border border-red-900 rounded-lg p-3 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSetPassword} className="space-y-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="Create a strong password"
+                required
+                minLength={8}
+                disabled={loading}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Minimum 8 characters. This encrypts your Bitcoin keys.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || password.length < 8}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors"
+            >
+              Continue
+            </button>
+          </form>
+
+          <div className="bg-amber-900/20 border border-amber-900 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <title>Warning</title>
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm">
+                <p className="font-semibold text-amber-500 mb-1">Important</p>
+                <p className="text-amber-400/80">
+                  This password cannot be recovered. If you forget it, you'll lose access to your Bitcoin identity.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'confirmPassword' && importedDecryptedBackup) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-2">Confirm Your Password</h1>
+            <p className="text-gray-400">
+              Enter your password again to confirm
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-900/20 border border-red-900 rounded-lg p-3 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleConfirmPassword} className="space-y-4">
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="Re-enter your password"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !confirmPassword}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors"
+            >
+              {loading ? 'Importing...' : 'Complete Import'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Default signin view
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
