@@ -31,14 +31,25 @@ export default function OAuthRestorePage() {
       // Construct OAuth ID from session
       let oauthId: string;
       
-      if (session.user.isOAuthOnly && session.user.provider && session.user.providerAccountId) {
-        // OAuth-only user with provider info
+      // Check if we have provider account ID directly
+      if (session.user.provider && session.user.providerAccountId) {
         oauthId = `${session.user.provider}|${session.user.providerAccountId}`;
-      } else if (session.user.id.includes('-') && !session.user.address) {
-        // Fallback: OAuth-only user with ID format "provider-providerAccountId"
-        oauthId = session.user.id.replace('-', '|');
+      } else if (session.user.id.includes('-')) {
+        // Fallback: Extract from composite ID format "provider-providerAccountId"
+        const parts = session.user.id.split('-');
+        if (parts.length >= 2) {
+          oauthId = `${parts[0]}|${parts.slice(1).join('-')}`;
+        } else {
+          console.error('Cannot parse OAuth ID from composite ID:', session.user.id);
+          setError('Invalid OAuth session format.');
+          setTimeout(() => {
+            signOut({ callbackUrl: '/signin' });
+          }, 2000);
+          return;
+        }
       } else {
-        setError('Invalid OAuth session. Please sign in again.');
+        console.error('No OAuth provider information in session:', session.user);
+        setError('Not signed in with OAuth provider.');
         setTimeout(() => {
           signOut({ callbackUrl: '/signin' });
         }, 2000);
