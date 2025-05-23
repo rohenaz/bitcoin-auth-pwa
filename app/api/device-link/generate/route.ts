@@ -16,12 +16,14 @@ export async function POST(request: NextRequest) {
     
     // Store the token in Redis with user info and 10-minute expiry
     const tokenKey = `device-link:${token}`;
-    await redis.setex(tokenKey, 600, JSON.stringify({
+    await redis.set(tokenKey, JSON.stringify({
       bapId: session.user.id,
       address: session.user.address,
       idKey: session.user.idKey,
       createdAt: new Date().toISOString()
-    }));
+    }), {
+      ex: 600 // 10 minutes expiry
+    });
     
     // Get the base URL from environment or request
     const baseUrl = process.env.NEXTAUTH_URL || new URL(request.url).origin;

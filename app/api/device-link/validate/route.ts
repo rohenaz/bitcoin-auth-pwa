@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { redis, backupKey } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 404 });
     }
     
-    const data = JSON.parse(tokenData as string);
+    // Upstash Redis automatically deserializes JSON, so tokenData is already an object
+    const data = tokenData as { bapId: string; address: string; idKey: string };
     
     // Delete the token after validation (one-time use)
     await redis.del(tokenKey);
