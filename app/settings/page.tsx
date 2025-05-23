@@ -101,7 +101,7 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold mb-4">Account Overview</h2>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-400">Bitcoin Address</span>
+              <span className="text-gray-400">Signing Address</span>
               <span className="font-mono text-sm bg-gray-800 px-3 py-1 rounded">
                 {session.user.address || session.user.id}
               </span>
