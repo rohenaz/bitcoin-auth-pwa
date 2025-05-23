@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ProfileEditor from '@/components/ProfileEditor';
+import DeviceLinkQR from '@/components/DeviceLinkQR';
 
 interface BAPProfile {
   idKey: string;
@@ -275,6 +276,9 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* Device Link QR */}
+            <DeviceLinkQR />
 
             {/* Security Notice */}
             <div className="bg-amber-900/20 border border-amber-900 rounded-lg p-4">
