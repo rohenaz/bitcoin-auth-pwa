@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { type BapMasterBackup, decryptBackup } from 'bitcoin-backup';
 import { getAuthToken } from 'bitcoin-auth';
@@ -13,6 +13,7 @@ const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
 function SignInPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -152,11 +153,116 @@ function SignInPageContent() {
 
     try {
       const text = await file.text();
+      let isUnencrypted = false;
+      let decryptedBackup: BapMasterBackup | null = null;
       
-      // Try to validate it's an encrypted backup
-      // bitcoin-backup exports as an encrypted string that can be decrypted
-      // We'll do a basic validation by trying to parse as JSON and checking for encrypted fields
-      // or by checking if it's a valid encrypted string format
+      // First, check if it's an unencrypted backup (BapMasterBackup)
+      try {
+        const parsed = JSON.parse(text);
+        // Check for BapMasterBackup structure
+        if (parsed.xprv && parsed.ids && parsed.mnemonic) {
+          isUnencrypted = true;
+          decryptedBackup = parsed as BapMasterBackup;
+        }
+      } catch {
+        // Not JSON, likely encrypted
+      }
+      
+      if (isUnencrypted && decryptedBackup) {
+        // Handle unencrypted backup
+        setError('');
+        setLoading(true);
+        
+        try {
+          // Store in session storage
+          sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(decryptedBackup));
+          
+          // Get private key for auth using BAP
+          const bap = new BAP(decryptedBackup.xprv);
+          bap.importIds(decryptedBackup.ids);
+          const ids = bap.listIds();
+          
+          if (ids.length === 0) {
+            throw new Error('Imported backup has no identities');
+          }
+          
+          const firstId = ids[0];
+          if (!firstId) {
+            throw new Error('No identity found in backup');
+          }
+          
+          const identityInstance = bap.getId(firstId);
+          
+          if (!identityInstance) {
+            throw new Error('Could not get identity instance from imported backup');
+          }
+          
+          // Use exportMemberBackup to get the WIF for the identity instance
+          const memberBackup = identityInstance.exportMemberBackup();
+          
+          if (!memberBackup || !memberBackup.derivedPrivateKey) {
+            throw new Error('Could not derive private key from imported backup identity');
+          }
+
+          // Create auth token
+          const authToken = getAuthToken({
+            privateKeyWif: memberBackup.derivedPrivateKey,
+            requestPath: '/api/auth/signin',
+            body: ''
+          });
+
+          // Sign in
+          const result = await signIn('credentials', {
+            token: authToken,
+            redirect: false,
+          });
+
+          if (result?.error) {
+            // If user doesn't exist, create from backup
+            if (result.error.includes('User not found')) {
+              const createResult = await fetch('/api/users/create-from-backup', {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'X-Auth-Token': authToken
+                },
+                body: JSON.stringify({})
+              });
+              
+              if (createResult.ok) {
+                // Try signing in again
+                const retryResult = await signIn('credentials', {
+                  token: authToken,
+                  redirect: false,
+                });
+                
+                if (retryResult?.error) {
+                  throw new Error(retryResult.error);
+                }
+              } else {
+                throw new Error('Failed to create user from backup');
+              }
+            } else {
+              throw new Error(result.error);
+            }
+          }
+
+          // For unencrypted imports, we should prompt user to set a password
+          // and create an encrypted backup
+          alert('Successfully imported unencrypted backup. Please go to Security Settings to create an encrypted backup with a password.');
+          
+          // Redirect to dashboard
+          router.push('/dashboard');
+          return;
+        } catch (err) {
+          console.error('Import error:', err);
+          setError(err instanceof Error ? err.message : 'Failed to import backup');
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // If not unencrypted, validate it's an encrypted backup
       let isValid = false;
       
       try {
@@ -183,7 +289,8 @@ function SignInPageContent() {
       localStorage.setItem(ENCRYPTED_BACKUP_KEY, text.trim());
     } catch (err) {
       console.error('Import error:', err);
-      setError('Invalid backup file. Please select a valid encrypted backup.');
+      setError('Invalid backup file. Please select a valid backup (encrypted or decrypted).');
+      setLoading(false);
     }
   };
 
@@ -301,11 +408,12 @@ function SignInPageContent() {
                 <span className="text-sm font-medium">Import Backup File</span>
                 <input
                   type="file"
-                  accept=".json"
+                  accept=".json,.txt"
                   onChange={handleImportBackup}
                   className="hidden"
                 />
               </label>
+              <p className="text-xs text-gray-500 mt-2">Supports both encrypted and decrypted backups</p>
             </div>
           </div>
         )}
