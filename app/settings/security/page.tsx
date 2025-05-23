@@ -122,78 +122,84 @@ export default function SecuritySettingsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="mb-8">
-          <Link 
-            href="/settings"
-            className="text-gray-400 hover:text-white transition-colors mb-4 inline-block"
-          >
-            ← Back to Settings
-          </Link>
-          <h1 className="text-3xl font-bold">Security Settings</h1>
-          <p className="text-gray-400 mt-2">
+      {/* Header */}
+      <header className="border-b border-gray-800/50">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Link 
+                href="/settings"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Back
+              </Link>
+              <h1 className="text-xl font-semibold">Security</h1>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
+        <div className="mb-12">
+          <h1 className="text-2xl font-semibold mb-2">Security Settings</h1>
+          <p className="text-gray-400">
             Manage your encryption settings and backup security
           </p>
         </div>
 
-        {/* Current Security Status */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Security Status</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-green-900/20 border border-green-800 rounded-lg">
-              <div className="flex items-center space-x-3">
+        <div className="space-y-8">
+          {/* Security Status */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h2 className="text-lg font-medium mb-8">Security Status</h2>
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
                 <span className="text-2xl">✅</span>
                 <div>
-                  <div className="font-medium">Bitcoin Authentication</div>
-                  <div className="text-sm text-gray-400">
+                  <h3 className="font-medium mb-1">Bitcoin Authentication</h3>
+                  <p className="text-sm text-gray-400">
                     Your identity is secured by Bitcoin cryptography
-                  </div>
+                  </p>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between p-4 bg-green-900/20 border border-green-800 rounded-lg">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
                 <span className="text-2xl">🔐</span>
                 <div>
-                  <div className="font-medium">Client-Side Encryption</div>
-                  <div className="text-sm text-gray-400">
+                  <h3 className="font-medium mb-1">Client-Side Encryption</h3>
+                  <p className="text-sm text-gray-400">
                     Private keys never leave your device unencrypted
-                  </div>
+                  </p>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
                 <span className="text-2xl">⏰</span>
                 <div>
-                  <div className="font-medium">Time-Bound Tokens</div>
-                  <div className="text-sm text-gray-400">
+                  <h3 className="font-medium mb-1">Time-Bound Tokens</h3>
+                  <p className="text-sm text-gray-400">
                     Authentication tokens expire after 10 minutes
-                  </div>
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Cloud Backup Status */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">Cloud Backup</h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Manage your encrypted backup stored with OAuth providers.
-          </p>
+          {/* Cloud Backup Management */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h2 className="text-lg font-medium mb-2">Cloud Backup</h2>
+            <p className="text-gray-400 text-sm mb-8">
+              Manage your encrypted backup stored with OAuth providers.
+            </p>
 
-          <div className="space-y-4">
-            <div className="p-4 border border-gray-700 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">Cloud Backup Status</h3>
+            <div className="border border-gray-800/50 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-medium">Backup Status</h3>
                 {cloudBackupStatus.hasCloudBackup && (
-                  <span className={`text-sm px-2 py-1 rounded ${
+                  <span className={`text-xs px-2 py-1 rounded border ${
                     cloudBackupStatus.isOutdated 
-                      ? 'bg-yellow-900/50 text-yellow-400' 
-                      : 'bg-green-900/50 text-green-400'
+                      ? 'border-yellow-600 text-yellow-400' 
+                      : 'border-green-600 text-green-400'
                   }`}>
                     {cloudBackupStatus.isOutdated ? 'Outdated' : 'Up to date'}
                   </span>
@@ -201,14 +207,14 @@ export default function SecuritySettingsPage() {
               </div>
               
               {cloudBackupStatus.hasCloudBackup ? (
-                <>
-                  <p className="text-sm text-gray-400 mb-2">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-400">
                     Last updated: {cloudBackupStatus.lastUpdated 
                       ? new Date(cloudBackupStatus.lastUpdated).toLocaleString()
                       : 'Unknown'}
                   </p>
                   {cloudBackupStatus.isOutdated && (
-                    <div className="bg-yellow-900/20 border border-yellow-800 rounded p-3 mb-4">
+                    <div className="border border-yellow-600 rounded-lg p-4">
                       <p className="text-sm text-yellow-400">
                         Your local backup is newer than the cloud backup. Update it to ensure you can access your latest identity from other devices.
                       </p>
@@ -217,20 +223,20 @@ export default function SecuritySettingsPage() {
                   <button
                     onClick={handleUpdateCloudBackup}
                     disabled={updating || !cloudBackupStatus.isOutdated}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {updating ? "Updating..." : cloudBackupStatus.isOutdated ? "Update Cloud Backup" : "Already Up to Date"}
                   </button>
-                </>
+                </div>
               ) : (
-                <div>
-                  <p className="text-sm text-gray-400 mb-4">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-400">
                     No cloud backup found. Create one to access your identity from other devices.
                   </p>
                   <button
                     onClick={handleUpdateCloudBackup}
                     disabled={updating}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {updating ? "Creating..." : "Create Cloud Backup"}
                   </button>
@@ -238,104 +244,102 @@ export default function SecuritySettingsPage() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Local Backup Management */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">Local Backup</h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Export your encrypted backup for safekeeping or manual restoration.
-          </p>
+          {/* Local Backup Export */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h2 className="text-lg font-medium mb-2">Local Backup</h2>
+            <p className="text-gray-400 text-sm mb-8">
+              Export your encrypted backup for safekeeping or manual restoration.
+            </p>
 
-          <div className="space-y-4">
-            <div className="p-4 border border-gray-700 rounded-lg">
+            <div className="border border-gray-800/50 rounded-lg p-6">
               <h3 className="font-medium mb-2">Export Encrypted Backup</h3>
-              <p className="text-sm text-gray-400 mb-4">
+              <p className="text-sm text-gray-400 mb-6">
                 Download a copy of your encrypted backup file. You'll need your original password to decrypt it when importing.
               </p>
               
               <button
                 onClick={handleExportBackup}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 transition-colors"
               >
                 Download Backup
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Security Information */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Security Information</h2>
-          
-          <button
-            onClick={() => setShowBackupData(!showBackupData)}
-            className="w-full text-left p-4 border border-gray-700 rounded-lg hover:border-gray-600 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">View Technical Details</div>
-                <div className="text-sm text-gray-400">
-                  Bitcoin address, public key, and encryption info
-                </div>
-              </div>
-              <span className="text-gray-400">
-                {showBackupData ? "▼" : "▶"}
-              </span>
-            </div>
-          </button>
-
-          {showBackupData && (
-            <div className="mt-4 p-4 bg-gray-800 rounded-lg space-y-3">
-              <div>
-                <div className="text-sm text-gray-400">Bitcoin Address</div>
-                <div className="font-mono text-sm break-all">
-                  {session.user.address || session.user.id}
-                </div>
-              </div>
-              
-              {session.user.idKey && (
+          {/* Technical Details */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h2 className="text-lg font-medium mb-8">Technical Details</h2>
+            
+            <button
+              onClick={() => setShowBackupData(!showBackupData)}
+              className="w-full text-left border border-gray-800/50 rounded-lg p-6 hover:border-gray-700 transition-colors"
+            >
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-gray-400">BAP Identity Key</div>
-                  <div className="font-mono text-sm break-all">
-                    {session.user.idKey}
-                  </div>
+                  <h3 className="font-medium mb-1">View Technical Information</h3>
+                  <p className="text-sm text-gray-400">
+                    Bitcoin address, public key, and encryption info
+                  </p>
                 </div>
-              )}
-              
-              <div>
-                <div className="text-sm text-gray-400">Session Type</div>
-                <div className="text-sm">
-                  {session.user.provider === 'credentials' ? 'Bitcoin Signature' : `OAuth (${session.user.provider})`}
+                <span className="text-gray-400 text-sm">
+                  {showBackupData ? "▼" : "▶"}
+                </span>
+              </div>
+            </button>
+
+            {showBackupData && (
+              <div className="mt-6 border border-gray-800/50 rounded-lg p-6 space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400 mb-2">Bitcoin Address</h4>
+                  <p className="font-mono text-sm break-all">
+                    {session.user.address || session.user.id}
+                  </p>
+                </div>
+                
+                {session.user.idKey && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">BAP Identity Key</h4>
+                    <p className="font-mono text-sm break-all">
+                      {session.user.idKey}
+                    </p>
+                  </div>
+                )}
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400 mb-2">Session Type</h4>
+                  <p className="text-sm">
+                    {session.user.provider === 'credentials' ? 'Bitcoin Signature' : `OAuth (${session.user.provider})`}
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Security Warnings */}
-        <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-2 text-yellow-400">Security Reminders</h2>
-          <ul className="text-sm text-gray-300 space-y-2">
-            <li className="flex items-start space-x-2">
-              <span className="text-yellow-400 mt-1">⚠️</span>
-              <span>Your backup password cannot be recovered if lost</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-yellow-400 mt-1">⚠️</span>
-              <span>Never share your private key or backup password</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-yellow-400 mt-1">⚠️</span>
-              <span>Keep multiple backup copies in secure locations</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-yellow-400 mt-1">⚠️</span>
-              <span>OAuth providers only store encrypted data - they cannot access your keys</span>
-            </li>
-          </ul>
+          {/* Security Reminders */}
+          <div className="border border-yellow-600 rounded-lg p-8">
+            <h2 className="text-lg font-medium mb-6 text-yellow-400">Security Reminders</h2>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <p className="text-sm text-gray-300">Your backup password cannot be recovered if lost</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <p className="text-sm text-gray-300">Never share your private key or backup password</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <p className="text-sm text-gray-300">Keep multiple backup copies in secure locations</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <p className="text-sm text-gray-300">OAuth providers only store encrypted data - they cannot access your keys</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 } 

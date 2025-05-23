@@ -160,16 +160,18 @@ export default function SettingsPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-400 mb-6">Please sign in to access settings</p>
-          <Link 
-            href="/signin"
-            className="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg transition-colors"
-          >
-            Sign In
-          </Link>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h1 className="text-2xl font-medium mb-4">Access Denied</h1>
+            <p className="text-gray-400 mb-6">Please sign in to access settings</p>
+            <Link 
+              href="/signin"
+              className="inline-flex px-6 py-2 text-sm border border-gray-700 hover:border-gray-600 rounded-md transition-colors"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -177,144 +179,187 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="mb-8">
-          <Link 
-            href="/dashboard"
-            className="text-gray-400 hover:text-white transition-colors mb-4 inline-block"
-          >
-            ← Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-gray-400 mt-2">
-            Manage your account settings and connected backup anchors
-          </p>
-        </div>
-
-        {/* Account Overview */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Account Overview</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Signing Address</span>
-              <span className="font-mono text-sm bg-gray-800 px-3 py-1 rounded">
-                {session.user.address || session.user.id}
-              </span>
+      {/* Header */}
+      <header className="border-b border-gray-800/50">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-lg font-medium">Settings</h1>
+              <nav className="hidden sm:flex space-x-6">
+                <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                  Dashboard
+                </Link>
+                <Link href="/settings" className="text-white">
+                  Settings
+                </Link>
+              </nav>
             </div>
-            {session.user.idKey && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">BAP Identity Key</span>
-                <span className="font-mono text-sm bg-gray-800 px-3 py-1 rounded">
-                  {session.user.idKey.substring(0, 12)}...
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Session Provider</span>
-              <span className="capitalize text-orange-400">
-                {session.user.provider || 'bitcoin'}
-              </span>
-            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Sign Out
+            </button>
           </div>
         </div>
+      </header>
 
-        {/* Connected Backup Anchors */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">Backup Anchors</h2>
-          <p className="text-gray-400 text-sm mb-6">
-            OAuth providers used to store your encrypted backup across devices. 
-            Link multiple providers for redundancy.
-          </p>
-          
-          {isLoading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {providers.map((provider) => {
-                const isConnected = connectedAccounts.some(
-                  account => account.provider === provider.id
-                );
-                
-                return (
-                  <div 
-                    key={provider.id}
-                    className="flex items-center justify-between p-4 border border-gray-700 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{provider.icon}</span>
-                      <div>
-                        <div className="font-medium">{provider.name}</div>
-                        <div className="text-sm text-gray-400">
-                          {isConnected ? 'Connected' : 'Not connected'}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {isConnected ? (
-                      <button
-                        type="button"
-                        onClick={() => handleDisconnectAccount(provider.id)}
-                        disabled={disconnectMutation.isPending}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
-                      >
-                        {disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleConnectAccount(provider.id)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-                      >
-                        Connect
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Security Settings */}
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Security</h2>
-          <div className="space-y-4">
-            <Link
-              href="/settings/security"
-              className="flex items-center justify-between p-4 border border-gray-700 rounded-lg hover:border-gray-600 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">🔐</span>
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
+        <div className="space-y-8">
+          {/* Account Overview */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h2 className="text-xl font-medium mb-6">Account Overview</h2>
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="font-medium">Security Settings</div>
-                  <div className="text-sm text-gray-400">
-                    Manage encryption and backup security
-                  </div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                    Signing Address
+                  </label>
+                  <code className="text-sm font-mono text-gray-300">
+                    {session.user.address || session.user.id}
+                  </code>
                 </div>
               </div>
-              <span className="text-gray-400">→</span>
+              
+              {session.user.idKey && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                      BAP Identity Key
+                    </label>
+                    <code className="text-sm font-mono text-gray-300">
+                      {session.user.idKey.substring(0, 12)}...
+                    </code>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                    Session Provider
+                  </label>
+                  <span className="text-sm capitalize text-gray-300">
+                    {session.user.provider || 'Bitcoin'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Backup Anchors */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <div className="mb-8">
+              <h2 className="text-xl font-medium mb-2">Backup Anchors</h2>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                OAuth providers used to store your encrypted backup across devices. 
+                Link multiple providers for redundancy.
+              </p>
+            </div>
+            
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border border-gray-800 border-t-gray-400" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {providers.map((provider) => {
+                  const isConnected = connectedAccounts.some(
+                    account => account.provider === provider.id
+                  );
+                  
+                  return (
+                    <div 
+                      key={provider.id}
+                      className="flex items-center justify-between p-6 border border-gray-800/50 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="text-2xl">{provider.icon}</div>
+                        <div>
+                          <div className="font-medium text-gray-100">{provider.name}</div>
+                          <div className="text-sm text-gray-400">
+                            {isConnected ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span>Connected</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-gray-600 rounded-full"></div>
+                                <span>Not connected</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {isConnected ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDisconnectAccount(provider.id)}
+                          disabled={disconnectMutation.isPending}
+                          className="px-4 py-2 text-sm border border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/5 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          {disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleConnectAccount(provider.id)}
+                          className="px-4 py-2 text-sm border border-gray-700 hover:border-gray-600 rounded-md transition-colors"
+                        >
+                          Connect
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Security Settings */}
+          <div className="border border-gray-800/50 rounded-lg p-8">
+            <h2 className="text-xl font-medium mb-6">Security</h2>
+            <Link
+              href="/settings/security"
+              className="flex items-center justify-between p-6 border border-gray-800/50 hover:border-gray-700/50 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 border border-gray-700 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-medium group-hover:text-white transition-colors">Security Settings</div>
+                  <div className="text-sm text-gray-400">Manage encryption and backup security</div>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
           </div>
-        </div>
 
-        {/* Danger Zone */}
-        <div className="bg-red-900/20 border border-red-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-2 text-red-400">Danger Zone</h2>
-          <p className="text-gray-400 text-sm mb-4">
-            These actions are permanent and cannot be undone.
-          </p>
-          
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-          >
-            Sign Out
-          </button>
+          {/* Danger Zone */}
+          <div className="border border-red-500/20 bg-red-500/5 rounded-lg p-8">
+            <h2 className="text-xl font-medium text-red-400 mb-2">Danger Zone</h2>
+            <p className="text-sm text-red-400/80 mb-6 leading-relaxed">
+              These actions are permanent and cannot be undone.
+            </p>
+            
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="px-4 py-2 text-sm border border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10 rounded-md transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Modal for messages */}
       <Modal
@@ -352,7 +397,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setShowModal(false)}
-            className="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors"
+            className="w-full py-2 px-4 border border-gray-700 hover:border-gray-600 rounded-md text-sm transition-colors"
           >
             Close
           </button>
