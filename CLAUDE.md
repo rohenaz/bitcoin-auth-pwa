@@ -10,7 +10,7 @@ bun dev          # Start development server with Turbopack
 npm run dev      # Alternative with npm
 
 # Production
-bun build        # Build for production
+bun run build    # Build for production
 bun start        # Start production server
 
 # Code Quality
@@ -27,6 +27,7 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 1. **New Users**: Generate BAP identity → Encrypt with password → Store locally → Link OAuth for cloud backup
 2. **Returning Users (Same Device)**: Decrypt local backup with password → Use keys for auth
 3. **Returning Users (New Device)**: OAuth login → Retrieve encrypted backup → Decrypt with password
+4. **OAuth Provider Linking**: From Settings → OAuth sign-in → Create mapping → Return to credentials session
 
 ### Key Architectural Decisions
 
@@ -43,6 +44,9 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 - **BAP Identity Access**: Extract identity from backup using: `new BAP(backup.xprv)` → `bap.getId(ids[0])` → `exportMemberBackup()`
 - **Time-Bound Tokens**: Authentication tokens have 10-minute validity window
 - **Block Height Tracking**: BAP profiles tracked with block height for updates
+- **JWT Session Strategy**: Uses JWT tokens, NOT database sessions (no adapter needed)
+- **OAuth Mapping**: Links OAuth providers to BAP IDs via `oauth:{provider}:{providerAccountId}` → `bapId`
+- **Address Mapping**: Maps Bitcoin addresses to BAP IDs for unpublished profiles via `addr:{address}` → `{id, block}`
 
 ### API Routes
 
@@ -55,6 +59,7 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 - `/api/users/disconnect-account`: POST to unlink OAuth provider
 - `/api/users/link-backup`: POST to link backup to OAuth provider
 - `/api/users/create-from-backup`: POST to create user record from existing backup
+- `/api/users/profile`: GET/PUT user profile data (alternateName, image, description)
 
 ### Environment Variables Required
 
@@ -82,3 +87,21 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - `KV_REST_API_URL`
 - `KV_REST_API_TOKEN`
 - `KV_REST_API_READ_ONLY_TOKEN`
+
+### Redis Key Structure
+
+- `user:{bapId}`: User data (address, idKey, createdAt)
+- `backup:{bapId}`: Encrypted backup string
+- `backup:{bapId}:metadata`: Backup metadata (lastUpdated, hash)
+- `oauth:{provider}:{providerAccountId}`: OAuth to BAP ID mapping
+- `addr:{address}`: Address to BAP ID mapping for unpublished profiles
+- `bap:{bapId}`: Cached BAP profile data
+- `block:height`: Current blockchain height for tracking
+
+### Key UI Components
+
+- **ProfileEditor**: Modal for editing user profile (alternateName, image, description)
+- **Homepage**: Dark-themed landing page with animations and feature highlights
+- **Dashboard**: User profile display with edit functionality and BAP profile integration
+- **Settings**: OAuth provider management for multi-device backup access
+- **Security Settings**: Cloud backup management and local backup export
