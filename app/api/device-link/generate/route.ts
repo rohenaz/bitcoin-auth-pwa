@@ -8,8 +8,8 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id || !session.user.address || !session.user.idKey) {
+      return NextResponse.json({ error: 'Unauthorized or incomplete session' }, { status: 401 });
     }
     
     // Generate a secure random token
