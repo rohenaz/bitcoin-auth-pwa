@@ -219,6 +219,10 @@ export const authOptions = {
       if (url.includes('/signin/oauth-restore')) {
         return url;
       }
+      // If the URL contains settings with connected parameter, preserve it
+      if (url.includes('/settings?connected=')) {
+        return url;
+      }
       // Otherwise, use the URL or default to baseUrl
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
