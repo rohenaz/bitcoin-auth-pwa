@@ -225,6 +225,18 @@ export const authOptions = {
       if (url.includes('/settings?connected=')) {
         return url;
       }
+      // If the URL contains signup/oauth, preserve it
+      if (url.includes('/signup/oauth')) {
+        return url;
+      }
+      // If the URL contains dashboard, preserve it
+      if (url.includes('/dashboard')) {
+        return url;
+      }
+      // If the URL contains success, preserve it
+      if (url.includes('/success')) {
+        return url;
+      }
       // Otherwise, use the URL or default to baseUrl
       return url.startsWith(baseUrl) ? url : baseUrl;
     },

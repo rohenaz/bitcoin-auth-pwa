@@ -188,7 +188,7 @@ export default function DashboardPage() {
 
               <div>
                 <label className="text-sm text-gray-500">Display Name</label>
-                <p className="font-medium">{bapProfile?.identity?.alternateName || 'Not set'}</p>
+                <p className="font-medium">{bapProfile?.identity?.alternateName || session?.user?.name || 'Not set'}</p>
               </div>
 
               <div>
@@ -198,12 +198,12 @@ export default function DashboardPage() {
 
               <div>
                 <label htmlFor="bitcoinAddress" className="text-sm text-gray-500">Bitcoin Address</label>
-                <p className="font-mono text-sm break-all">{session?.user?.address}</p>
+                <p className="font-mono text-sm break-all">{session?.user?.address || 'Loading...'}</p>
               </div>
 
               <div>
                 <label htmlFor="identityKey" className="text-sm text-gray-500">Identity Key</label>
-                <p className="font-mono text-sm break-all">{session?.user?.idKey}</p>
+                <p className="font-mono text-sm break-all">{session?.user?.idKey || 'Loading...'}</p>
               </div>
             </div>
           </div>
