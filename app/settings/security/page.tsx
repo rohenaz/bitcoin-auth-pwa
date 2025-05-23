@@ -154,7 +154,11 @@ export default function SecuritySettingsPage() {
             <h2 className="text-lg font-medium mb-8">Security Status</h2>
             <div className="space-y-6">
               <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
-                <span className="text-2xl">✅</span>
+                <div className="text-gray-400">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                </div>
                 <div>
                   <h3 className="font-medium mb-1">Bitcoin Authentication</h3>
                   <p className="text-sm text-gray-400">
@@ -164,7 +168,11 @@ export default function SecuritySettingsPage() {
               </div>
 
               <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
-                <span className="text-2xl">🔐</span>
+                <div className="text-gray-400">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                </div>
                 <div>
                   <h3 className="font-medium mb-1">Client-Side Encryption</h3>
                   <p className="text-sm text-gray-400">
@@ -174,7 +182,11 @@ export default function SecuritySettingsPage() {
               </div>
 
               <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
-                <span className="text-2xl">⏰</span>
+                <div className="text-gray-400">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
                 <div>
                   <h3 className="font-medium mb-1">Time-Bound Tokens</h3>
                   <p className="text-sm text-gray-400">
@@ -321,19 +333,27 @@ export default function SecuritySettingsPage() {
             <h2 className="text-lg font-medium mb-6 text-yellow-400">Security Reminders</h2>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <svg className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <p className="text-sm text-gray-300">Your backup password cannot be recovered if lost</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <svg className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <p className="text-sm text-gray-300">Never share your private key or backup password</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <svg className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <p className="text-sm text-gray-300">Keep multiple backup copies in secure locations</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="text-yellow-400 mt-0.5">⚠️</span>
+                <svg className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <p className="text-sm text-gray-300">OAuth providers only store encrypted data - they cannot access your keys</p>
               </div>
             </div>
