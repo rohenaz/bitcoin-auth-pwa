@@ -80,6 +80,7 @@ export default function SettingsPage() {
         'MissingParams': 'Missing required OAuth parameters.',
         'ProviderNotConfigured': 'This OAuth provider is not configured. Please check environment variables.',
         'ProviderDisabled': 'This OAuth provider is temporarily disabled.',
+        'OAuthAlreadyLinked': 'This OAuth account is already linked to another Bitcoin identity. Each OAuth account can only be linked to one identity.',
       };
       
       const message = errorMessages[error] || 'An error occurred while linking your account.';

@@ -6,8 +6,9 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
-import { redis, oauthKey } from '@/lib/redis';
+import { redis } from '@/lib/redis';
 import { env, ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
+import { linkOAuthAccount } from '@/lib/oauth-utils';
 
 // OAuth provider configurations (matching the parent route)
 const OAUTH_CONFIGS = {
@@ -170,7 +171,12 @@ export async function GET(request: NextRequest) {
     }
     
     // Create the OAuth mapping
-    await redis.set(oauthKey(provider, providerAccountId), session.user.id);
+    const linkResult = await linkOAuthAccount(provider, providerAccountId, session.user.id);
+    
+    if (!linkResult.success && linkResult.error === 'already-linked') {
+      console.error(`OAuth account already linked: ${provider}|${providerAccountId} -> ${linkResult.existingBapId}`);
+      return NextResponse.redirect(new URL('/settings?error=OAuthAlreadyLinked', request.url));
+    }
     
     // Store the encrypted backup if provided
     const encryptedBackup = await redis.get(`pending-backup:${session.user.id}`);

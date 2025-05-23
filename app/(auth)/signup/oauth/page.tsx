@@ -88,45 +88,50 @@ export default function OAuthPage() {
                 }
                 return prev;
               });
+            } else if (response.status === 409) {
+              // OAuth account already linked to another identity
+              await response.json();
+              setError(`This ${provider} account is already linked to another Bitcoin identity. Please use a different ${provider} account or sign in with your existing identity.`);
+              return;
+            }
 
-              // Sign back in with Bitcoin credentials
-              const backup = JSON.parse(decryptedBackup);
-              const { BAP } = await import('bsv-bap');
-              const { getAuthToken } = await import('bitcoin-auth');
-              const { signIn, signOut } = await import('next-auth/react');
+            // Sign back in with Bitcoin credentials
+            const backup = JSON.parse(decryptedBackup);
+            const { BAP } = await import('bsv-bap');
+            const { getAuthToken } = await import('bitcoin-auth');
+            const { signIn, signOut } = await import('next-auth/react');
+            
+            const bap = new BAP(backup.xprv);
+            bap.importIds(backup.ids);
+            const ids = bap.listIds();
+            const id = ids[0];
+            
+            if (id) {
+              const master = bap.getId(id);
+              const memberBackup = master?.exportMemberBackup();
+              const pk = memberBackup?.derivedPrivateKey;
               
-              const bap = new BAP(backup.xprv);
-              bap.importIds(backup.ids);
-              const ids = bap.listIds();
-              const id = ids[0];
-              
-              if (id) {
-                const master = bap.getId(id);
-                const memberBackup = master?.exportMemberBackup();
-                const pk = memberBackup?.derivedPrivateKey;
+              if (pk) {
+                const authToken = getAuthToken({
+                  privateKeyWif: pk,
+                  requestPath: '/api/auth/signin',
+                  body: ''
+                });
+
+                // Sign out of OAuth session first
+                await signOut({ redirect: false });
+
+                const result = await signIn('credentials', {
+                  token: authToken,
+                  redirect: false,
+                });
                 
-                if (pk) {
-                  const authToken = getAuthToken({
-                    privateKeyWif: pk,
-                    requestPath: '/api/auth/signin',
-                    body: ''
-                  });
-
-                  // Sign out of OAuth session first
-                  await signOut({ redirect: false });
-
-                  const result = await signIn('credentials', {
-                    token: authToken,
-                    redirect: false,
-                  });
-                  
-                  if (result?.ok) {
-                    // Successfully signed back in with Bitcoin credentials
-                    // Clean up and redirect
-                    sessionStorage.removeItem(STORAGE_KEYS.OAUTH_LINKING);
-                    router.push('/dashboard');
-                    return;
-                  }
+                if (result?.ok) {
+                  // Successfully signed back in with Bitcoin credentials
+                  // Clean up and redirect
+                  sessionStorage.removeItem(STORAGE_KEYS.OAUTH_LINKING);
+                  router.push('/dashboard');
+                  return;
                 }
               }
             }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth-helpers";
 import { Hash, Utils } from "@bsv/sdk";
 import { apiError, apiSuccess } from "@/lib/api-utils";
+import { linkOAuthAccount } from "@/lib/oauth-utils";
 const { toHex } = Utils;
 
 export const GET = async (req: Request) => {
@@ -107,7 +108,15 @@ export const POST = async (req: Request) => {
 
     // If OAuth info provided, create OAuth mapping
     if (oauthProvider && oauthId) {
-      await redis.set(oauthKey(oauthProvider, oauthId), bapId);
+      const linkResult = await linkOAuthAccount(oauthProvider, oauthId, bapId);
+      
+      if (!linkResult.success && linkResult.error === 'already-linked') {
+        return NextResponse.json({ 
+          error: "This OAuth account is already linked to another Bitcoin identity",
+          existingBapId: linkResult.existingBapId,
+          code: 'OAUTH_ALREADY_LINKED'
+        }, { status: 409 });
+      }
     }
     
     // Store email mapping if we have the user's email

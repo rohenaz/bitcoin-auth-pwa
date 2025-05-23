@@ -179,7 +179,7 @@ export default function SignUpPage() {
           const bapId = bap.listIds()[0] || bap.newId().identityKey;
           
           // Store the backup with OAuth mapping
-          await fetch('/api/backup', {
+          const backupResponse = await fetch('/api/backup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -189,6 +189,13 @@ export default function SignUpPage() {
               oauthId: providerAccountId
             })
           });
+          
+          if (backupResponse.status === 409) {
+            // OAuth account already linked
+            await backupResponse.json();
+            setError(`This ${provider} account is already linked to another Bitcoin identity. Please sign out and use a different ${provider} account.`);
+            return;
+          }
           
           // Store email mapping if provided
           if (email) {
