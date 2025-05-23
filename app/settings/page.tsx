@@ -62,12 +62,23 @@ export default function SettingsPage() {
           if (pendingLink) {
             const { bapId, provider: pendingProvider, encryptedBackup } = JSON.parse(pendingLink);
             
+            // Extract provider account ID - use providerAccountId if available, otherwise extract from composite ID
+            let providerAccountId = session.user.providerAccountId;
+            
+            if (!providerAccountId && session.user.id && session.user.id.includes('-')) {
+              // Fallback: extract from composite ID format "provider-providerAccountId"
+              const parts = session.user.id.split('-');
+              if (parts[0] === pendingProvider && parts.length >= 2) {
+                providerAccountId = parts.slice(1).join('-');
+              }
+            }
+            
             // If we're now logged in via OAuth and it matches the pending provider
-            if (session.user.provider === pendingProvider && session.user.providerAccountId) {
+            if (session.user.provider === pendingProvider && providerAccountId) {
               console.log('Creating OAuth mapping:', {
                 bapId,
                 provider: pendingProvider,
-                providerAccountId: session.user.providerAccountId
+                providerAccountId
               });
               
               // Create the OAuth mapping with the encrypted backup
@@ -77,12 +88,13 @@ export default function SettingsPage() {
                 body: JSON.stringify({
                   bapId,
                   oauthProvider: pendingProvider,
-                  oauthId: session.user.providerAccountId,
+                  oauthId: providerAccountId,
                   encryptedBackup
                 })
               });
             
             if (response.ok) {
+              console.log('OAuth mapping created successfully');
               // Switch back to credentials session with the original BAP ID
               const { signIn } = await import('next-auth/react');
               
@@ -118,11 +130,18 @@ export default function SettingsPage() {
               
               // Refresh the page to show updated state
               window.location.href = '/settings';
+            } else {
+              const errorText = await response.text();
+              console.error('Failed to create OAuth mapping:', response.status, errorText);
             }
+          } else {
+            console.warn('Missing provider or providerAccountId, cannot create OAuth mapping');
           }
           
-            sessionStorage.removeItem('pendingOAuthLink');
-          }
+          sessionStorage.removeItem('pendingOAuthLink');
+        } else {
+          console.log('No pending OAuth link found');
+        }
         }
       }
     };
