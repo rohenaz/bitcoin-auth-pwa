@@ -16,7 +16,7 @@ interface ProfileEditorProps {
   onPublish: () => Promise<void>;
 }
 
-export default function ProfileEditor({ isOpen, onClose, profile, onSave, onPublish }: ProfileEditorProps) {
+export default function ProfileEditor({ isOpen, onClose, profile, onSave }: ProfileEditorProps) {
   const [formData, setFormData] = useState({
     alternateName: '',
     image: '',

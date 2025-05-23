@@ -41,6 +41,20 @@ export default function SecuritySettingsPage() {
 
     setUpdating(true);
     try {
+      // First check if user has any OAuth providers linked
+      const accountsResponse = await fetch('/api/users/connected-accounts');
+      const connectedAccounts = await accountsResponse.json();
+      
+      const hasOAuthLinked = connectedAccounts.some((acc: { connected: boolean; provider: string }) => 
+        acc.connected && acc.provider !== 'credentials'
+      );
+      
+      if (!hasOAuthLinked) {
+        alert('Please link an OAuth provider (Google, GitHub, or X) in Settings first. This enables cloud backup restoration from other devices.');
+        setUpdating(false);
+        return;
+      }
+      
       const response = await fetch('/api/backup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

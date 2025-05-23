@@ -16,7 +16,7 @@ export default function OAuthRestorePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [encryptedBackup, setEncryptedBackup] = useState<string | null>(null);
+  const [encryptedBackup] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [decrypting, setDecrypting] = useState(false);
 
@@ -69,14 +69,19 @@ export default function OAuthRestorePage() {
       }
 
       const data = await response.json();
-      setEncryptedBackup(data.backup);
-      setLoading(false);
+      
+      // Store the encrypted backup in localStorage
+      localStorage.setItem(ENCRYPTED_BACKUP_KEY, data.backup);
+      
+      // Sign out of OAuth session and redirect to signin
+      await signOut({ redirect: false });
+      router.push('/signin');
     } catch (err) {
       console.error('Error fetching backup:', err);
       setError('Failed to retrieve your backup. Please try again.');
       setLoading(false);
     }
-  }, [session]);
+  }, [session, router]);
 
   useEffect(() => {
     if (status === 'loading') return;

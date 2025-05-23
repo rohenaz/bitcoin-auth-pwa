@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
 interface ConnectedAccount {
@@ -14,6 +14,29 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const createOAuthMapping = useCallback(async (bapId: string, provider: string, providerAccountId: string) => {
+    try {
+      const response = await fetch('/api/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bapId,
+          oauthProvider: provider,
+          oauthId: providerAccountId,
+          // Include encrypted backup if available
+          encryptedBackup: localStorage.getItem('encryptedBackup')
+        })
+      });
+      
+      if (response.ok) {
+        // Refresh connected accounts
+        fetchConnectedAccounts();
+      }
+    } catch (error) {
+      console.error('Failed to create OAuth mapping:', error);
+    }
+  }, []);
 
   const providers = [
     { id: 'google', name: 'Google', icon: '🔗' },
@@ -22,10 +45,84 @@ export default function SettingsPage() {
   ];
 
   useEffect(() => {
-    if (session?.user) {
-      fetchConnectedAccounts();
-    }
-  }, [session]);
+    const handleOAuthReturn = async () => {
+      if (session?.user) {
+        fetchConnectedAccounts();
+        
+        // Check if we're returning from OAuth connection
+        const urlParams = new URLSearchParams(window.location.search);
+        const connectedProvider = urlParams.get('connected');
+        
+        if (connectedProvider) {
+          // Clean up URL
+          window.history.replaceState({}, '', '/settings');
+          
+          // Check for pending OAuth link
+          const pendingLink = sessionStorage.getItem('pendingOAuthLink');
+          if (pendingLink) {
+            const { bapId, provider: pendingProvider, encryptedBackup } = JSON.parse(pendingLink);
+            
+            // If we're now logged in via OAuth and it matches the pending provider
+            if (session.user.provider === pendingProvider && session.user.providerAccountId) {
+            // Create the OAuth mapping with the encrypted backup
+            const response = await fetch('/api/backup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                bapId,
+                oauthProvider: pendingProvider,
+                oauthId: session.user.providerAccountId,
+                encryptedBackup
+              })
+            });
+            
+            if (response.ok) {
+              // Switch back to credentials session with the original BAP ID
+              const { signIn } = await import('next-auth/react');
+              
+              // Get the decrypted backup to sign in with credentials
+              const decryptedBackup = sessionStorage.getItem('decryptedBackup');
+              if (decryptedBackup) {
+                const backup = JSON.parse(decryptedBackup);
+                const { BAP } = await import('bsv-bap');
+                const { getAuthToken } = await import('bitcoin-auth');
+                
+                const bap = new BAP(backup.xprv);
+                bap.importIds(backup.ids);
+                const ids = bap.listIds();
+                const id = ids[0] || bap.newId().identityKey;
+                const master = bap.getId(id);
+                const memberBackup = master?.exportMemberBackup();
+                const pk = memberBackup?.derivedPrivateKey;
+                
+                if (pk) {
+                  const authToken = getAuthToken({
+                    privateKeyWif: pk,
+                    requestPath: '/api/auth/signin',
+                    body: ''
+                  });
+                  
+                  // Sign back in with credentials
+                  await signIn('credentials', {
+                    token: authToken,
+                    redirect: false,
+                  });
+                }
+              }
+              
+              // Refresh the page to show updated state
+              window.location.href = '/settings';
+            }
+          }
+          
+            sessionStorage.removeItem('pendingOAuthLink');
+          }
+        }
+      }
+    };
+    
+    handleOAuthReturn();
+  }, [session, createOAuthMapping]);
 
   const fetchConnectedAccounts = async () => {
     try {
@@ -42,6 +139,18 @@ export default function SettingsPage() {
   };
 
   const handleConnectAccount = async (provider: string) => {
+    // Store current BAP ID and encrypted backup before OAuth redirect
+    if (session?.user?.id && session?.user?.provider === 'credentials') {
+      const encryptedBackup = localStorage.getItem('encryptedBackup');
+      if (encryptedBackup) {
+        sessionStorage.setItem('pendingOAuthLink', JSON.stringify({
+          bapId: session.user.id,
+          provider: provider,
+          encryptedBackup: encryptedBackup
+        }));
+      }
+    }
+    
     await signIn(provider, { 
       callbackUrl: '/settings?connected=' + provider 
     });
