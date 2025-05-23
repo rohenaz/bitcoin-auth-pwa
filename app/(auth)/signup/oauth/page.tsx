@@ -7,10 +7,8 @@ import { signIn, useSession } from 'next-auth/react';
 export default function OAuthPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
-  const [backupStored, setBackupStored] = useState(false);
 
   useEffect(() => {
     // Check if we have the decrypted backup in session
@@ -21,72 +19,104 @@ export default function OAuthPage() {
       return;
     }
 
-    // Check if we just completed OAuth and need to store backup
-    const handleOAuthCallback = async () => {
-      if (session?.user && !backupStored) {
-        const encryptedBackup = localStorage.getItem('encryptedBackup');
-        if (encryptedBackup) {
-          try {
-            // Store the encrypted backup on the server
+    // Check if we're returning from OAuth linking
+    const handleOAuthReturn = async () => {
+      const linkingData = sessionStorage.getItem('oauth_linking');
+      if (linkingData && session?.user?.provider && session.user.provider !== 'credentials') {
+        try {
+          const { bapId, provider } = JSON.parse(linkingData);
+          const encryptedBackup = localStorage.getItem('encryptedBackup');
+          
+          if (encryptedBackup && provider === session.user.provider) {
+            // Store the backup with OAuth mapping
             const response = await fetch('/api/backup', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 encryptedBackup,
+                bapId,
                 oauthProvider: session.user.provider,
-                oauthId: session.user.id,
-              }),
+                oauthId: session.user.id
+              })
             });
 
             if (response.ok) {
-              setBackupStored(true);
+              // Mark provider as linked
               setLinkedProviders(prev => {
-                const provider = session.user?.provider;
-                if (provider && !prev.includes(provider)) {
+                if (!prev.includes(provider)) {
                   return [...prev, provider];
                 }
                 return prev;
               });
+
+              // Sign back in with Bitcoin credentials
+              const backup = JSON.parse(decryptedBackup);
+              const { BAP } = await import('bsv-bap');
+              const { getAuthToken } = await import('bitcoin-auth');
+              const { signIn } = await import('next-auth/react');
+              
+              const bap = new BAP(backup.xprv);
+              bap.importIds(backup.ids);
+              const ids = bap.listIds();
+              const id = ids[0];
+              
+              if (id) {
+                const master = bap.getId(id);
+                const memberBackup = master?.exportMemberBackup();
+                const pk = memberBackup?.derivedPrivateKey;
+                
+                if (pk) {
+                  const authToken = getAuthToken({
+                    privateKeyWif: pk,
+                    requestPath: '/api/auth/signin',
+                    body: ''
+                  });
+
+                  await signIn('credentials', {
+                    token: authToken,
+                    redirect: false,
+                  });
+                }
+              }
             }
-          } catch (err) {
-            console.error('Error storing backup:', err);
+
+            // Clean up
+            sessionStorage.removeItem('oauth_linking');
           }
+        } catch (err) {
+          console.error('Error handling OAuth return:', err);
         }
       }
     };
 
-    handleOAuthCallback();
-  }, [session, router, backupStored]);
+    handleOAuthReturn();
+  }, [session, router]);
 
   const handleOAuthLink = async (provider: string) => {
-    setLoading(true);
-    setError('');
-
     try {
-      // Get the encrypted backup from local storage
+      // Store backup info in session storage for after OAuth
       const encryptedBackup = localStorage.getItem('encryptedBackup');
-      if (!encryptedBackup) {
-        throw new Error('No encrypted backup found');
+      const decryptedBackup = sessionStorage.getItem('decryptedBackup');
+      if (!encryptedBackup || !decryptedBackup || !session?.user?.id) {
+        throw new Error('Missing backup or session');
       }
 
-      // Sign in with the provider
-      const result = await signIn(provider, {
+      // Store info for after OAuth callback
+      sessionStorage.setItem('oauth_linking', JSON.stringify({
+        bapId: session.user.id,
+        provider,
+        address: session.user.address,
+        idKey: session.user.idKey
+      }));
+
+      // Sign in with OAuth provider
+      await signIn(provider, {
         callbackUrl: '/signup/oauth',
         redirect: true,
       });
-
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
-      // Store this provider as linked
-      setLinkedProviders([...linkedProviders, provider]);
     } catch (err) {
       console.error('OAuth link error:', err);
       setError(err instanceof Error ? err.message : 'Failed to link account');
-      setLoading(false);
     }
   };
 
@@ -215,12 +245,12 @@ export default function OAuthPage() {
                 type="button"
                 key={provider.id}
                 onClick={() => !isLinked && handleOAuthLink(provider.id)}
-                disabled={loading || isLinked}
+                disabled={isLinked}
                 className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-between ${
                   isLinked
                     ? 'bg-green-900/20 border-green-900 border cursor-default'
                     : 'bg-gray-900 hover:bg-gray-800 border border-gray-800'
-                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                }`}
               >
                 <div className="flex items-center space-x-3">
                   {provider.icon}
@@ -252,7 +282,7 @@ export default function OAuthPage() {
         <button
           type="button"
           onClick={handleContinue}
-          disabled={linkedProviders.length === 0 || loading}
+          disabled={linkedProviders.length === 0}
           className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors"
         >
           {linkedProviders.length === 0 ? 'Link an Account to Continue' : 'Continue to Dashboard'}

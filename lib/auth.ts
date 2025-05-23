@@ -185,12 +185,28 @@ export const authOptions = {
       }
       if (account?.provider && account.providerAccountId) {
         token.provider = account.provider;
-        // For OAuth providers, create a user ID based on provider info
-        if (!token.sub && account.provider !== 'credentials') {
-          const oauthUserId = `${account.provider}-${account.providerAccountId}`;
-          token.sub = oauthUserId;
-          token.isOAuthOnly = true;
-          await redis.set(oauthKey(account.provider, String(account.providerAccountId)), oauthUserId);
+        
+        // For OAuth providers, check if there's a linked BAP identity
+        if (account.provider !== 'credentials') {
+          const mappedBapId = await redis.get(oauthKey(account.provider, String(account.providerAccountId)));
+          
+          if (mappedBapId) {
+            // User has a linked Bitcoin identity, load it
+            const userKey = `user:${mappedBapId}`;
+            const userData = await redis.hgetall(userKey) as { address?: string; idKey?: string } | null;
+            
+            if (userData && userData.address) {
+              token.sub = mappedBapId as string;
+              token.address = userData.address;
+              token.idKey = userData.idKey || (mappedBapId as string);
+              token.linkedProvider = account.provider;
+            }
+          } else {
+            // No linked identity, create OAuth-only session
+            const oauthUserId = `${account.provider}-${account.providerAccountId}`;
+            token.sub = oauthUserId;
+            token.isOAuthOnly = true;
+          }
         }
       }
       return token;

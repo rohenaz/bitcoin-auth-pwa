@@ -50,9 +50,9 @@ export const POST = async (req: Request) => {
     }
 
     // Store the backup with the user's BAP ID
-    const bapId = session.user.id;
+    const bapId = body.bapId || session.user.id;
     if (!bapId) {
-      return NextResponse.json({ error: "No BAP ID found in session" }, { status: 400 });
+      return NextResponse.json({ error: "No BAP ID found" }, { status: 400 });
     }
 
     // Store the encrypted backup
@@ -69,6 +69,15 @@ export const POST = async (req: Request) => {
     // If OAuth info provided, create mapping
     if (oauthProvider && oauthId) {
       await redis.set(oauthKey(oauthProvider, oauthId), bapId);
+      
+      // Also store user data for OAuth lookups
+      if (session.user.address) {
+        const userKey = `user:${bapId}`;
+        await redis.hset(userKey, {
+          address: session.user.address,
+          idKey: session.user.idKey || bapId
+        });
+      }
     }
 
     return NextResponse.json({ 
