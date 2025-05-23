@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { type BapMasterBackup, decryptBackup } from 'bitcoin-backup';
@@ -11,7 +11,7 @@ import { BAP } from 'bsv-bap';
 const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
-export default function SignInPage() {
+function SignInPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -253,5 +253,17 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <SignInPageContent />
+    </Suspense>
   );
 } 
