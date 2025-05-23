@@ -74,6 +74,7 @@ export default function SettingsPage() {
         'LinkFailed': 'Failed to link OAuth account. Please try again.',
         'SessionExpired': 'Your session has expired. Please sign in again.',
         'MissingParams': 'Missing required OAuth parameters.',
+        'ProviderNotConfigured': 'This OAuth provider is not configured. Please check environment variables.',
       };
       
       const message = errorMessages[error] || 'An error occurred while linking your account.';

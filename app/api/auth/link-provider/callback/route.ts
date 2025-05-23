@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
 import { redis, oauthKey } from '@/lib/redis';
+import { env } from '@/lib/env';
 
 // OAuth provider configurations (matching the parent route)
 const OAUTH_CONFIGS = {
@@ -68,8 +69,8 @@ export async function GET(request: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          client_id: process.env.AUTH_GITHUB_ID!,
-          client_secret: process.env.AUTH_GITHUB_SECRET!,
+          client_id: env.AUTH_GITHUB_ID!,
+          client_secret: env.AUTH_GITHUB_SECRET!,
           code,
         }),
       });
@@ -96,8 +97,8 @@ export async function GET(request: NextRequest) {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: process.env.AUTH_GOOGLE_ID!,
-          client_secret: process.env.AUTH_GOOGLE_SECRET!,
+          client_id: env.AUTH_GOOGLE_ID!,
+          client_secret: env.AUTH_GOOGLE_SECRET!,
           code,
           grant_type: 'authorization_code',
           redirect_uri: getRedirectUri(provider),
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
       
     } else if (provider === 'twitter') {
       // Twitter uses OAuth 2.0 with PKCE
-      const auth = Buffer.from(`${process.env.AUTH_TWITTER_ID}:${process.env.AUTH_TWITTER_SECRET}`).toString('base64');
+      const auth = Buffer.from(`${env.AUTH_TWITTER_ID}:${env.AUTH_TWITTER_SECRET}`).toString('base64');
       
       const tokenResponse = await fetch(config.tokenUrl, {
         method: 'POST',

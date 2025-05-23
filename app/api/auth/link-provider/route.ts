@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
 import { redis } from '@/lib/redis';
+import { env } from '@/lib/env';
 import crypto from 'crypto';
 
 // OAuth provider configurations
@@ -67,13 +68,25 @@ export async function GET(request: NextRequest) {
     
     // Provider-specific parameters
     if (provider === 'github') {
-      params.set('client_id', process.env.AUTH_GITHUB_ID!);
+      if (!env.AUTH_GITHUB_ID) {
+        console.error('AUTH_GITHUB_ID not configured');
+        return NextResponse.redirect(new URL('/settings?error=ProviderNotConfigured', request.url));
+      }
+      params.set('client_id', env.AUTH_GITHUB_ID);
     } else if (provider === 'google') {
-      params.set('client_id', process.env.AUTH_GOOGLE_ID!);
+      if (!env.AUTH_GOOGLE_ID) {
+        console.error('AUTH_GOOGLE_ID not configured');
+        return NextResponse.redirect(new URL('/settings?error=ProviderNotConfigured', request.url));
+      }
+      params.set('client_id', env.AUTH_GOOGLE_ID);
       params.set('access_type', 'offline');
       params.set('prompt', 'consent');
     } else if (provider === 'twitter') {
-      params.set('client_id', process.env.AUTH_TWITTER_ID!);
+      if (!env.AUTH_TWITTER_ID) {
+        console.error('AUTH_TWITTER_ID not configured');
+        return NextResponse.redirect(new URL('/settings?error=ProviderNotConfigured', request.url));
+      }
+      params.set('client_id', env.AUTH_TWITTER_ID);
       params.set('code_challenge', 'challenge'); // Twitter requires PKCE
       params.set('code_challenge_method', 'plain');
     }
