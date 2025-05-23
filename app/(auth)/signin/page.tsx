@@ -8,9 +8,9 @@ import { getAuthToken } from 'bitcoin-auth';
 import Link from 'next/link';
 import { BAP } from 'bsv-bap';
 import { PrivateKey } from '@bsv/sdk';
+import { STORAGE_KEYS } from '@/lib/storage-keys';
+import { extractIdentityFromBackup, createAuthTokenFromBackup } from '@/lib/bap-utils';
 
-const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
-const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
 function SignInPageContent() {
   const searchParams = useSearchParams();
@@ -53,38 +53,16 @@ function SignInPageContent() {
       }
 
       // Store WIF in session storage for authenticated requests
-      sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(decrypted));
+      sessionStorage.setItem(STORAGE_KEYS.DECRYPTED_BACKUP, JSON.stringify(decrypted));
       
 
-      // get the first key from the bap master backup
-      const bap = new BAP(decrypted.xprv)
-      bap.importIds(decrypted.ids);
-      const ids = bap.listIds()
-      let id = ids[0]
-      if (!id) {
-        id = bap.newId().identityKey
-      }
-      const master = bap.getId(id)
-      const membedBackup = master?.exportMemberBackup();
-      const pk = membedBackup?.derivedPrivateKey;
-      if (!pk) {
-        throw new Error('No private key found in backup')
-      }
-
-      // Get the public key and address for the user
-      const pubkey = PrivateKey.fromWif(pk).toPublicKey()
-      const address = pubkey.toAddress()
-      
-      // Create the auth token
-      const authToken = getAuthToken({
-        privateKeyWif: pk,
-        requestPath: '/api/auth/signin',
-        body: ''
-      });
+      // Extract identity and create auth token
+      const identity = extractIdentityFromBackup(decrypted);
+      const authToken = createAuthTokenFromBackup(decrypted, '/api/auth/signin');
 
       console.log('Signing in with auth token:', authToken);
-      console.log('BAP ID:', id);
-      console.log('Address:', address);
+      console.log('BAP ID:', identity.id);
+      console.log('Address:', identity.address);
 
       // Sign in with Bitcoin credentials
       const result = await signIn('credentials', {
@@ -98,7 +76,7 @@ function SignInPageContent() {
           console.log('User not found, creating user record...');
           
           // Also store the encrypted backup if we have it
-          const encryptedBackup = localStorage.getItem(ENCRYPTED_BACKUP_KEY);
+          const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
           
           // Create auth token for user creation
           const createUserToken = getAuthToken({
@@ -198,10 +176,10 @@ function SignInPageContent() {
       const encrypted = await encryptBackup(importedDecryptedBackup, password);
       
       // Store in localStorage
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, encrypted);
+      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, encrypted);
       
       // Store decrypted in sessionStorage
-      sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(importedDecryptedBackup));
+      sessionStorage.setItem(STORAGE_KEYS.DECRYPTED_BACKUP, JSON.stringify(importedDecryptedBackup));
       
       // Get private key for auth
       const bap = new BAP(importedDecryptedBackup.xprv);
@@ -349,7 +327,7 @@ function SignInPageContent() {
       setHasLocalBackup(true);
       setShowOAuthProviders(false);
       // Store in localStorage
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, text.trim());
+      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, text.trim());
     } catch (err) {
       console.error('Import error:', err);
       setError('Invalid backup file. Please select a valid backup (encrypted or decrypted).');

@@ -2,6 +2,7 @@ import { redis, backupKey, oauthKey } from "@/lib/redis";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth-helpers";
 import { Hash, Utils } from "@bsv/sdk";
+import { apiError, apiSuccess } from "@/lib/api-utils";
 const { toHex } = Utils;
 
 export const GET = async (req: Request) => {
@@ -17,30 +18,30 @@ export const GET = async (req: Request) => {
     // OAuth ID format: "provider|providerAccountId"
     const [provider, providerAccountId] = oauthId.split('|');
     if (!provider || !providerAccountId) {
-      return NextResponse.json({ error: "Invalid oauthId format" }, { status: 400 });
+      return apiError("Invalid oauthId format");
     }
     // Look up BAP ID from OAuth mapping
     const mappedBapId = await redis.get(oauthKey(provider, providerAccountId));
     if (!mappedBapId) {
-      return NextResponse.json({ error: "No backup found for OAuth account" }, { status: 404 });
+      return apiError("No backup found for OAuth account", 404);
     }
     key = backupKey(String(mappedBapId));
   } else {
-    return NextResponse.json({ error: "bapid or oauthId required" }, { status: 400 });
+    return apiError("bapid or oauthId required");
   }
   
   const encryptedBackupString = await redis.get<string>(key);
   
   return encryptedBackupString
-    ? NextResponse.json({ backup: encryptedBackupString }) // Return the encrypted string within a JSON object
-    : NextResponse.json({ error: "not found" }, { status: 404 });
+    ? apiSuccess({ backup: encryptedBackupString })
+    : apiError("not found", 404);
 };
 
 export const POST = async (req: Request) => {
   // Verify user is authenticated
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError("Unauthorized", 401);
   }
 
   try {
