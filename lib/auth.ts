@@ -6,7 +6,6 @@ import Credentials from "next-auth/providers/credentials";
 import { type AuthPayload, parseAuthToken, verifyAuthToken } from "bitcoin-auth";
 import { redis, oauthKey, userKey, latestBlockKey, addrKey } from "./redis";
 import { upsertRootProfile } from "./bap";
-import { UpstashRedisAdapter } from "@auth/upstash-redis-adapter";
 import type { APIResponse, APIIdentity, Organization } from "@/types/bap";
 import { PublicKey } from "@bsv/sdk";
 import { getLatestBlockHeight } from "./block";
@@ -206,7 +205,7 @@ const customProvider = Credentials({
 providers.push(customProvider);
 
 export const authOptions = {
-  adapter: UpstashRedisAdapter(redis),
+  // adapter: UpstashRedisAdapter(redis), // Not needed with JWT strategy
   providers,
   secret: env.AUTH_SECRET,
   session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
