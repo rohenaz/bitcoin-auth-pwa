@@ -58,16 +58,22 @@ export function useUpdateProfile() {
       try {
         const backup = JSON.parse(decryptedBackupStr);
         // Import required auth utilities
-        const { BAP } = await import('bitcoin-wallet-sdk');
-        const { signAuthToken } = await import('@/lib/auth-helpers');
+        const { extractIdentityFromBackup, createAuthTokenFromBackup } = await import('@/lib/bap-utils');
         
-        // Initialize BAP with the backup
-        const bap = new BAP(backup.xprv);
-        const id = await bap.getId(bapId);
-        currentAddress = id.address;
+        // Extract identity information from backup
+        const identity = extractIdentityFromBackup(backup);
+        
+        // For multi-profile support, we need to find the specific address for this bapId
+        // If it's not the primary ID, we'll use the primary address for now
+        currentAddress = identity.address;
         
         // Create auth token for this request
-        const authToken = await signAuthToken('/api/users/profile', backup);
+        const requestBody = JSON.stringify({ 
+          bapId, 
+          address: currentAddress,
+          ...data 
+        });
+        const authToken = createAuthTokenFromBackup(backup, '/api/users/profile', requestBody);
         
         const response = await fetch('/api/users/profile', {
           method: 'PUT',
@@ -78,11 +84,7 @@ export function useUpdateProfile() {
               'X-Decrypted-Backup': decryptedBackupStr
             })
           },
-          body: JSON.stringify({ 
-            bapId, 
-            address: currentAddress,
-            ...data 
-          }),
+          body: requestBody,
         });
 
         if (!response.ok) {
