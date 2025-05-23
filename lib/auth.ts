@@ -214,7 +214,7 @@ export const authOptions = {
     error: '/signin',
   },
   callbacks: {
-    redirect: async ({ url, baseUrl }) => {
+    redirect: async ({ url, baseUrl }: { url: string; baseUrl: string }) => {
       // If the URL contains oauth-restore, preserve it
       if (url.includes('/signin/oauth-restore')) {
         return url;
