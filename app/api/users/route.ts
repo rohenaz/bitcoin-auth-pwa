@@ -1,14 +1,21 @@
-import { Redis } from '@upstash/redis';
-import type { User } from 'next-auth';
-import { NextResponse } from 'next/server';
-
-const redis = Redis.fromEnv();
+import { redis } from "@/lib/redis";
+import { NextResponse } from "next/server";
+// import type { User } from 'next-auth'; // User type might not be needed if hgetall returns structured objects
 
 export const GET = async () => {
-  // Fetch all users from Redis
-  // Not sure what structure we're using yet
-  const userKeys = await redis.keys("user:*");
-  const users = await redis.mget(userKeys) as User[];
-  // Return the result in the response
-  return new NextResponse(JSON.stringify({ users }), { status: 200 });
+  const keys = await redis.keys("user:*");
+  if (!keys.length) return NextResponse.json({ result: [] });
+  
+  const pipe = redis.pipeline();
+  for (const k of keys) {
+    pipe.hgetall(k); // user records are hashes
+  }
+  // Each result from hgetall in a pipeline is [Error | null, Record<string, string> | null]
+  const results = await pipe.exec<[Error | null, Record<string, string> | null][]>();
+  
+  const users = results
+    .filter((result): result is [null, Record<string, string>] => result[0] === null && result[1] !== null)
+    .map(result => result[1]);
+  
+  return NextResponse.json({ result: users });
 };

@@ -1,4 +1,4 @@
-import type { AboutPage, Action, AdministrativeArea, AggregateRating, Article, Brand, Certification, ContactPoint, Country, CreativeWork, DefinedTerm, Demand, Distance, EducationalOccupationalCredential, EducationalOrganization, GenderType, GeoShape, Grant, ImageObject, InteractionCounter, Language, LoanOrCredit, MemberProgram, MemberProgramTier, MerchantReturnPolicy, MonetaryAmount, NonprofitType, Occupation, Offer, OfferCatalog, OwnershipInfo, PaymentMethod, Place, PostalAddress, PriceSpecification, Product, ProductReturnPolicy, ProgramMembership, PropertyValue, QuantitativeValue, Review, Role, Text, TextObject, Thing, VirtualLocation, WithContext } from 'schema-dts';
+import type { AboutPage, Action, AdministrativeArea, AggregateRating, Article, Brand, Certification, ContactPoint, Country, CreativeWork, DefinedTerm, Demand, Distance, EducationalOccupationalCredential, EducationalOrganization, GenderType, GeoShape, Grant, ImageObject, InteractionCounter, Language, LoanOrCredit, MemberProgram, MemberProgramTier, MerchantReturnPolicy, MonetaryAmount, NonprofitType, Occupation, Offer, OfferCatalog, OwnershipInfo, PaymentMethod, Place, PostalAddress, PriceSpecification, Product, ProductReturnPolicy, ProgramMembership, PropertyValue, QuantitativeValue, Review, Role, stringObject, Thing, VirtualLocation, WithContext } from 'schema-dts';
 type SchemaValue<T, TProperty extends string> = T | Role<T, TProperty> | readonly (T | Role<T, TProperty>)[];
 
 type IdReference = {
@@ -7,72 +7,72 @@ type IdReference = {
 };
 
 interface ThingBase extends Partial<IdReference> {
-  /** An additional type for the item, typically used for adding more specific types from external vocabularies in microdata syntax. This is a relationship between something and a class that the thing is in. Typically the value is a URI-identified RDF class, and in this case corresponds to the use of rdf:type in RDF. Text values can be used sparingly, for cases where useful information can be added without their being an appropriate schema to reference. In the case of text values, the class label should follow the schema.org {@link https://schema.org/docs/styleguide.html style guide}. */
-  "additionalType"?: SchemaValue<Text | URL, "additionalType">;
+  /** An additional type for the item, typically used for adding more specific types from external vocabularies in microdata syntax. This is a relationship between something and a class that the thing is in. Typically the value is a URI-identified RDF class, and in this case corresponds to the use of rdf:type in RDF. string values can be used sparingly, for cases where useful information can be added without their being an appropriate schema to reference. In the case of text values, the class label should follow the schema.org {@link https://schema.org/docs/styleguide.html style guide}. */
+  "additionalType"?: string | URL;
   /** An alias for the item. */
-  "alternateName"?: SchemaValue<Text, "alternateName">;
+  "alternateName"?: string;
   /** A description of the item. */
-  "description"?: SchemaValue<Text | TextObject | IdReference, "description">;
+  "description"?: string | stringObject | IdReference
   /** A sub property of description. A short description of the item used to disambiguate from other, similar items. Information from other properties (in particular, name) may be necessary for the description to be useful for disambiguation. */
-  "disambiguatingDescription"?: SchemaValue<Text, "disambiguatingDescription">;
+  "disambiguatingDescription"?: string
   /** The identifier property represents any kind of identifier for any kind of {@link https://schema.org/Thing Thing}, such as ISBNs, GTIN codes, UUIDs etc. Schema.org provides dedicated properties for representing many of these, either as textual strings or as URL (URI) links. See {@link /docs/datamodel.html#identifierBg background notes} for more details. */
-  "identifier"?: SchemaValue<PropertyValue | Text | URL | IdReference, "identifier">;
+  "identifier"?: PropertyValue | string | URL | IdReference
   /** An image of the item. This can be a {@link https://schema.org/URL URL} or a fully described {@link https://schema.org/ImageObject ImageObject}. */
-  "image"?: SchemaValue<ImageObject | URL | IdReference, "image">;
+  "image"?: string
   /** Indicates a page (or other CreativeWork) for which this thing is the main entity being described. See {@link /docs/datamodel.html#mainEntityBackground background notes} for details. */
-  "mainEntityOfPage"?: SchemaValue<CreativeWork | URL | IdReference, "mainEntityOfPage">;
+  "mainEntityOfPage"?: CreativeWork | URL | IdReference
   /** The name of the item. */
-  "name"?: SchemaValue<Text, "name">;
+  "name"?: string
   /** Indicates a potential Action, which describes an idealized action in which this thing would play an 'object' role. */
-  "potentialAction"?: SchemaValue<Action | IdReference, "potentialAction">;
+  "potentialAction"?: Action | IdReference
   /** URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL of the item's Wikipedia page, Wikidata entry, or official website. */
-  "sameAs"?: SchemaValue<URL, "sameAs">;
+  "sameAs"?: URL
   /** A CreativeWork or Event about this Thing. */
-  "subjectOf"?: SchemaValue<CreativeWork | Event | IdReference, "subjectOf">;
+  "subjectOf"?: CreativeWork | Event | IdReference
   /** URL of the item. */
-  "url"?: SchemaValue<URL, "url">;
+  "url"?: URL
 }
 
 export interface Person extends ThingBase {
   "@type": "Person";
   /** An additional name for a Person, can be used for a middle name. */
-  "additionalName"?: SchemaValue<Text, "additionalName">;
+  "additionalName"?: string
   /** Physical address of the item. */
-  "address"?: SchemaValue<PostalAddress | Text | IdReference, "address">;
+  "address"?: PostalAddress | string | IdReference
   /** An organization that this person is affiliated with. For example, a school/university, a club, or a team. */
-  "affiliation"?: SchemaValue<Organization | IdReference, "affiliation">;
+  "affiliation"?: Organization | IdReference
   /** The number of completed interactions for this entity, in a particular role (the 'agent'), in a particular action (indicated in the statistic), and in a particular context (i.e. interactionService). */
-  "agentInteractionStatistic"?: SchemaValue<InteractionCounter | IdReference, "agentInteractionStatistic">;
+  "agentInteractionStatistic"?: InteractionCounter | IdReference
   /** An organization that the person is an alumni of. */
-  "alumniOf"?: SchemaValue<EducationalOrganization | Organization | IdReference, "alumniOf">;
+  "alumniOf"?: EducationalOrganization | Organization | IdReference
   /** An award won by or for this item. */
-  "award"?: SchemaValue<Text, "award">;
+  "award"?: string
   /**
    * Awards won by or for this item.
    *
    * @deprecated Consider using https://schema.org/award instead.
    */
-  "awards"?: SchemaValue<Text, "awards">;
+  "awards"?: string
   /** Date of birth. */
-  "birthDate"?: SchemaValue<Date, "birthDate">;
+  "birthDate"?: Date
   /** The place where the person was born. */
-  "birthPlace"?: SchemaValue<Place | IdReference, "birthPlace">;
+  "birthPlace"?: Place | IdReference
   /** The brand(s) associated with a product or service, or the brand(s) maintained by an organization or business person. */
-  "brand"?: SchemaValue<Brand | Organization | IdReference, "brand">;
+  "brand"?: Brand | Organization | IdReference
   /** A {@link https://en.wikipedia.org/wiki/Call_sign callsign}, as used in broadcasting and radio communications to identify people, radio and TV stations, or vehicles. */
-  "callSign"?: SchemaValue<Text, "callSign">;
+  "callSign"?: string
   /** A child of the person. */
-  "children"?: SchemaValue<Person | IdReference, "children">;
+  "children"?: Person | IdReference
   /** A colleague of the person. */
-  "colleague"?: SchemaValue<Person | URL | IdReference, "colleague">;
+  "colleague"?: Person | URL | IdReference
   /**
    * A colleague of the person.
    *
    * @deprecated Consider using https://schema.org/colleague instead.
    */
-  "colleagues"?: SchemaValue<Person | IdReference, "colleagues">;
+  "colleagues"?: Person | IdReference
   /** A contact point for a person or organization. */
-  "contactPoint"?: SchemaValue<ContactPoint | IdReference, "contactPoint">;
+  "contactPoint"?: ContactPoint | IdReference
   /**
    * A contact point for a person or organization.
    *
@@ -84,13 +84,13 @@ export interface Person extends ThingBase {
   /** The place where the person died. */
   "deathPlace"?: SchemaValue<Place | IdReference, "deathPlace">;
   /** The Dun & Bradstreet DUNS number for identifying an organization or business person. */
-  "duns"?: SchemaValue<Text, "duns">;
+  "duns"?: SchemaValue<string, "duns">;
   /** Email address. */
-  "email"?: SchemaValue<Text, "email">;
+  "email"?: SchemaValue<string, "email">;
   /** Family name. In the U.S., the last name of a Person. */
-  "familyName"?: SchemaValue<Text, "familyName">;
+  "familyName"?: SchemaValue<string, "familyName">;
   /** The fax number. */
-  "faxNumber"?: SchemaValue<Text, "faxNumber">;
+  "faxNumber"?: SchemaValue<string, "faxNumber">;
   /** The most generic uni-directional social relation. */
   "follows"?: SchemaValue<Person | IdReference, "follows">;
   /** A person or organization that supports (sponsors) something through some kind of financial contribution. */
@@ -98,11 +98,11 @@ export interface Person extends ThingBase {
   /** A {@link https://schema.org/Grant Grant} that directly or indirectly provide funding or sponsorship for this item. See also {@link https://schema.org/ownershipFundingInfo ownershipFundingInfo}. */
   "funding"?: SchemaValue<Grant | IdReference, "funding">;
   /** Gender of something, typically a {@link https://schema.org/Person Person}, but possibly also fictional characters, animals, etc. While https://schema.org/Male and https://schema.org/Female may be used, text strings are also acceptable for people who do not identify as a binary gender. The {@link https://schema.org/gender gender} property can also be used in an extended sense to cover e.g. the gender of sports teams. As with the gender of individuals, we do not try to enumerate all possibilities. A mixed-gender {@link https://schema.org/SportsTeam SportsTeam} can be indicated with a text value of "Mixed". */
-  "gender"?: SchemaValue<GenderType | Text | IdReference, "gender">;
+  "gender"?: SchemaValue<GenderType | string | IdReference, "gender">;
   /** Given name. In the U.S., the first name of a Person. */
-  "givenName"?: SchemaValue<Text, "givenName">;
+  "givenName"?: SchemaValue<string, "givenName">;
   /** The {@link http://www.gs1.org/gln Global Location Number} (GLN, sometimes also referred to as International Location Number or ILN) of the respective organization, person, or place. The GLN is a 13-digit number used to identify parties and physical locations. */
-  "globalLocationNumber"?: SchemaValue<Text, "globalLocationNumber">;
+  "globalLocationNumber"?: SchemaValue<string, "globalLocationNumber">;
   /** Certification information about a product, organization, service, place, or person. */
   "hasCertification"?: SchemaValue<Certification | IdReference, "hasCertification">;
   /** A credential awarded to the Person or Organization. */
@@ -118,27 +118,27 @@ export interface Person extends ThingBase {
   /** A contact location for a person's residence. */
   "homeLocation"?: SchemaValue<ContactPoint | Place | IdReference, "homeLocation">;
   /** An honorific prefix preceding a Person's name such as Dr/Mrs/Mr. */
-  "honorificPrefix"?: SchemaValue<Text, "honorificPrefix">;
+  "honorificPrefix"?: SchemaValue<string, "honorificPrefix">;
   /** An honorific suffix following a Person's name such as M.D./PhD/MSCSW. */
-  "honorificSuffix"?: SchemaValue<Text, "honorificSuffix">;
+  "honorificSuffix"?: SchemaValue<string, "honorificSuffix">;
   /** The number of interactions for the CreativeWork using the WebSite or SoftwareApplication. The most specific child type of InteractionCounter should be used. */
   "interactionStatistic"?: SchemaValue<InteractionCounter | IdReference, "interactionStatistic">;
   /** The International Standard of Industrial Classification of All Economic Activities (ISIC), Revision 4 code for a particular organization, business person, or place. */
-  "isicV4"?: SchemaValue<Text, "isicV4">;
+  "isicV4"?: SchemaValue<string, "isicV4">;
   /** The job title of the person (for example, Financial Manager). */
-  "jobTitle"?: SchemaValue<DefinedTerm | Text | IdReference, "jobTitle">;
+  "jobTitle"?: SchemaValue<DefinedTerm | string | IdReference, "jobTitle">;
   /** The most generic bi-directional social/work relation. */
   "knows"?: SchemaValue<Person | IdReference, "knows">;
   /** Of a {@link https://schema.org/Person Person}, and less typically of an {@link https://schema.org/Organization Organization}, to indicate a topic that is known about - suggesting possible expertise but not implying it. We do not distinguish skill levels here, or relate this to educational content, events, objectives or {@link https://schema.org/JobPosting JobPosting} descriptions. */
-  "knowsAbout"?: SchemaValue<Text | Thing | URL | IdReference, "knowsAbout">;
+  "knowsAbout"?: SchemaValue<string | Thing | URL | IdReference, "knowsAbout">;
   /** Of a {@link https://schema.org/Person Person}, and less typically of an {@link https://schema.org/Organization Organization}, to indicate a known language. We do not distinguish skill levels or reading/writing/speaking/signing here. Use language codes from the {@link http://tools.ietf.org/html/bcp47 IETF BCP 47 standard}. */
-  "knowsLanguage"?: SchemaValue<Language | Text | IdReference, "knowsLanguage">;
+  "knowsLanguage"?: SchemaValue<Language | string | IdReference, "knowsLanguage">;
   /** A pointer to products or services offered by the organization or person. */
   "makesOffer"?: SchemaValue<Offer | IdReference, "makesOffer">;
   /** An Organization (or ProgramMembership) to which this Person or Organization belongs. */
   "memberOf"?: SchemaValue<MemberProgramTier | Organization | ProgramMembership | IdReference, "memberOf">;
   /** The North American Industry Classification System (NAICS) code for a particular organization or business person. */
-  "naics"?: SchemaValue<Text, "naics">;
+  "naics"?: SchemaValue<string, "naics">;
   /** Nationality of the person. */
   "nationality"?: SchemaValue<Country | IdReference, "nationality">;
   /** The total financial value of the person as calculated by subtracting assets from liabilities. */
@@ -174,17 +174,17 @@ export interface Person extends ThingBase {
    */
   "siblings"?: SchemaValue<Person | IdReference, "siblings">;
   /** A statement of knowledge, skill, ability, task or any other assertion expressing a competency that is either claimed by a person, an organization or desired or required to fulfill a role or to work in an occupation. */
-  "skills"?: SchemaValue<DefinedTerm | Text | IdReference, "skills">;
+  "skills"?: SchemaValue<DefinedTerm | string | IdReference, "skills">;
   /** A person or organization that supports a thing through a pledge, promise, or financial contribution. E.g. a sponsor of a Medical Study or a corporate sponsor of an event. */
   "sponsor"?: SchemaValue<Organization | Person | IdReference, "sponsor">;
   /** The person's spouse. */
   "spouse"?: SchemaValue<Person | IdReference, "spouse">;
   /** The Tax / Fiscal ID of the organization or person, e.g. the TIN in the US or the CIF/NIF in Spain. */
-  "taxID"?: SchemaValue<Text, "taxID">;
+  "taxID"?: SchemaValue<string, "taxID">;
   /** The telephone number. */
-  "telephone"?: SchemaValue<Text, "telephone">;
+  "telephone"?: SchemaValue<string, "telephone">;
   /** The Value-added Tax ID of the organization or person. */
-  "vatID"?: SchemaValue<Text, "vatID">;
+  "vatID"?: SchemaValue<string, "vatID">;
   /** The weight of the product or person. */
   "weight"?: SchemaValue<QuantitativeValue | IdReference, "weight">;
   /** A contact location for a person's place of work. */
@@ -196,11 +196,11 @@ export interface Person extends ThingBase {
 export interface Organization extends ThingBase {
   "@type": "Organization";
   /** The payment method(s) that are accepted in general by an organization, or for some specific demand or offer. */
-  "acceptedPaymentMethod"?: SchemaValue<LoanOrCredit | PaymentMethod | Text | IdReference, "acceptedPaymentMethod">;
+  "acceptedPaymentMethod"?: SchemaValue<LoanOrCredit | PaymentMethod | string | IdReference, "acceptedPaymentMethod">;
   /** For a {@link https://schema.org/NewsMediaOrganization NewsMediaOrganization} or other news-related {@link https://schema.org/Organization Organization}, a statement about public engagement activities (for news media, the newsroom’s), including involving the public - digitally or otherwise -- in coverage decisions, reporting and activities after publication. */
   "actionableFeedbackPolicy"?: SchemaValue<CreativeWork | URL | IdReference, "actionableFeedbackPolicy">;
   /** Physical address of the item. */
-  "address"?: SchemaValue<PostalAddress | Text | IdReference, "address">;
+  "address"?: SchemaValue<PostalAddress | string | IdReference, "address">;
   /** The number of completed interactions for this entity, in a particular role (the 'agent'), in a particular action (indicated in the statistic), and in a particular context (i.e. interactionService). */
   "agentInteractionStatistic"?: SchemaValue<InteractionCounter | IdReference, "agentInteractionStatistic">;
   /** The overall rating, based on a collection of reviews or ratings, of the item. */
@@ -208,15 +208,15 @@ export interface Organization extends ThingBase {
   /** Alumni of an organization. */
   "alumni"?: SchemaValue<Person | IdReference, "alumni">;
   /** The geographic area where a service or offered item is provided. */
-  "areaServed"?: SchemaValue<AdministrativeArea | GeoShape | Place | Text | IdReference, "areaServed">;
+  "areaServed"?: SchemaValue<AdministrativeArea | GeoShape | Place | string | IdReference, "areaServed">;
   /** An award won by or for this item. */
-  "award"?: SchemaValue<Text, "award">;
+  "award"?: SchemaValue<string, "award">;
   /**
    * Awards won by or for this item.
    *
    * @deprecated Consider using https://schema.org/award instead.
    */
-  "awards"?: SchemaValue<Text, "awards">;
+  "awards"?: SchemaValue<string, "awards">;
   /** The brand(s) associated with a product or service, or the brand(s) maintained by an organization or business person. */
   "brand"?: SchemaValue<Brand | Organization | IdReference, "brand">;
   /** A contact point for a person or organization. */
@@ -238,9 +238,9 @@ export interface Organization extends ThingBase {
   /** For an {@link https://schema.org/Organization Organization} (often but not necessarily a {@link https://schema.org/NewsMediaOrganization NewsMediaOrganization}), a report on staffing diversity issues. In a news context this might be for example ASNE or RTDNA (US) reports, or self-reported. */
   "diversityStaffingReport"?: SchemaValue<Article | URL | IdReference, "diversityStaffingReport">;
   /** The Dun & Bradstreet DUNS number for identifying an organization or business person. */
-  "duns"?: SchemaValue<Text, "duns">;
+  "duns"?: SchemaValue<string, "duns">;
   /** Email address. */
-  "email"?: SchemaValue<Text, "email">;
+  "email"?: SchemaValue<string, "email">;
   /** Someone working for this organization. */
   "employee"?: SchemaValue<Person | IdReference, "employee">;
   /**
@@ -260,7 +260,7 @@ export interface Organization extends ThingBase {
    */
   "events"?: SchemaValue<Event | IdReference, "events">;
   /** The fax number. */
-  "faxNumber"?: SchemaValue<Text, "faxNumber">;
+  "faxNumber"?: SchemaValue<string, "faxNumber">;
   /** A person or organization who founded this organization. */
   "founder"?: SchemaValue<Organization | Person | IdReference, "founder">;
   /**
@@ -278,7 +278,7 @@ export interface Organization extends ThingBase {
   /** A {@link https://schema.org/Grant Grant} that directly or indirectly provide funding or sponsorship for this item. See also {@link https://schema.org/ownershipFundingInfo ownershipFundingInfo}. */
   "funding"?: SchemaValue<Grant | IdReference, "funding">;
   /** The {@link http://www.gs1.org/gln Global Location Number} (GLN, sometimes also referred to as International Location Number or ILN) of the respective organization, person, or place. The GLN is a 13-digit number used to identify parties and physical locations. */
-  "globalLocationNumber"?: SchemaValue<Text, "globalLocationNumber">;
+  "globalLocationNumber"?: SchemaValue<string, "globalLocationNumber">;
   /** Certification information about a product, organization, service, place, or person. */
   "hasCertification"?: SchemaValue<Certification | IdReference, "hasCertification">;
   /** A credential awarded to the Person or Organization. */
@@ -307,23 +307,23 @@ export interface Organization extends ThingBase {
   /** The number of interactions for the CreativeWork using the WebSite or SoftwareApplication. The most specific child type of InteractionCounter should be used. */
   "interactionStatistic"?: SchemaValue<InteractionCounter | IdReference, "interactionStatistic">;
   /** The International Standard of Industrial Classification of All Economic Activities (ISIC), Revision 4 code for a particular organization, business person, or place. */
-  "isicV4"?: SchemaValue<Text, "isicV4">;
+  "isicV4"?: SchemaValue<string, "isicV4">;
   /** An organization identifier as defined in {@link https://en.wikipedia.org/wiki/ISO/IEC_6523 ISO 6523(-1)}. The identifier should be in the `XXXX:YYYYYY:ZZZ` or `XXXX:YYYYYY`format. Where `XXXX` is a 4 digit _ICD_ (International Code Designator), `YYYYYY` is an _OID_ (Organization Identifier) with all formatting characters (dots, dashes, spaces) removed with a maximal length of 35 characters, and `ZZZ` is an optional OPI (Organization Part Identifier) with a maximum length of 35 characters. The various components (ICD, OID, OPI) are joined with a colon character (ASCII `0x3a`). Note that many existing organization identifiers defined as attributes like {@link https://schema.org/leiCode leiCode} (`0199`), {@link https://schema.org/duns duns} (`0060`) or {@link https://schema.org/globalLocationNumber GLN} (`0088`) can be expressed using ISO-6523. If possible, ISO-6523 codes should be preferred to populating {@link https://schema.org/vatID vatID} or {@link https://schema.org/taxID taxID}, as ISO identifiers are less ambiguous. */
-  "iso6523Code"?: SchemaValue<Text, "iso6523Code">;
+  "iso6523Code"?: SchemaValue<string, "iso6523Code">;
   /** Keywords or tags used to describe some item. Multiple textual entries in a keywords list are typically delimited by commas, or by repeating the property. */
-  "keywords"?: SchemaValue<DefinedTerm | Text | URL | IdReference, "keywords">;
+  "keywords"?: SchemaValue<DefinedTerm | string | URL | IdReference, "keywords">;
   /** Of a {@link https://schema.org/Person Person}, and less typically of an {@link https://schema.org/Organization Organization}, to indicate a topic that is known about - suggesting possible expertise but not implying it. We do not distinguish skill levels here, or relate this to educational content, events, objectives or {@link https://schema.org/JobPosting JobPosting} descriptions. */
-  "knowsAbout"?: SchemaValue<Text | Thing | URL | IdReference, "knowsAbout">;
+  "knowsAbout"?: SchemaValue<string | Thing | URL | IdReference, "knowsAbout">;
   /** Of a {@link https://schema.org/Person Person}, and less typically of an {@link https://schema.org/Organization Organization}, to indicate a known language. We do not distinguish skill levels or reading/writing/speaking/signing here. Use language codes from the {@link http://tools.ietf.org/html/bcp47 IETF BCP 47 standard}. */
-  "knowsLanguage"?: SchemaValue<Language | Text | IdReference, "knowsLanguage">;
+  "knowsLanguage"?: SchemaValue<Language | string | IdReference, "knowsLanguage">;
   /** The official name of the organization, e.g. the registered company name. */
-  "legalName"?: SchemaValue<Text, "legalName">;
+  "legalName"?: SchemaValue<string, "legalName">;
   /** An organization identifier that uniquely identifies a legal entity as defined in ISO 17442. */
-  "leiCode"?: SchemaValue<Text, "leiCode">;
+  "leiCode"?: SchemaValue<string, "leiCode">;
   /** The location of, for example, where an event is happening, where an organization is located, or where an action takes place. */
-  "location"?: SchemaValue<Place | PostalAddress | Text | VirtualLocation | IdReference, "location">;
+  "location"?: SchemaValue<Place | PostalAddress | string | VirtualLocation | IdReference, "location">;
   /** An associated logo. */
-  "logo"?: SchemaValue<ImageObject | URL | IdReference, "logo">;
+  "logo"?: ImageObject | URL | IdReference
   /** A pointer to products or services offered by the organization or person. */
   "makesOffer"?: SchemaValue<Offer | IdReference, "makesOffer">;
   /** A member of an Organization or a ProgramMembership. Organizations can be members of organizations; ProgramMembership is typically for individuals. */
@@ -337,13 +337,13 @@ export interface Organization extends ThingBase {
    */
   "members"?: SchemaValue<Organization | Person | IdReference, "members">;
   /** The North American Industry Classification System (NAICS) code for a particular organization or business person. */
-  "naics"?: SchemaValue<Text, "naics">;
+  "naics"?: SchemaValue<string, "naics">;
   /** nonprofitStatus indicates the legal status of a non-profit organization in its primary place of business. */
   "nonprofitStatus"?: SchemaValue<NonprofitType | IdReference, "nonprofitStatus">;
   /** The number of employees in an organization, e.g. business. */
   "numberOfEmployees"?: SchemaValue<QuantitativeValue | IdReference, "numberOfEmployees">;
   /** For an {@link https://schema.org/Organization Organization} (often but not necessarily a {@link https://schema.org/NewsMediaOrganization NewsMediaOrganization}), a description of organizational ownership structure; funding and grants. In a news/media setting, this is with particular reference to editorial independence. Note that the {@link https://schema.org/funder funder} is also available and can be used to make basic funder information machine-readable. */
-  "ownershipFundingInfo"?: SchemaValue<AboutPage | CreativeWork | Text | URL | IdReference, "ownershipFundingInfo">;
+  "ownershipFundingInfo"?: SchemaValue<AboutPage | CreativeWork | string | URL | IdReference, "ownershipFundingInfo">;
   /** Products owned by the organization or person. */
   "owns"?: SchemaValue<OwnershipInfo | Product | IdReference, "owns">;
   /** The larger organization that this organization is a {@link https://schema.org/subOrganization subOrganization} of, if any. */
@@ -371,21 +371,21 @@ export interface Organization extends ThingBase {
    */
   "serviceArea"?: SchemaValue<AdministrativeArea | GeoShape | Place | IdReference, "serviceArea">;
   /** A statement of knowledge, skill, ability, task or any other assertion expressing a competency that is either claimed by a person, an organization or desired or required to fulfill a role or to work in an occupation. */
-  "skills"?: SchemaValue<DefinedTerm | Text | IdReference, "skills">;
+  "skills"?: SchemaValue<DefinedTerm | string | IdReference, "skills">;
   /** A slogan or motto associated with the item. */
-  "slogan"?: SchemaValue<Text, "slogan">;
+  "slogan"?: SchemaValue<string, "slogan">;
   /** A person or organization that supports a thing through a pledge, promise, or financial contribution. E.g. a sponsor of a Medical Study or a corporate sponsor of an event. */
   "sponsor"?: SchemaValue<Organization | Person | IdReference, "sponsor">;
   /** A relationship between two organizations where the first includes the second, e.g., as a subsidiary. See also: the more specific 'department' property. */
   "subOrganization"?: SchemaValue<Organization | IdReference, "subOrganization">;
   /** The Tax / Fiscal ID of the organization or person, e.g. the TIN in the US or the CIF/NIF in Spain. */
-  "taxID"?: SchemaValue<Text, "taxID">;
+  "taxID"?: SchemaValue<string, "taxID">;
   /** The telephone number. */
-  "telephone"?: SchemaValue<Text, "telephone">;
+  "telephone"?: SchemaValue<string, "telephone">;
   /** For an {@link https://schema.org/Organization Organization} (typically a {@link https://schema.org/NewsMediaOrganization NewsMediaOrganization}), a statement about policy on use of unnamed sources and the decision process required. */
   "unnamedSourcesPolicy"?: SchemaValue<CreativeWork | URL | IdReference, "unnamedSourcesPolicy">;
   /** The Value-added Tax ID of the organization or person. */
-  "vatID"?: SchemaValue<Text, "vatID">;
+  "vatID"?: SchemaValue<string, "vatID">;
 }
 
 export interface APIIdentityAddress {

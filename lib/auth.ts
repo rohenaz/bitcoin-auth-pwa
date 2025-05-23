@@ -1,87 +1,274 @@
-import NextAuth, { type User } from "next-auth";
+import NextAuth, { type Account, type Session, type User } from "next-auth";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
-import X from "next-auth/providers/twitter";
+import Twitter from "next-auth/providers/twitter";
 import Credentials from "next-auth/providers/credentials";
 import { type AuthPayload, parseAuthToken, verifyAuthToken } from "bitcoin-auth";
-import { Redis } from "@upstash/redis"
+import { redis, oauthKey, userKey, latestBlockKey } from "./redis";
+import { upsertRootProfile } from "./bap";
 import { UpstashRedisAdapter } from "@auth/upstash-redis-adapter";
-import type { APIIdentity, APIResponse, Organization } from "@/types/bap";
+import type { APIResponse, APIIdentity, Organization } from "@/types/bap";
 import { PublicKey } from "@bsv/sdk";
-
+import { getLatestBlockHeight } from "./block";
+import { env } from "./env";
+import type { JWT } from "next-auth/jwt";
 // amount of time to pad the timestamp in the token
 const TIME_PAD = 1000 * 60 * 10 // 10 minutes
-const BAP_API_URL = "https://api.sigmaidentity.com"
-
-const redis = Redis.fromEnv();
  
 // 1. Credentials provider handles X-Auth-Token verification
-export const { handlers, auth } = NextAuth({
-  adapter: UpstashRedisAdapter(redis),
-  providers: [
-    Credentials({
-      name: "Bitcoin",
-      credentials: {
-        token: { label: "Token", type: "text" },
-      },
-      authorize: async (credentials) => {
-        if (!credentials?.token) return null;
-        const parsedToken = parseAuthToken(credentials.token)
-        const timestamp = new Date().toISOString()
-        const targetPayload = {
-          // for generic auth not specific to a request, 
-          // we use the request path from the token
-          requestPath: parsedToken?.requestPath,
-          timestamp
-        } as AuthPayload
-        const ok = verifyAuthToken(credentials.token, targetPayload, TIME_PAD);
+// Build providers array dynamically based on available credentials
+const providers = [];
 
-        if (ok) {
-          // look up the bap ID from the pubkey
-          const pubkey = parsedToken?.pubkey
-          const bapId = await redis.get<APIResponse<APIIdentity>>(`bap:${pubkey}`)
-          // if the profile is not found, fetch it from the BAP API
-          if (!bapId && pubkey) {
-            const bapId = await getBapProfile(pubkey)
+// Add OAuth providers only if credentials are available
+if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
+  providers.push(Google({
+    clientId: env.AUTH_GOOGLE_ID,
+    clientSecret: env.AUTH_GOOGLE_SECRET,
+  }));
+}
+
+if (env.AUTH_GITHUB_ID && env.AUTH_GITHUB_SECRET) {
+  providers.push(GitHub({
+    clientId: env.AUTH_GITHUB_ID,
+    clientSecret: env.AUTH_GITHUB_SECRET,
+    allowDangerousEmailAccountLinking: true,
+  }));
+}
+
+if (env.AUTH_TWITTER_ID && env.AUTH_TWITTER_SECRET) {
+  providers.push(Twitter({
+    clientId: env.AUTH_TWITTER_ID,
+    clientSecret: env.AUTH_TWITTER_SECRET,
+  }));
+}
+
+// Always include the Bitcoin credentials provider
+const customProvider = Credentials({
+  name: "Bitcoin-Auth",
+  credentials: {
+    token: { label: "Token", type: "text" },
+  },
+  async authorize (credentials) {
+    console.log('🔐 Authorize called with credentials:', !!credentials?.token);
+    
+    if (!credentials?.token) {
+      console.log('❌ No token provided');
+      return null;
+    }
+    
+    const parsedToken = parseAuthToken(credentials.token)
+    console.log('📄 Parsed token:', {
+      pubkey: `${parsedToken?.pubkey?.substring(0, 10)}...`,
+      requestPath: parsedToken?.requestPath,
+      timestamp: parsedToken?.timestamp
+    });
+    
+    if (!parsedToken || !parsedToken.pubkey) {
+      console.log('❌ Invalid token or missing pubkey');
+      return null;
+    }
+
+    const timestamp = new Date().toISOString()
+    const targetPayload = {
+      // for generic auth not specific to a request, 
+      // we use the request path from the token
+      requestPath: parsedToken?.requestPath,
+      timestamp
+    } as AuthPayload
+    
+    console.log('🔍 Verifying token with payload:', {
+      requestPath: targetPayload.requestPath,
+      timestamp: targetPayload.timestamp
+    });
+    
+    const ok = verifyAuthToken(credentials.token, targetPayload, TIME_PAD);
+    console.log('✅ Token verification result:', ok);
+    
+    if (ok) {
+      // look up the bap ID from the pubkey
+      const pubkey = parsedToken?.pubkey
+      console.log('🔍 Looking up cached BAP profile for pubkey:', `${pubkey?.substring(0, 10)}...`);
+      
+      const bapId = await redis.get<APIResponse<APIIdentity>>(`bap:${pubkey}`)
+      console.log('📦 Cached BAP profile found:', !!bapId);
+      
+      // if the profile is not found, fetch it from the BAP API
+      if (!bapId && pubkey) {
+        console.log('🌐 No cached profile, fetching from BAP API...');
+        
+        try {
+          const bapProfile = await getBapProfile(pubkey)
+          console.log('✅ BAP profile fetched successfully:', !!bapProfile);
+          
+          const address = PublicKey.fromString(pubkey).toAddress()
+          if (bapProfile) {
+            console.log('💾 Storing BAP profile in cache and upserting root profile...');
+            
+            // get the current block height (number)
+            const blockHeight = await redis.get(latestBlockKey())
+            if (!blockHeight) {
+              const blockHeight = await getLatestBlockHeight()
+              if (!blockHeight) {
+                throw new Error("Current block height not found")
+              }
+              await redis.set(latestBlockKey(), blockHeight)
+            }
+            await upsertRootProfile(bapProfile.idKey, bapProfile.currentAddress, Number(blockHeight), {
+              displayName: bapProfile.identity?.alternateName,
+              avatar: bapProfile.identity?.image,
+            }, bapProfile)
+            await redis.set(`bap:${address}:${bapProfile.idKey}:${pubkey}`, { result: bapProfile })
+            console.log('✅ BAP profile stored successfully');
+          } else {
+            console.log('⚠️ BAP profile is null, creating basic Bitcoin user');
+            // Create a basic user with just the Bitcoin address
             const address = PublicKey.fromString(pubkey).toAddress()
-            await redis.set(`bap:${address}:${bapId}:${pubkey}`, bapId)
+            const user = { 
+              id: address, 
+              name: `Bitcoin User (${address.substring(0, 8)}...)`, 
+              image: null,
+              address 
+            } as User;
+            console.log('👤 Returning basic Bitcoin user:', user);
+            return user;
           }
-          const profile = bapId?.result?.identity
-          const id = bapId?.result?.idKey
-          const name = profile?.alternateName
-          const image = profile?.image || (profile as Organization)?.logo
-
-          return { id, name, image } as User
+        } catch (error) {
+          console.error('❌ Failed to fetch BAP profile:', error);
+          console.log('🔄 Creating fallback Bitcoin user...');
+          
+          // Create a basic user with just the Bitcoin address
+          const address = PublicKey.fromString(pubkey).toAddress()
+          const user = { 
+            id: address, 
+            name: `Bitcoin User (${address.substring(0, 8)}...)`, 
+            image: null,
+            address 
+          } as User;
+          console.log('👤 Returning fallback Bitcoin user:', user);
+          return user;
         }
-        return null;
-      },
-    }),
-  ],
-  session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
-  callbacks: {
-    jwt: async ({ token, user, account }) => {
-      if (user) token.sub = user.id;
-      if (account?.provider) token.provider = account.provider;
-      return token;
-    },
+      }
+      
+      const profile = bapId?.result?.identity
+      const id = bapId?.result?.idKey
+      const name = profile?.alternateName
+      const image = profile?.image || (profile as Organization)?.logo
+      const user = { id, name, image } as User;
+      
+      console.log('👤 Returning cached user:', { id, name, hasImage: !!image });
+      return user;
+    }
+    
+    console.log('❌ Token verification failed, returning null');
+    return null;
   },
 });
+providers.push(customProvider);
 
+export const authOptions = {
+  adapter: UpstashRedisAdapter(redis),
+  providers,
+  secret: env.AUTH_SECRET,
+  session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
+  pages: {
+    signIn: '/signin',
+    error: '/signin',
+  },
+  callbacks: {
+    jwt: async ({ token, user, account }: { token: JWT, user: User, account: Account | null }) => {
+      if (user) {
+        token.sub = user.id;
+        token.address = (user as User).address;
+        token.idKey = (user as User).idKey;
+      }
+      if (account?.provider && account.providerAccountId) {
+        token.provider = account.provider;
+        // For OAuth providers, create a user ID based on provider info
+        if (!token.sub && account.provider !== 'credentials') {
+          const oauthUserId = `${account.provider}-${account.providerAccountId}`;
+          token.sub = oauthUserId;
+          token.isOAuthOnly = true;
+          await redis.set(oauthKey(account.provider, String(account.providerAccountId)), oauthUserId);
+        }
+      }
+      return token;
+    },
+    session: async ({ session, token }: { session: Session, token: JWT }) => {
+      if (token) {
+        session.user.id = token.sub as string;
+        session.user.address = token.address as string;
+        session.user.idKey = token.idKey as string;
+        session.user.provider = token.provider as string;
+      }
+      return session;
+    },
+  },
+} as const;
+
+export default NextAuth(authOptions);
 
 export async function getUserByToken(token: string | undefined) {
   if (!token) {
-    return null
+    return null;
   }
-  const parsedToken = parseAuthToken(token)
-  if (!parsedToken) {
-    return null
+  const parsedToken = parseAuthToken(token);
+  if (!parsedToken || !parsedToken.pubkey) {
+    return null;
   }
-  return await redis.get(`user:${parsedToken.pubkey}`) as User
+  console.log('Getting user by token:', parsedToken);
+  // To get the user by token, we first need to resolve the pubkey to a rootBapId.
+  // This mimics part of the logic in `authorize` but without creating/updating user profiles.
+  // This is a simplified lookup and might need its own robust resolver.
+  try {
+    const bapProfileResult = await getBapProfile(parsedToken.pubkey);
+    console.log('BAP profile result:', bapProfileResult);
+    if (bapProfileResult?.idKey) {
+      const rootBapId = bapProfileResult.idKey;
+      return await redis.hgetall(userKey(rootBapId)) as User | null;
+    }
+  } catch (error) {
+    console.error("Error fetching BAP profile in getUserByToken:", error);
+    return null;
+  }
+  return null;
 }
 
 async function getBapProfile(pubkey: string) {
+  console.log('🔍 getBapProfile called with pubkey:', `${pubkey.substring(0, 10)}...`);
+  
   const address = PublicKey.fromString(pubkey).toAddress()
-  const bap = await fetch(`${BAP_API_URL}/identity/${address}`)
-  const bapData = await bap.json() as APIResponse<APIIdentity>
-  return bapData.result
+  console.log('📍 Generated address:', address);
+  console.log('🌐 BAP API URL:', env.BAP_API_URL);
+  console.log('📤 Sending POST to:', `${env.BAP_API_URL}/identity/validByAddress`);
+  console.log('📤 Request body:', { address });
+  
+  try {
+    const response = await fetch(`${env.BAP_API_URL}/identity/validByAddress`, {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ address }),
+    });
+    
+    console.log('📥 Response status:', response.status);
+    console.log('📥 Response ok:', response.ok);
+    console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log('❌ Response error text:', errorText);
+      throw new Error(`BAP API error: ${response.status} - ${errorText}`);
+    }
+    
+    const bapData = await response.json() as APIResponse<APIIdentity>;
+    console.log('📄 BAP response data:', JSON.stringify(bapData, null, 2));
+    console.log('🎯 Returning result:', bapData.result);
+    
+    return bapData.result;
+  } catch (error) {
+    console.error('💥 getBapProfile error:', error);
+    throw error;
+  }
 }
