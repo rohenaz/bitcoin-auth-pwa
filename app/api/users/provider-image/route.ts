@@ -17,8 +17,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
+    console.log(`[provider-image] Fetching ${provider} image for user ${session.user.id}`);
+    console.log(`[provider-image] Session provider: ${session.user.provider}, has image: ${!!session.user.image}`);
+
     // For OAuth sessions, check if current session is from this provider
     if (session.user.provider === provider && session.user.image) {
+      console.log(`[provider-image] Returning session image: ${session.user.image}`);
       return NextResponse.json({ image: session.user.image });
     }
 
@@ -27,12 +31,16 @@ export async function GET(request: NextRequest) {
     const userKey = `user:${session.user.id}`;
     const userData = await redis.hgetall(userKey) as Record<string, string>;
     
+    console.log(`[provider-image] User data avatar: ${userData?.avatar}`);
+    
     // Check if there's a stored avatar that matches the provider pattern
     // Google images typically come from googleusercontent.com or lh3.googleusercontent.com
     if (userData?.avatar) {
       if (provider === 'google' && (userData.avatar.includes('googleusercontent.com') || userData.avatar.includes('google.com'))) {
+        console.log(`[provider-image] Found Google avatar in user data: ${userData.avatar}`);
         return NextResponse.json({ image: userData.avatar });
       } else if (provider === 'github' && userData.avatar.includes('github')) {
+        console.log(`[provider-image] Found GitHub avatar in user data: ${userData.avatar}`);
         return NextResponse.json({ image: userData.avatar });
       }
     }

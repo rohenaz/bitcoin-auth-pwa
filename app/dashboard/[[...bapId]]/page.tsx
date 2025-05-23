@@ -166,8 +166,8 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     identity: {
       '@context': 'https://schema.org',
       '@type': 'Person',
-      alternateName: profileData.displayName || profileData.bapProfile?.identity?.alternateName || '',
-      image: profileData.avatar || profileData.bapProfile?.identity?.image || '',
+      alternateName: profileData.alternateName || profileData.displayName || profileData.bapProfile?.identity?.alternateName || '',
+      image: profileData.image || profileData.avatar || profileData.bapProfile?.identity?.image || '',
       description: profileData.description || profileData.bapProfile?.identity?.description || '',
     }
   } : null;
