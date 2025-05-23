@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import QRCode from 'qrcode';
+import type { DeviceLinkResponse } from '@/types/device-link';
 
 export default function DeviceLinkQR() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -23,7 +24,7 @@ export default function DeviceLinkQR() {
         throw new Error('Failed to generate link');
       }
       
-      const data = await response.json();
+      const data: DeviceLinkResponse = await response.json();
       setLinkUrl(data.url);
       
       // Generate QR code

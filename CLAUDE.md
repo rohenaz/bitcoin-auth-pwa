@@ -64,6 +64,8 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 - `/api/backup`: GET/POST encrypted backups (GET by OAuth ID or BAP ID, POST to store backup)
 - `/api/backup/status`: GET backup status for current user
 - `/api/bap`: GET cached BAP profiles from Redis by address (includes unpublished profiles)
+- `/api/device-link/generate`: POST generates a time-limited QR code for device linking
+- `/api/device-link/validate`: POST validates device link token and returns encrypted backup
 - `/api/users`: GET all users
 - `/api/users/connected-accounts`: GET linked OAuth providers for current user
 - `/api/users/disconnect-account`: POST to unlink OAuth provider
@@ -98,6 +100,12 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - `KV_REST_API_TOKEN`
 - `KV_REST_API_READ_ONLY_TOKEN`
 
+**IMPORTANT**: Upstash Redis (used by Vercel KV) automatically serializes/deserializes JSON:
+- When storing objects with `redis.set()`, they are automatically JSON.stringify'd
+- When retrieving with `redis.get()`, objects are automatically parsed
+- DO NOT manually `JSON.parse()` data from Redis - it's already an object
+- Use proper typing: `const data = await redis.get(key) as MyType`
+
 ### Redis Key Structure
 
 - `user:{bapId}`: User data (address, idKey, createdAt)
@@ -115,6 +123,8 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - **Dashboard**: User profile display with edit functionality and BAP profile integration
 - **Settings**: OAuth provider management for multi-device backup access
 - **Security Settings**: Cloud backup management and local backup export
+- **DeviceLinkQR**: QR code generator for direct device-to-device linking without OAuth
+- **LinkDevice**: Page that handles QR code scanning and password decryption for new devices
 
 ### Important Implementation Notes
 

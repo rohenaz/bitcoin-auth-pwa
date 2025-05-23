@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { redis, backupKey } from '@/lib/redis';
+import type { DeviceLinkToken, DeviceLinkValidateResponse } from '@/types/device-link';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Upstash Redis automatically deserializes JSON, so tokenData is already an object
-    const data = tokenData as { bapId: string; address: string; idKey: string };
+    const data = tokenData as DeviceLinkToken;
     
     // Delete the token after validation (one-time use)
     await redis.del(tokenKey);
@@ -32,12 +33,14 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
     
-    return NextResponse.json({
+    const response: DeviceLinkValidateResponse = {
       bapId: data.bapId,
       address: data.address,
       idKey: data.idKey,
-      encryptedBackup
-    });
+      encryptedBackup: encryptedBackup as string
+    };
+    
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error validating device link:', error);
     return NextResponse.json({ error: 'Failed to validate token' }, { status: 500 });

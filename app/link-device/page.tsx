@@ -6,6 +6,7 @@ import { decryptBackup, type BapMasterBackup } from 'bitcoin-backup';
 import { BAP } from 'bsv-bap';
 import { getAuthToken } from 'bitcoin-auth';
 import { signIn } from 'next-auth/react';
+import type { DeviceLinkValidateResponse } from '@/types/device-link';
 
 const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
@@ -47,7 +48,7 @@ function LinkDeviceContent() {
           throw new Error(data.error || 'Invalid or expired token');
         }
 
-        const data = await response.json();
+        const data: DeviceLinkValidateResponse = await response.json();
         setTokenData(data);
         
         // Check if we already have the backup
