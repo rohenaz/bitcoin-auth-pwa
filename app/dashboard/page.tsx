@@ -1,26 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ProfileEditor from '@/components/ProfileEditor';
 
 interface BAPProfile {
-  '@context': string;
-  '@type': string;
-  '@id': string;
-  name?: string;
-  alternateName?: string;
-  description?: string;
-  image?: string;
-  url?: string;
-  email?: string;
-  telephone?: string;
-  address?: {
+  idKey: string;
+  currentAddress: string;
+  identity: {
+    '@context': string;
     '@type': string;
-    addressCountry?: string;
-    addressLocality?: string;
+    '@id'?: string;
+    name?: string;
+    alternateName?: string;
+    description?: string;
+    image?: string;
+    url?: string;
+    email?: string;
+    telephone?: string;
+    address?: {
+      '@type': string;
+      addressCountry?: string;
+      addressLocality?: string;
+    };
   };
+  block?: number;
+  currentHeight?: number;
 }
 
 export default function DashboardPage() {
@@ -29,6 +36,33 @@ export default function DashboardPage() {
   const [bapProfile, setBapProfile] = useState<BAPProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+
+
+  const fetchBAPProfile = useCallback(async () => {
+    if (!session?.user?.address) return;
+
+    try {
+      const response = await fetch(`/api/bap?address=${session.user.address}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          // This is expected for unpublished BAP IDs or profiles not in cache
+          console.log('BAP profile not found in cache');
+          setBapProfile(null);
+        } else {
+          throw new Error('Failed to fetch BAP profile');
+        }
+      } else {
+        const data = await response.json();
+        setBapProfile(data.result);
+      }
+    } catch (err) {
+      console.error('Error fetching BAP profile:', err);
+      setError('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -36,36 +70,12 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
+
   useEffect(() => {
-    const fetchBAPProfile = async () => {
-      if (!session?.user?.address) return;
-
-      try {
-        const response = await fetch(`/api/bap?address=${session.user.address}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            // This is expected for unpublished BAP IDs or profiles not in cache
-            console.log('BAP profile not found in cache');
-            setBapProfile(null);
-          } else {
-            throw new Error('Failed to fetch BAP profile');
-          }
-        } else {
-          const data = await response.json();
-          setBapProfile(data.result);
-        }
-      } catch (err) {
-        console.error('Error fetching BAP profile:', err);
-        setError('Failed to load profile');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (session?.user) {
       fetchBAPProfile();
     }
-  }, [session]);
+  }, [session, fetchBAPProfile]);
 
   const handleSignOut = async () => {
     // Only clear session storage, preserve encrypted backup in localStorage
@@ -75,11 +85,38 @@ export default function DashboardPage() {
     await signOut({ callbackUrl: '/' });
   };
 
+  const handleSaveProfile = async (profile: { alternateName: string; image: string; description: string }) => {
+    try {
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      // Refresh the BAP profile
+      await fetchBAPProfile();
+      setShowProfileEditor(false);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setError('Failed to save profile');
+    }
+  };
+
+  const handlePublishProfile = async () => {
+    // TODO: Implement blockchain publishing
+    console.log('Publishing profile to blockchain...');
+    alert('Publishing to blockchain will be implemented soon!');
+  };
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-400">Loading your profile...</p>
         </div>
       </div>
@@ -104,6 +141,7 @@ export default function DashboardPage() {
               </nav>
             </div>
             <button
+              type="button"
               onClick={handleSignOut}
               className="text-sm text-gray-400 hover:text-white transition-colors"
             >
@@ -118,13 +156,22 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Profile Card */}
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold mb-4">Your Identity</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Your Identity</h2>
+              <button
+                type="button"
+                onClick={() => setShowProfileEditor(true)}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition-colors"
+              >
+                Edit Profile
+              </button>
+            </div>
             
             <div className="space-y-4">
-              {bapProfile?.image && (
+              {bapProfile?.identity?.image && (
                 <div className="flex justify-center mb-6">
                   <img 
-                    src={bapProfile.image} 
+                    src={bapProfile.identity.image} 
                     alt="Profile" 
                     className="w-24 h-24 rounded-full border-2 border-gray-700"
                   />
@@ -132,27 +179,27 @@ export default function DashboardPage() {
               )}
 
               <div>
-                <label className="text-sm text-gray-500">Name</label>
-                <p className="font-medium">{bapProfile?.name || 'Not set'}</p>
+                <label htmlFor="name" className="text-sm text-gray-500">Name</label>
+                <p className="font-medium">{bapProfile?.identity?.name || 'Not set'}</p>
               </div>
 
               <div>
-                <label className="text-sm text-gray-500">Handle</label>
-                <p className="font-medium">{bapProfile?.alternateName || 'Not set'}</p>
+                <label htmlFor="handle" className="text-sm text-gray-500">Handle</label>
+                <p className="font-medium">{bapProfile?.identity?.alternateName || 'Not set'}</p>
               </div>
 
               <div>
-                <label className="text-sm text-gray-500">Description</label>
-                <p className="text-sm">{bapProfile?.description || 'No description'}</p>
+                <label htmlFor="description" className="text-sm text-gray-500">Description</label>
+                <p className="text-sm">{bapProfile?.identity?.description || 'No description'}</p>
               </div>
 
               <div>
-                <label className="text-sm text-gray-500">Bitcoin Address</label>
+                <label htmlFor="bitcoinAddress" className="text-sm text-gray-500">Bitcoin Address</label>
                 <p className="font-mono text-sm break-all">{session?.user?.address}</p>
               </div>
 
               <div>
-                <label className="text-sm text-gray-500">Identity Key</label>
+                <label htmlFor="identityKey" className="text-sm text-gray-500">Identity Key</label>
                 <p className="font-mono text-sm break-all">{session?.user?.idKey}</p>
               </div>
             </div>
@@ -250,6 +297,19 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {/* Profile Editor Modal */}
+      <ProfileEditor
+        isOpen={showProfileEditor}
+        onClose={() => setShowProfileEditor(false)}
+        profile={{
+          alternateName: bapProfile?.identity?.alternateName || '',
+          image: bapProfile?.identity?.image || '',
+          description: bapProfile?.identity?.description || ''
+        }}
+        onSave={handleSaveProfile}
+        onPublish={handlePublishProfile}
+      />
     </div>
   );
 } 
