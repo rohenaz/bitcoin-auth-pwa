@@ -9,29 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
 import { redis } from '@/lib/redis';
 import { env, ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
+import { OAUTH_PROVIDERS, getOAuthConfig } from '@/lib/oauth-config';
 import crypto from 'crypto';
-
-// OAuth provider configurations
-const OAUTH_CONFIGS = {
-  github: {
-    authUrl: 'https://github.com/login/oauth/authorize',
-    tokenUrl: 'https://github.com/login/oauth/access_token',
-    userUrl: 'https://api.github.com/user',
-    scope: 'read:user user:email',
-  },
-  google: {
-    authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenUrl: 'https://oauth2.googleapis.com/token',
-    userUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-    scope: 'openid email profile',
-  },
-  twitter: {
-    authUrl: 'https://twitter.com/i/oauth2/authorize',
-    tokenUrl: 'https://api.twitter.com/2/oauth2/token',
-    userUrl: 'https://api.twitter.com/2/users/me',
-    scope: 'users.read tweet.read offline.access',
-  }
-};
 
 function getRedirectUri(provider: string) {
   const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -43,14 +22,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     const { searchParams } = new URL(request.url);
-    const provider = searchParams.get('provider') as keyof typeof OAUTH_CONFIGS;
+    const provider = searchParams.get('provider') as keyof typeof OAUTH_PROVIDERS;
     
     // Must be signed in with credentials to link providers
     if (!session?.user?.id || session.user.provider !== 'credentials') {
       return NextResponse.redirect(new URL('/settings?error=CredentialsRequired', request.url));
     }
     
-    if (!provider || !OAUTH_CONFIGS[provider]) {
+    if (!provider || !OAUTH_PROVIDERS[provider]) {
       return NextResponse.redirect(new URL('/settings?error=InvalidProvider', request.url));
     }
     
@@ -71,23 +50,20 @@ export async function GET(request: NextRequest) {
     }
     
     // Build OAuth authorization URL
-    const config = OAUTH_CONFIGS[provider];
+    const config = getOAuthConfig(provider);
     const params = new URLSearchParams({
       response_type: 'code',
       scope: config.scope,
       state,
       redirect_uri: getRedirectUri(provider),
+      client_id: config.clientId,
     });
     
-    // Provider-specific parameters - env vars are guaranteed to exist for enabled providers
-    if (provider === 'github') {
-      params.set('client_id', env.AUTH_GITHUB_ID);
-    } else if (provider === 'google') {
-      params.set('client_id', env.AUTH_GOOGLE_ID);
+    // Provider-specific parameters
+    if (provider === 'google') {
       params.set('access_type', 'offline');
       params.set('prompt', 'consent');
     } else if (provider === 'twitter') {
-      params.set('client_id', env.AUTH_TWITTER_ID);
       params.set('code_challenge', 'challenge'); // Twitter requires PKCE
       params.set('code_challenge_method', 'plain');
     }

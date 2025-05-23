@@ -1,7 +1,7 @@
 import NextAuth, { type Account, type Session, type User } from "next-auth";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
-import Twitter from "next-auth/providers/twitter";
+// import Twitter from "next-auth/providers/twitter";
 import Credentials from "next-auth/providers/credentials";
 import { type AuthPayload, parseAuthToken, verifyAuthToken } from "bitcoin-auth";
 import { redis, oauthKey, userKey, latestBlockKey, addrKey } from "./redis";
@@ -36,13 +36,14 @@ if (ENABLED_PROVIDERS.includes('github')) {
   }));
 }
 
-if (ENABLED_PROVIDERS.includes('twitter')) {
-  providers.push(Twitter({
-    clientId: env.AUTH_TWITTER_ID,
-    clientSecret: env.AUTH_TWITTER_SECRET,
-    allowDangerousEmailAccountLinking: true,
-  }));
-}
+// Twitter is temporarily disabled, uncomment when enabled
+// if (ENABLED_PROVIDERS.includes('twitter')) {
+//   providers.push(Twitter({
+//     clientId: env.AUTH_TWITTER_ID,
+//     clientSecret: env.AUTH_TWITTER_SECRET,
+//     allowDangerousEmailAccountLinking: true,
+//   }));
+// }
 
 // Always include the Bitcoin credentials provider
 const customProvider = Credentials({

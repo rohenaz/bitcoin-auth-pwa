@@ -1,7 +1,7 @@
 import { BAP } from 'bsv-bap';
 import { PrivateKey } from '@bsv/sdk';
 import { getAuthToken } from 'bitcoin-auth';
-import type { BapMasterBackup } from '@/types/bap';
+import type { BapMasterBackup } from 'bitcoin-backup';
 
 export interface ExtractedIdentity {
   id: string;
