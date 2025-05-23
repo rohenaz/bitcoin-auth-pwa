@@ -18,14 +18,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Clone request to read body twice
-    const requestClone = request.clone();
+    // Read body as text first to avoid stream consumption issues
+    const bodyText = await request.text();
     
-    // Parse request body first
-    const { decryptedBackup, password } = await request.json();
+    // Create a new request with the body for auth verification
+    const authRequest = new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body: bodyText
+    });
     
-    // Verify auth token with cloned request
-    await verifyBitcoinAuth(requestClone, '/api/users/profiles/create');
+    // Verify auth token
+    try {
+      await verifyBitcoinAuth(authRequest, '/api/users/profiles/create');
+    } catch (authError) {
+      console.error('Auth verification failed:', authError);
+      return NextResponse.json(
+        { error: 'Authentication failed' },
+        { status: 401 }
+      );
+    }
+    
+    // Parse the body
+    const body = JSON.parse(bodyText);
+    const { decryptedBackup, password } = body;
     
     if (!decryptedBackup || !password) {
       return NextResponse.json(
@@ -36,7 +52,13 @@ export async function POST(request: NextRequest) {
 
     // Validate the backup structure
     const backup = decryptedBackup as BapMasterBackup;
-    if (!backup.xprv || !backup.ids || !Array.isArray(backup.ids)) {
+    if (!backup.xprv || !backup.ids || typeof backup.ids !== 'string') {
+      console.error('Invalid backup format:', {
+        hasXprv: !!backup.xprv,
+        hasIds: !!backup.ids,
+        idsType: typeof backup.ids,
+        idsValue: backup.ids
+      });
       return NextResponse.json(
         { error: 'Invalid backup format' },
         { status: 400 }
@@ -125,6 +147,12 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Profile creation error:', error);
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to create profile' },
       { status: 500 }

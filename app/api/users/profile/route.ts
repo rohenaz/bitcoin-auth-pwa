@@ -39,14 +39,21 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    // Clone request to read body twice
-    const requestClone = request.clone();
+    // Read body as text first to avoid stream consumption issues
+    const bodyText = await request.text();
     
-    // Parse request body first
-    const { alternateName, image, description, bapId, address } = await request.json();
+    // Create a new request with the body for auth verification
+    const authRequest = new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body: bodyText
+    });
     
-    // Verify Bitcoin auth token with cloned request
-    const authResult = await verifyBitcoinAuth(requestClone, '/api/users/profile');
+    // Verify Bitcoin auth token
+    const authResult = await verifyBitcoinAuth(authRequest, '/api/users/profile');
+    
+    // Parse the body
+    const { alternateName, image, description, bapId, address } = JSON.parse(bodyText);
     
     // Validate inputs
     if (!alternateName || typeof alternateName !== 'string') {
