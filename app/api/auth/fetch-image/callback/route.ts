@@ -121,36 +121,38 @@ export async function GET(request: NextRequest) {
         profileImage = userData.picture;
       }
       
-    } else if (provider === 'twitter') {
-      const auth = Buffer.from(`${env.AUTH_TWITTER_ID}:${env.AUTH_TWITTER_SECRET}`).toString('base64');
-      
-      const tokenResponse = await fetch(config.tokenUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: getRedirectUri(provider),
-          code_verifier: 'challenge', // Must match what was sent in authorize
-        }),
-      });
-      
-      const tokenData = await tokenResponse.json();
-      
-      if (tokenData.access_token) {
-        const userResponse = await fetch(`${config.userUrl}?user.fields=profile_image_url`, {
-          headers: {
-            'Authorization': `Bearer ${tokenData.access_token}`,
-          },
-        });
-        
-        const userData = await userResponse.json();
-        profileImage = userData.data?.profile_image_url?.replace('_normal', ''); // Get full size image
-      }
     }
+    // Twitter OAuth would go here when enabled
+    // else if (provider === 'twitter') {
+    //   const auth = Buffer.from(`${env.AUTH_TWITTER_ID}:${env.AUTH_TWITTER_SECRET}`).toString('base64');
+    //   
+    //   const tokenResponse = await fetch(config.tokenUrl, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Authorization': `Basic ${auth}`,
+    //       'Content-Type': 'application/x-www-form-urlencoded',
+    //     },
+    //     body: new URLSearchParams({
+    //       code,
+    //       grant_type: 'authorization_code',
+    //       redirect_uri: getRedirectUri(provider),
+    //       code_verifier: 'challenge', // Must match what was sent in authorize
+    //     }),
+    //   });
+    //   
+    //   const tokenData = await tokenResponse.json();
+    //   
+    //   if (tokenData.access_token) {
+    //     const userResponse = await fetch(`${config.userUrl}?user.fields=profile_image_url`, {
+    //       headers: {
+    //         'Authorization': `Bearer ${tokenData.access_token}`,
+    //       },
+    //     });
+    //     
+    //     const userData = await userResponse.json();
+    //     profileImage = userData.data?.profile_image_url?.replace('_normal', ''); // Get full size image
+    //   }
+    // }
     
     if (!profileImage) {
       return NextResponse.redirect(new URL(`${stateData.returnUrl}?error=NoImageFound`, request.url));

@@ -2,9 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 
 interface UserProfile {
+  bapId?: string;
+  alternateName?: string;
+  image?: string;
+  description?: string;
+  // Legacy fields for backwards compatibility
   displayName?: string;
   avatar?: string;
-  description?: string;
   bapProfile?: {
     identity?: {
       alternateName?: string;

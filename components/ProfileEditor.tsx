@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { useOAuthImage } from '@/hooks/useOAuthImage';
-import { ENABLED_PROVIDERS } from '@/lib/env';
+import { ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
 
 interface ProfileData {
   alternateName?: string;
@@ -22,7 +21,6 @@ interface ProfileEditorProps {
 
 export default function ProfileEditor({ isOpen, onClose, profile, onSave }: ProfileEditorProps) {
   const { data: session } = useSession();
-  const { data: connectedAccounts = [] } = useConnectedAccounts();
   const { imageUrl: oauthImageUrl, error: oauthError } = useOAuthImage();
   const [formData, setFormData] = useState({
     alternateName: '',
@@ -170,7 +168,7 @@ export default function ProfileEditor({ isOpen, onClose, profile, onSave }: Prof
                   </button>
                 )}
                 {/* Twitter Icon - Only show if explicitly enabled */}
-                {ENABLED_PROVIDERS.includes('twitter' as any) && (
+                {ENABLED_PROVIDERS.includes('twitter' as EnabledProvider) && (
                   <button
                     type="button"
                     onClick={() => loadProviderImage('twitter')}

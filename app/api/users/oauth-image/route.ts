@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
-import { redis, oauthKey } from '@/lib/redis';
+import { redis } from '@/lib/redis';
 
 export async function GET(request: NextRequest) {
   try {

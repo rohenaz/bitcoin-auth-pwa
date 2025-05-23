@@ -46,6 +46,16 @@ bun lint         # Run ESLint
 npm run lint     # Alternative with npm
 ```
 
+## ⚠️ IMPORTANT: Always Run Build After Changes
+
+**ALWAYS run `bun run build` after making code changes to ensure:**
+- TypeScript compilation succeeds
+- No import/export errors
+- ESLint rules are satisfied
+- The production build works correctly
+
+If the build fails, fix all errors before considering the task complete.
+
 ## Architecture Overview
 
 This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE their identity. No traditional usernames/passwords.

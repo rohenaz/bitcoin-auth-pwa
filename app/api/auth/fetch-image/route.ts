@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     const { searchParams } = new URL(request.url);
-    const provider = searchParams.get('provider') as keyof typeof ENABLED_PROVIDERS;
+    const providerParam = searchParams.get('provider');
     const returnUrl = searchParams.get('returnUrl') || '/dashboard';
     
     // Must be signed in
@@ -28,9 +28,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/signin?error=SessionRequired', request.url));
     }
     
-    if (!provider || !ENABLED_PROVIDERS.includes(provider as EnabledProvider)) {
+    if (!providerParam || !ENABLED_PROVIDERS.includes(providerParam as EnabledProvider)) {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
+    
+    const provider = providerParam as EnabledProvider;
     
     // Generate state for CSRF protection and to store context
     const state = crypto.randomBytes(32).toString('hex');
@@ -45,12 +47,12 @@ export async function GET(request: NextRequest) {
     await redis.setex(`oauth-image-state:${state}`, 600, JSON.stringify(stateData));
     
     // Build OAuth authorization URL
-    const config = getOAuthConfig(provider);
+    const config = getOAuthConfig(provider as 'google' | 'github' | 'twitter');
     const params = new URLSearchParams({
       response_type: 'code',
       scope: config.scope,
       state,
-      redirect_uri: getRedirectUri(provider),
+      redirect_uri: getRedirectUri(provider as 'google' | 'github' | 'twitter'),
       client_id: config.clientId,
     });
     
@@ -58,10 +60,12 @@ export async function GET(request: NextRequest) {
     if (provider === 'google') {
       params.set('access_type', 'online'); // We don't need refresh tokens
       params.set('prompt', 'select_account'); // Allow user to choose account
-    } else if (provider === 'twitter') {
-      params.set('code_challenge', 'challenge'); // Twitter requires PKCE
-      params.set('code_challenge_method', 'plain');
     }
+    // Twitter-specific params would go here when enabled
+    // else if (provider === 'twitter') {
+    //   params.set('code_challenge', 'challenge'); // Twitter requires PKCE
+    //   params.set('code_challenge_method', 'plain');
+    // }
     
     return NextResponse.redirect(`${config.authUrl}?${params}`);
     
