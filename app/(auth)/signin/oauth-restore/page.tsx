@@ -89,6 +89,7 @@ export default function OAuthRestorePage() {
       
       // Get private key for auth
       const bap = new BAP(decrypted.xprv);
+      bap.importIds(decrypted.ids);
       const ids = bap.listIds();
       let id = ids[0];
       if (!id) {

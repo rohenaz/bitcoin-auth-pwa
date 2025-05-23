@@ -55,6 +55,7 @@ function SignInPageContent() {
 
       // get the first key from the bap master backup
       const bap = new BAP(decrypted.xprv)
+      bap.importIds(decrypted.ids);
       const ids = bap.listIds()
       let id = ids[0]
       if (!id) {

@@ -97,6 +97,7 @@ export default function SignUpPage() {
 
       // Sign in with credentials to create the user account
       const bap = new BAP(bapBackup.xprv);
+      bap.importIds(bapBackup.ids);
       const ids = bap.listIds();
       const id = ids[0];
       if (!id) {
