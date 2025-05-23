@@ -28,6 +28,29 @@ export default function OAuthPage() {
           const encryptedBackup = localStorage.getItem('encryptedBackup');
           
           if (encryptedBackup && provider === session.user.provider) {
+            // Extract provider account ID from the OAuth session
+            let providerAccountId = session.user.providerAccountId;
+            
+            // If not available, try to extract from composite ID
+            if (!providerAccountId && session.user.id.includes('-')) {
+              // OAuth user ID format: "provider-providerAccountId"
+              const parts = session.user.id.split('-');
+              if (parts[0] === session.user.provider) {
+                providerAccountId = parts.slice(1).join('-'); // Handle IDs with dashes
+              }
+            }
+            
+            if (!providerAccountId) {
+              console.error('Could not extract provider account ID');
+              throw new Error('Invalid OAuth session');
+            }
+            
+            console.log('Storing backup with OAuth mapping:', {
+              provider: session.user.provider,
+              providerAccountId,
+              bapId
+            });
+            
             // Store the backup with OAuth mapping
             const response = await fetch('/api/backup', {
               method: 'POST',
@@ -36,7 +59,7 @@ export default function OAuthPage() {
                 encryptedBackup,
                 bapId,
                 oauthProvider: session.user.provider,
-                oauthId: session.user.id
+                oauthId: providerAccountId
               })
             });
 

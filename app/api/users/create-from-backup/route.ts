@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { parseAuthToken, verifyAuthToken } from 'bitcoin-auth';
 import { redis, userKey, addrKey } from '@/lib/redis';
 import { PublicKey } from '@bsv/sdk';
-import { auth } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
   try {

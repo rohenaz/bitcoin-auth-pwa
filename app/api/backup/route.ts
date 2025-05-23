@@ -76,12 +76,30 @@ export const POST = async (req: Request) => {
       });
       
       // Create address-to-BAP mapping for unpublished IDs
-      const { addrKey } = await import('@/lib/redis');
+      const { addrKey, bapKey } = await import('@/lib/redis');
       const currentBlock = await redis.get('block:height') || '0';
       await redis.hset(addrKey(session.user.address), { 
         id: bapId, 
         block: currentBlock.toString() 
       });
+      
+      // Store a basic BAP profile for unpublished identities
+      // This ensures /api/bap can return something for new identities
+      const existingProfile = await redis.get(bapKey(bapId));
+      if (!existingProfile) {
+        const basicProfile = {
+          idKey: bapId,
+          currentAddress: session.user.address,
+          identity: {
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            alternateName: `Bitcoin User (${session.user.address.substring(0, 8)}...)`,
+          },
+          block: Number(currentBlock) || 0,
+          currentHeight: Number(currentBlock) || 0
+        };
+        await redis.set(bapKey(bapId), JSON.stringify(basicProfile));
+      }
     }
 
     // If OAuth info provided, create OAuth mapping

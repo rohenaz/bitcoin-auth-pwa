@@ -222,7 +222,10 @@ export const authOptions = {
       }
       if (account?.provider && account.providerAccountId) {
         token.provider = account.provider;
-        token.providerAccountId = String(account.providerAccountId);
+        // Always store providerAccountId for OAuth providers
+        if (account.provider !== 'credentials') {
+          token.providerAccountId = String(account.providerAccountId);
+        }
         
         // For OAuth providers, check if there's a linked BAP identity
         if (account.provider !== 'credentials') {

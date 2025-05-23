@@ -47,9 +47,14 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 ### API Routes
 
 - `/api/auth/[...nextauth]`: NextAuth handler with custom Bitcoin credentials provider
-- `/api/backup`: GET encrypted backups by OAuth ID
-- `/api/bap`: GET BAP profiles by address
-- `/api/users`: User management endpoints
+- `/api/backup`: GET/POST encrypted backups (GET by OAuth ID or BAP ID, POST to store backup)
+- `/api/backup/status`: GET backup status for current user
+- `/api/bap`: GET cached BAP profiles from Redis by address (includes unpublished profiles)
+- `/api/users`: GET all users
+- `/api/users/connected-accounts`: GET linked OAuth providers for current user
+- `/api/users/disconnect-account`: POST to unlink OAuth provider
+- `/api/users/link-backup`: POST to link backup to OAuth provider
+- `/api/users/create-from-backup`: POST to create user record from existing backup
 
 ### Environment Variables Required
 
