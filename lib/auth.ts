@@ -237,8 +237,34 @@ export const authOptions = {
       if (url.includes('/success')) {
         return url;
       }
+      // If this is an OAuth image fetch callback, preserve the oauth_image_state parameter
+      if (url.includes('oauth_image_state=')) {
+        return url;
+      }
       // Otherwise, use the URL or default to baseUrl
       return url.startsWith(baseUrl) ? url : baseUrl;
+    },
+    signIn: async ({ user, account }: { user: User, account: Account | null }) => {
+      // Check if this is an OAuth image fetch by looking for our callback URL pattern
+      if (account?.provider !== 'credentials' && user?.image) {
+        // If this OAuth sign-in has an image, check if there are any pending image fetch states
+        // We'll store the image temporarily for all recent states from this user
+        // This is a simple approach since the session will be very short-lived for image fetching
+        const keys = await redis.keys('oauth-image-state:*');
+        for (const key of keys) {
+          const stateData = await redis.get(key);
+          if (stateData) {
+            const parsed = JSON.parse(stateData as string);
+            if (parsed.provider === account?.provider && parsed.purpose === 'fetch-image') {
+              const state = key.replace('oauth-image-state:', '');
+              await redis.setex(`oauth-temp-image:${state}`, 300, user.image); // 5 min expiry
+              console.log('🖼️ Stored OAuth image for fetch:', { provider: account?.provider, state });
+              break; // Only match the first one to avoid storing multiple times
+            }
+          }
+        }
+      }
+      return true; // Allow the sign-in to continue
     },
     jwt: async ({ token, user, account }: { token: JWT, user: User, account: Account | null }) => {
       if (user) {

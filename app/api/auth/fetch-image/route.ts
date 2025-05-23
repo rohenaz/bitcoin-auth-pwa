@@ -7,14 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
 import { redis } from '@/lib/redis';
-import { env, ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
-import { getOAuthConfig } from '@/lib/oauth-config';
+import { ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
 import crypto from 'crypto';
-
-function getRedirectUri(provider: string) {
-  const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
-  return `${baseUrl}/api/auth/fetch-image/callback?provider=${provider}`;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,28 +40,12 @@ export async function GET(request: NextRequest) {
     // Store state data temporarily (10 min expiry)
     await redis.setex(`oauth-image-state:${state}`, 600, JSON.stringify(stateData));
     
-    // Build OAuth authorization URL
-    const config = getOAuthConfig(provider as 'google' | 'github' | 'twitter');
-    const params = new URLSearchParams({
-      response_type: 'code',
-      scope: config.scope,
-      state,
-      redirect_uri: getRedirectUri(provider as 'google' | 'github' | 'twitter'),
-      client_id: config.clientId,
-    });
+    // Build OAuth authorization URL using NextAuth's signIn URL
+    // This ensures we use the same redirect URI that's configured in Google Console
+    const authUrl = new URL('/api/auth/signin/' + provider, request.url);
+    authUrl.searchParams.set('callbackUrl', `/dashboard?oauth_image_state=${state}`);
     
-    // Provider-specific parameters
-    if (provider === 'google') {
-      params.set('access_type', 'online'); // We don't need refresh tokens
-      params.set('prompt', 'select_account'); // Allow user to choose account
-    }
-    // Twitter-specific params would go here when enabled
-    // else if (provider === 'twitter') {
-    //   params.set('code_challenge', 'challenge'); // Twitter requires PKCE
-    //   params.set('code_challenge_method', 'plain');
-    // }
-    
-    return NextResponse.redirect(`${config.authUrl}?${params}`);
+    return NextResponse.redirect(authUrl);
     
   } catch (error) {
     console.error('Error initiating OAuth image fetch:', error);

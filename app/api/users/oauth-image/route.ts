@@ -12,29 +12,38 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     const { searchParams } = new URL(request.url);
-    const provider = searchParams.get('provider');
+    const state = searchParams.get('state');
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    if (!provider) {
-      return NextResponse.json({ error: 'Provider required' }, { status: 400 });
+    if (!state) {
+      return NextResponse.json({ error: 'State required' }, { status: 400 });
     }
     
-    // First check if we have a temporarily stored image from recent OAuth flow
-    const tempImageKey = `oauth-image:${session.user.id}:${provider}`;
-    const tempImage = await redis.get(tempImageKey);
-    
-    if (tempImage) {
-      // Clean up the temporary image
-      await redis.del(tempImageKey);
-      return NextResponse.json({ image: tempImage });
+    // Check if this state exists and belongs to this user
+    const stateDataStr = await redis.get(`oauth-image-state:${state}`);
+    if (!stateDataStr) {
+      return NextResponse.json({ error: 'Invalid or expired state' }, { status: 400 });
     }
     
-    // If no temporary image, check if user has this provider connected
-    // This would require fetching the provider's current profile image
-    // For now, return not found
+    const stateData = JSON.parse(stateDataStr as string);
+    if (stateData.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Check for temporarily stored OAuth image
+    const imageKey = `oauth-temp-image:${state}`;
+    const storedImage = await redis.get(imageKey);
+    
+    if (storedImage) {
+      // Clean up both temporary storage and state
+      await redis.del(imageKey);
+      await redis.del(`oauth-image-state:${state}`);
+      return NextResponse.json({ image: storedImage });
+    }
+    
     return NextResponse.json({ error: 'No image available' }, { status: 404 });
     
   } catch (error) {

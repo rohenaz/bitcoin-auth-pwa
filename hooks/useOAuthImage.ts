@@ -8,9 +8,9 @@ export function useOAuthImage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Parse URL parameters manually to avoid dependency on Next.js router
+    // Parse URL parameters for OAuth image state
     const params = new URLSearchParams(window.location.search);
-    const imageProvider = params.get('imageProvider');
+    const oauthImageState = params.get('oauth_image_state');
     const errorParam = params.get('error');
     
     if (errorParam) {
@@ -22,10 +22,10 @@ export function useOAuthImage() {
       window.history.replaceState({}, '', newUrl);
     }
     
-    if (imageProvider) {
+    if (oauthImageState) {
       setLoading(true);
-      // Fetch the OAuth image
-      fetch(`/api/users/oauth-image?provider=${imageProvider}`)
+      // Fetch the OAuth image using the state
+      fetch(`/api/users/oauth-image?state=${oauthImageState}`)
         .then(res => res.json())
         .then(data => {
           if (data.image) {
@@ -42,7 +42,7 @@ export function useOAuthImage() {
           setLoading(false);
           // Clean up URL
           const params = new URLSearchParams(window.location.search);
-          params.delete('imageProvider');
+          params.delete('oauth_image_state');
           const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
           window.history.replaceState({}, '', newUrl);
         });
