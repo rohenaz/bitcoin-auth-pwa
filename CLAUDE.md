@@ -27,7 +27,12 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 1. **New Users**: Generate BAP identity → Encrypt with password → Store locally → Link OAuth for cloud backup
 2. **Returning Users (Same Device)**: Decrypt local backup with password → Use keys for auth
 3. **Returning Users (New Device)**: OAuth login → Retrieve encrypted backup → Decrypt with password
-4. **OAuth Provider Linking**: From Settings → OAuth sign-in → Create mapping → Return to credentials session
+4. **OAuth Provider Linking**: Special flow that bypasses NextAuth session creation:
+   - Must be signed in with credentials provider (Bitcoin keys)
+   - From Settings → `/api/auth/link-provider` → OAuth sign-in
+   - Callback to `/api/auth/link-provider/callback` (NOT NextAuth callback)
+   - Creates OAuth mapping without creating new session
+   - Returns to existing credentials session with success/error params
 
 ### Key Architectural Decisions
 
@@ -47,10 +52,15 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 - **JWT Session Strategy**: Uses JWT tokens, NOT database sessions (no adapter needed)
 - **OAuth Mapping**: Links OAuth providers to BAP IDs via `oauth:{provider}:{providerAccountId}` → `bapId`
 - **Address Mapping**: Maps Bitcoin addresses to BAP IDs for unpublished profiles via `addr:{address}` → `{id, block}`
+- **OAuth State Management**: OAuth linking uses crypto-secure state stored in Redis with 10-minute expiry
+- **Environment Validation**: Server-side only via `typeof window === 'undefined'` check
+- **Enabled Providers**: Configured in `lib/env.ts` as `ENABLED_PROVIDERS` constant (currently google, github)
 
 ### API Routes
 
 - `/api/auth/[...nextauth]`: NextAuth handler with custom Bitcoin credentials provider
+- `/api/auth/link-provider`: GET initiates OAuth linking flow (bypasses NextAuth)
+- `/api/auth/link-provider/callback`: GET handles OAuth callback for linking (creates mapping only)
 - `/api/backup`: GET/POST encrypted backups (GET by OAuth ID or BAP ID, POST to store backup)
 - `/api/backup/status`: GET backup status for current user
 - `/api/bap`: GET cached BAP profiles from Redis by address (includes unpublished profiles)
@@ -105,3 +115,13 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - **Dashboard**: User profile display with edit functionality and BAP profile integration
 - **Settings**: OAuth provider management for multi-device backup access
 - **Security Settings**: Cloud backup management and local backup export
+
+### Important Implementation Notes
+
+- **OAuth Providers as "Dumb Storage"**: OAuth is NEVER used for authentication, only as key-value storage for encrypted backups
+- **No Mixed Sessions**: A user can only be authenticated via credentials (Bitcoin) OR OAuth, never both simultaneously
+- **OAuth Linking Requirements**: User MUST be signed in with credentials provider to link OAuth accounts
+- **Error Page Workaround**: Custom OAuth linking flow avoids NextAuth error pages by handling callbacks separately
+- **BAP ID as Primary Key**: All user data is keyed by BAP ID, which is derived from the Bitcoin identity
+- **Signature Verification**: Uses `bitcoin-auth` library to verify signatures with configurable time windows
+- **Profile Updates**: User profile changes update Redis immediately but don't modify the encrypted backup
