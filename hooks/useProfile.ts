@@ -48,23 +48,53 @@ export function useUpdateProfile() {
       bapId: string; 
       data: { alternateName?: string; image?: string; description?: string } 
     }) => {
-      const response = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.user?.id !== bapId && {
-            'X-Decrypted-Backup': sessionStorage.getItem('decryptedBackup') || ''
-          })
-        },
-        body: JSON.stringify({ bapId, ...data }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update profile');
+      // Get the decrypted backup to extract the current address
+      const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
+      if (!decryptedBackupStr) {
+        throw new Error('No decrypted backup found');
       }
 
-      return response.json();
+      let currentAddress = '';
+      try {
+        const backup = JSON.parse(decryptedBackupStr);
+        // Import required auth utilities
+        const { BAP } = await import('bitcoin-wallet-sdk');
+        const { signAuthToken } = await import('@/lib/auth-helpers');
+        
+        // Initialize BAP with the backup
+        const bap = new BAP(backup.xprv);
+        const id = await bap.getId(bapId);
+        currentAddress = id.address;
+        
+        // Create auth token for this request
+        const authToken = await signAuthToken('/api/users/profile', backup);
+        
+        const response = await fetch('/api/users/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': authToken,
+            ...(session?.user?.id !== bapId && {
+              'X-Decrypted-Backup': decryptedBackupStr
+            })
+          },
+          body: JSON.stringify({ 
+            bapId, 
+            address: currentAddress,
+            ...data 
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update profile');
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error('Error in updateProfile:', error);
+        throw error;
+      }
     },
     onSuccess: (_, { bapId }) => {
       // Invalidate the profile query to refetch latest data

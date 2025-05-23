@@ -27,9 +27,29 @@ export async function GET(request: NextRequest) {
     const userKey = `user:${session.user.id}`;
     const userData = await redis.hgetall(userKey) as Record<string, string>;
     
-    // If user has avatar stored from OAuth import, return it
+    // Check if there's a stored avatar that matches the provider pattern
+    // Google images typically come from googleusercontent.com or lh3.googleusercontent.com
     if (userData?.avatar) {
-      return NextResponse.json({ image: userData.avatar });
+      if (provider === 'google' && (userData.avatar.includes('googleusercontent.com') || userData.avatar.includes('google.com'))) {
+        return NextResponse.json({ image: userData.avatar });
+      } else if (provider === 'github' && userData.avatar.includes('github')) {
+        return NextResponse.json({ image: userData.avatar });
+      }
+    }
+
+    // Check BAP profile for any stored image
+    const bapProfileKey = `bap:${session.user.id}`;
+    const bapProfile = await redis.get(bapProfileKey);
+    if (bapProfile) {
+      const profile = typeof bapProfile === 'string' ? JSON.parse(bapProfile) : bapProfile;
+      if (profile?.identity?.image) {
+        // Check if the stored image matches the provider
+        if (provider === 'google' && (profile.identity.image.includes('googleusercontent.com') || profile.identity.image.includes('google.com'))) {
+          return NextResponse.json({ image: profile.identity.image });
+        } else if (provider === 'github' && profile.identity.image.includes('github')) {
+          return NextResponse.json({ image: profile.identity.image });
+        }
+      }
     }
 
     // Otherwise, try to find linked OAuth accounts
@@ -56,8 +76,8 @@ export async function GET(request: NextRequest) {
           }
         }
         
-        // For Google/Twitter, we'd need to use their APIs with proper auth
-        // For now, return null as we don't have stored images
+        // For Google, check if we have the image stored during OAuth flow
+        // Since Google requires OAuth to get user info, we rely on stored data
         break;
       }
     }
