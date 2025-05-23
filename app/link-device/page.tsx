@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { decryptBackup } from 'bitcoin-backup';
+import { decryptBackup, type BapMasterBackup } from 'bitcoin-backup';
 import { BAP } from 'bsv-bap';
 import { getAuthToken } from 'bitcoin-auth';
 import { signIn } from 'next-auth/react';
@@ -10,7 +10,7 @@ import { signIn } from 'next-auth/react';
 const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
-export default function LinkDevicePage() {
+function LinkDeviceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -85,9 +85,9 @@ export default function LinkDevicePage() {
 
     try {
       // Decrypt the backup
-      const decrypted = await decryptBackup(encryptedBackup, password);
+      const decrypted = await decryptBackup(encryptedBackup, password) as BapMasterBackup;
       
-      if (!decrypted) {
+      if (!decrypted || !decrypted.xprv) {
         throw new Error('Invalid password or corrupted backup');
       }
 
@@ -242,5 +242,20 @@ export default function LinkDevicePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LinkDevicePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LinkDeviceContent />
+    </Suspense>
   );
 }
