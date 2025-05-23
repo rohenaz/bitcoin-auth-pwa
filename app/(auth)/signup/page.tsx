@@ -6,6 +6,8 @@ import { type BapMasterBackup, encryptBackup } from 'bitcoin-backup';
 import { BAP } from 'bsv-bap';
 import Link from 'next/link';
 import { HD, Mnemonic } from '@bsv/sdk';
+import { getAuthToken } from 'bitcoin-auth';
+import { signIn } from 'next-auth/react';
 
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
@@ -93,7 +95,38 @@ export default function SignUpPage() {
       // Store decrypted backup in session for immediate use
       sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(bapBackup));
 
-      // Redirect to OAuth linking
+      // Sign in with credentials to create the user account
+      const bap = new BAP(bapBackup.xprv);
+      const ids = bap.listIds();
+      const id = ids[0];
+      if (!id) {
+        throw new Error('No identity found in backup');
+      }
+
+      const master = bap.getId(id);
+      const memberBackup = master?.exportMemberBackup();
+      const pk = memberBackup?.derivedPrivateKey;
+      if (!pk) {
+        throw new Error('No private key found');
+      }
+
+      // Create auth token and sign in
+      const authToken = getAuthToken({
+        privateKeyWif: pk,
+        requestPath: '/api/auth/signin',
+        body: ''
+      });
+
+      const result = await signIn('credentials', {
+        token: authToken,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      // Now redirect to OAuth linking with an active session
       router.push('/signup/oauth');
     } catch (err) {
       console.error('Encryption error:', err);

@@ -98,7 +98,10 @@ function SignInPageContent() {
     setLoading(true);
     // For existing users signing in from new device
     // This will fail in the OAuth callback if no backup is found
-    signIn(provider, { callbackUrl: '/signin/oauth-restore' });
+    signIn(provider, { 
+      callbackUrl: '/signin/oauth-restore',
+      redirect: true 
+    });
   };
 
   const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {

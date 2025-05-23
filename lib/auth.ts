@@ -24,6 +24,7 @@ if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
   providers.push(Google({
     clientId: env.AUTH_GOOGLE_ID,
     clientSecret: env.AUTH_GOOGLE_SECRET,
+    allowDangerousEmailAccountLinking: true,
   }));
 }
 
@@ -39,6 +40,7 @@ if (env.AUTH_TWITTER_ID && env.AUTH_TWITTER_SECRET) {
   providers.push(Twitter({
     clientId: env.AUTH_TWITTER_ID,
     clientSecret: env.AUTH_TWITTER_SECRET,
+    allowDangerousEmailAccountLinking: true,
   }));
 }
 

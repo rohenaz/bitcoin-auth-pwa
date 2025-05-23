@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
-import { getAuthToken } from 'bitcoin-auth';
 
 export default function OAuthPage() {
   const router = useRouter();
@@ -92,78 +91,35 @@ export default function OAuthPage() {
   };
 
   const handleContinue = async () => {
-    if (linkedProviders.length === 0) {
-      setError('Please link at least one account for backup');
+    if (linkedProviders.length === 0 && !window.confirm('Continue without linking any accounts? This means you won\'t be able to access your identity from other devices.')) {
       return;
     }
 
-    // Get the decrypted backup
-    const decryptedBackup = sessionStorage.getItem('decryptedBackup');
-    if (!decryptedBackup) {
-      router.push('/signup');
+    // We should already be signed in from the signup flow
+    if (!session?.user) {
+      router.push('/signin');
       return;
     }
 
-    try {
-      const backup = JSON.parse(decryptedBackup);
-      const { BAP } = await import('bsv-bap');
-
-      // Get the identity key from backup
-      const bap = new BAP(backup.xprv);
-      const ids = bap.listIds();
-      let id = ids[0];
-      if (!id) {
-        // No identity found in backup
-        // create a new identity
-        id = bap.newId().identityKey;
+    // Store the backup if we haven't already
+    const encryptedBackup = localStorage.getItem('encryptedBackup');
+    if (encryptedBackup && linkedProviders.length > 0) {
+      try {
+        await fetch('/api/backup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            encryptedBackup,
+            bapId: session.user.id
+          })
+        });
+      } catch (err) {
+        console.error('Error storing backup:', err);
       }
-
-      const master = bap.getId(id);
-      const memberBackup = master?.exportMemberBackup();
-      const pk = memberBackup?.derivedPrivateKey;
-      if (!pk) {
-        throw new Error('No private key found');
-      }
-
-
-      // Create the auth token
-      const authToken = getAuthToken({
-        privateKeyWif: pk,
-        requestPath: '/api/auth/callback/credentials',
-        body: ''
-      });
-
-      // Sign in with Bitcoin credentials
-      const result = await signIn('credentials', {
-        token: authToken,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
-      // Store the backup with OAuth mapping if we have a session
-      if (session?.user) {
-        const encryptedBackup = localStorage.getItem('encryptedBackup');
-        if (encryptedBackup) {
-          await fetch('/api/users/link-backup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              encryptedBackup,
-              bapId: id
-            })
-          });
-        }
-      }
-
-      // Redirect to success page
-      router.push('/success');
-    } catch (err) {
-      console.error('Continue error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to continue');
     }
+
+    // Redirect to success/dashboard
+    router.push('/success');
   };
 
   const providers = [
