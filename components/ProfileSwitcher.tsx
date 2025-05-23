@@ -127,13 +127,6 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
       if (!decryptedBackup.xprv || !decryptedBackup.ids) {
         throw new Error('Invalid backup structure - missing required fields');
       }
-      
-      console.log('Sending backup to API:', {
-        hasXprv: !!decryptedBackup.xprv,
-        hasIds: !!decryptedBackup.ids,
-        idsType: typeof decryptedBackup.ids,
-        backupKeys: Object.keys(decryptedBackup)
-      });
 
       // Create auth token
       const { getAuthToken } = await import('bitcoin-auth');
@@ -185,7 +178,7 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
       
     } catch (error) {
       console.error('Error creating new profile:', error);
-      alert('Failed to create new profile: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      alert(`Failed to create new profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setCreatingNew(false);
     }
@@ -196,7 +189,7 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
   if (loading) {
     return (
       <div className="animate-pulse">
-        <div className="h-10 bg-gray-700 rounded w-32"></div>
+        <div className="h-10 bg-gray-700 rounded w-32" />
       </div>
     );
   }
@@ -226,6 +219,7 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
           fill="currentColor" 
           viewBox="0 0 20 20"
         >
+          <title>Open Profile Switcher</title>
           <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
       </button>
@@ -237,6 +231,13 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
           <div 
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsOpen(false);
+              }
+            }}
+            role="button"
+            tabIndex={0}
           />
           
           {/* Menu */}
@@ -278,6 +279,7 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
                   </div>
                   {profile.idKey === currentBapId && (
                     <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <title>Current Profile</title>
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   )}
@@ -297,6 +299,7 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
                     ) : (
                       <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <title>Create New Profile</title>
                         <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
                     )}
