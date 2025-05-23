@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { type BapMasterBackup, decryptBackup } from 'bitcoin-backup';
 import { getAuthToken } from 'bitcoin-auth';
 import Link from 'next/link';
 import { BAP } from 'bsv-bap';
+import { PrivateKey } from '@bsv/sdk';
 
 const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
@@ -67,6 +68,10 @@ function SignInPageContent() {
         throw new Error('No private key found in backup')
       }
 
+      // Get the public key and address for the user
+      const pubkey = PrivateKey.fromWif(pk).toPublicKey()
+      const address = pubkey.toAddress()
+      
       // Create the auth token
       const authToken = getAuthToken({
         privateKeyWif: pk,
@@ -83,6 +88,40 @@ function SignInPageContent() {
       });
 
       if (result?.error) {
+        // If user not found, try to create the user record
+        if (result.error.includes('User not found')) {
+          console.log('User not found, creating user record...');
+          
+          // Create auth token for user creation
+          const createUserToken = getAuthToken({
+            privateKeyWif: pk,
+            requestPath: '/api/users/create-from-backup',
+            body: JSON.stringify({ bapId: id, address })
+          });
+          
+          const createResponse = await fetch('/api/users/create-from-backup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Auth-Token': createUserToken
+            },
+            body: JSON.stringify({ bapId: id, address })
+          });
+          
+          if (createResponse.ok) {
+            // Try signing in again
+            const retryResult = await signIn('credentials', {
+              token: authToken,
+              redirect: false,
+            });
+            
+            if (retryResult?.ok) {
+              window.location.href = callbackUrl;
+              return;
+            }
+          }
+        }
+        
         throw new Error(result.error);
       }
 
@@ -113,16 +152,37 @@ function SignInPageContent() {
 
     try {
       const text = await file.text();
-      // Validate it's a proper encrypted backup
-      const parsed = JSON.parse(text);
-      if (!parsed.encrypted || !parsed.encryptedMnemonic) {
+      
+      // Try to validate it's an encrypted backup
+      // bitcoin-backup exports as an encrypted string that can be decrypted
+      // We'll do a basic validation by trying to parse as JSON and checking for encrypted fields
+      // or by checking if it's a valid encrypted string format
+      let isValid = false;
+      
+      try {
+        // First try: Check if it's a JSON with encrypted fields (older format)
+        const parsed = JSON.parse(text);
+        if (parsed.encrypted || parsed.encryptedMnemonic) {
+          isValid = true;
+        }
+      } catch {
+        // Second try: Check if it's a plain encrypted string (current format)
+        // Encrypted strings from bitcoin-backup are typically long base64-like strings
+        if (text.length > 100 && /^[A-Za-z0-9+/=]+$/.test(text.trim())) {
+          isValid = true;
+        }
+      }
+      
+      if (!isValid) {
         throw new Error('Invalid backup file format');
       }
+      
       setHasLocalBackup(true);
       setShowOAuthProviders(false);
       // Store in localStorage
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, text);
-    } catch {
+      localStorage.setItem(ENCRYPTED_BACKUP_KEY, text.trim());
+    } catch (err) {
+      console.error('Import error:', err);
       setError('Invalid backup file. Please select a valid encrypted backup.');
     }
   };
@@ -235,6 +295,7 @@ function SignInPageContent() {
               <p className="text-sm text-gray-400 mb-3">Or import your existing backup</p>
               <label className="cursor-pointer inline-flex items-center space-x-2 text-blue-500 hover:text-blue-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <title>Import</title>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <span className="text-sm font-medium">Import Backup File</span>
@@ -266,7 +327,7 @@ export default function SignInPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
       </div>
     }>
       <SignInPageContent />

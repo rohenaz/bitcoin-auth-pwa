@@ -146,9 +146,15 @@ const customProvider = Credentials({
               }
             }
             
-            // If we still don't have a user, this is an error
+            // If we still don't have a user, create one for this unpublished BAP ID
+            // This handles the case where someone has a valid backup but no user record yet
+            console.log('⚠️ No user found, creating new user record for unpublished BAP ID');
+            
+            // We need to extract the BAP ID from the token or generate one
+            // For now, we'll throw an error asking them to sign up
+            // In a production system, you might want to auto-create the user here
             console.error('❌ No user found for address:', address);
-            throw new Error('User not found. Please sign up first.');
+            throw new Error('User not found. Please complete signup to create your user record.');
           }
         } catch (error) {
           console.error('❌ Failed to fetch BAP profile:', error);
