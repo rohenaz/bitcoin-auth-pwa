@@ -37,25 +37,28 @@ const env: Env = {
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
 }
 
-// Validate required env vars
-const requiredVars: string[] = ['AUTH_SECRET'];
+// Only validate on server side
+if (typeof window === 'undefined') {
+  // Validate required env vars
+  const requiredVars: string[] = ['AUTH_SECRET'];
 
-// Add OAuth provider requirements based on ENABLED_PROVIDERS
-for (const provider of ENABLED_PROVIDERS) {
-  const upperProvider = provider.toUpperCase();
-  requiredVars.push(`AUTH_${upperProvider}_ID`, `AUTH_${upperProvider}_SECRET`);
-}
-
-// Check all required vars
-const missingVars: string[] = [];
-for (const varName of requiredVars) {
-  if (!env[varName as keyof Env]) {
-    missingVars.push(varName);
+  // Add OAuth provider requirements based on ENABLED_PROVIDERS
+  for (const provider of ENABLED_PROVIDERS) {
+    const upperProvider = provider.toUpperCase();
+    requiredVars.push(`AUTH_${upperProvider}_ID`, `AUTH_${upperProvider}_SECRET`);
   }
-}
 
-if (missingVars.length > 0) {
-  throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  // Check all required vars
+  const missingVars: string[] = [];
+  for (const varName of requiredVars) {
+    if (!env[varName as keyof Env]) {
+      missingVars.push(varName);
+    }
+  }
+
+  if (missingVars.length > 0) {
+    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  }
 }
 
 export { env }
