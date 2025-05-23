@@ -108,6 +108,11 @@ export const POST = async (req: Request) => {
     if (oauthProvider && oauthId) {
       await redis.set(oauthKey(oauthProvider, oauthId), bapId);
     }
+    
+    // Store email mapping if we have the user's email
+    if (session.user.email) {
+      await redis.set(`email:${session.user.email}`, bapId);
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bapId, address, encryptedBackup } = body;
+    const { bapId, address, encryptedBackup, email } = body;
     
     if (!bapId || !address) {
       return NextResponse.json({ error: 'BAP ID and address are required' }, { status: 400 });
@@ -62,6 +62,11 @@ export async function POST(request: NextRequest) {
       id: bapId, 
       block: currentBlock.toString() 
     });
+    
+    // Store email mapping if provided
+    if (email) {
+      await redis.set(`email:${email}`, bapId);
+    }
     
     // Store encrypted backup if provided
     if (encryptedBackup) {

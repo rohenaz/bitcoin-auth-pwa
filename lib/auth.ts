@@ -227,6 +227,10 @@ export const authOptions = {
         token.sub = user.id;
         token.address = (user as User).address;
         token.idKey = (user as User).idKey;
+        // Capture email from OAuth provider
+        if (user.email) {
+          token.email = user.email;
+        }
       }
       if (account?.provider && account.providerAccountId) {
         token.provider = account.provider;
@@ -251,8 +255,24 @@ export const authOptions = {
               token.linkedProvider = account.provider;
             }
           } else {
-            // No linked identity, create OAuth-only session
+            // No linked identity yet
             const oauthUserId = `${account.provider}-${account.providerAccountId}`;
+            
+            // Check if we have a user with this email
+            if (user.email) {
+              token.email = user.email;
+              
+              // Check if email is already associated with a BAP ID
+              const emailKey = `email:${user.email}`;
+              const existingBapId = await redis.get(emailKey);
+              
+              if (existingBapId) {
+                // Found a user with this email
+                token.potentialBapId = existingBapId as string;
+                token.needsLinking = true;
+              }
+            }
+            
             token.sub = oauthUserId;
             token.isOAuthOnly = true;
           }
@@ -268,6 +288,9 @@ export const authOptions = {
         session.user.provider = token.provider as string;
         session.user.providerAccountId = token.providerAccountId as string;
         session.user.isOAuthOnly = token.isOAuthOnly as boolean;
+        session.user.email = token.email as string;
+        session.user.potentialBapId = token.potentialBapId as string;
+        session.user.needsLinking = token.needsLinking as boolean;
       }
       return session;
     },

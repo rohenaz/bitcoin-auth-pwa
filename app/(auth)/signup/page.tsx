@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { type BapMasterBackup, encryptBackup } from 'bitcoin-backup';
 import { BAP } from 'bsv-bap';
@@ -22,6 +22,20 @@ export default function SignUpPage() {
   const [bapBackup, setBapBackup] = useState<BapMasterBackup | null>(null);
   const [, setBapId] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [oauthInfo, setOauthInfo] = useState<{ provider?: string; email?: string; name?: string } | null>(null);
+
+  useEffect(() => {
+    // Check if coming from OAuth
+    const oauthSignupInfo = sessionStorage.getItem('oauthSignupInfo');
+    if (oauthSignupInfo) {
+      try {
+        const info = JSON.parse(oauthSignupInfo);
+        setOauthInfo(info);
+      } catch (err) {
+        console.error('Error parsing OAuth info:', err);
+      }
+    }
+  }, []);
 
   const generateWallet = useCallback(async (label: string) => {
     setLoading(true);
@@ -126,6 +140,42 @@ export default function SignUpPage() {
       if (result?.error) {
         throw new Error(result.error);
       }
+      
+      // Check if we have OAuth info from an OAuth-first signup
+      const oauthSignupInfo = sessionStorage.getItem('oauthSignupInfo');
+      if (oauthSignupInfo) {
+        try {
+          const { provider, providerAccountId, email } = JSON.parse(oauthSignupInfo);
+          
+          // Get the BAP ID from the backup
+          const bapId = bap.listIds()[0] || bap.newId().identityKey;
+          
+          // Store the backup with OAuth mapping
+          await fetch('/api/backup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              encryptedBackup: encrypted,
+              bapId: bapId,
+              oauthProvider: provider,
+              oauthId: providerAccountId
+            })
+          });
+          
+          // Store email mapping if provided
+          if (email) {
+            // This will be handled by the backup endpoint
+          }
+          
+          sessionStorage.removeItem('oauthSignupInfo');
+          
+          // Skip OAuth linking page since they're already linked
+          router.push('/success');
+          return;
+        } catch (err) {
+          console.error('Error linking OAuth account:', err);
+        }
+      }
 
       // Now redirect to OAuth linking with an active session
       router.push('/signup/oauth');
@@ -185,6 +235,24 @@ export default function SignUpPage() {
                 </div>
               </div>
             </div>
+
+            {oauthInfo && (
+              <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4 mb-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <title>Info</title>
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm">
+                    <p className="font-semibold text-blue-400 mb-1">Signed in with {oauthInfo.provider}</p>
+                    <p className="text-blue-300">
+                      Your Bitcoin identity will be automatically linked to your {oauthInfo.provider} account
+                      {oauthInfo.email && <> ({oauthInfo.email})</>}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-900/20 border border-red-900 rounded-lg p-3 text-red-400 text-sm">

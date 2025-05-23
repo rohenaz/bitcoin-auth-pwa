@@ -11,10 +11,25 @@ export default function OAuthPage() {
   const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
 
   useEffect(() => {
+    // Check if this is an OAuth-only user without Bitcoin credentials
+    if (session?.user?.isOAuthOnly && !sessionStorage.getItem('decryptedBackup')) {
+      console.log('OAuth-only user detected, redirecting to create Bitcoin identity');
+      // Store OAuth info for after identity creation
+      sessionStorage.setItem('oauthSignupInfo', JSON.stringify({
+        provider: session.user.provider,
+        providerAccountId: session.user.providerAccountId,
+        email: session.user.email,
+        name: session.user.name
+      }));
+      // Redirect to main signup to create Bitcoin identity
+      router.push('/signup');
+      return;
+    }
+    
     // Check if we have the decrypted backup in session
     const decryptedBackup = sessionStorage.getItem('decryptedBackup');
     if (!decryptedBackup) {
-      // If no backup, redirect to signup
+      // If no backup and not OAuth-only, redirect to signup
       router.push('/signup');
       return;
     }

@@ -70,12 +70,23 @@ export default function OAuthRestorePage() {
         console.error('Backup fetch failed:', response.status, responseText);
         
         if (response.status === 404) {
-          // No backup found - this is a new user trying to sign in
+          // No backup found
           console.error('No backup found for OAuth ID:', oauthId);
-          setError('No backup found for this account. Please create a new account first.');
-          setTimeout(() => {
-            signOut({ callbackUrl: '/signup' });
-          }, 3000);
+          
+          // Check if this user has a potential match via email
+          if (session.user.needsLinking && session.user.potentialBapId) {
+            // TODO: Implement account linking flow
+            setError('We found an existing account with your email. Account linking coming soon.');
+            setTimeout(() => {
+              signOut({ callbackUrl: '/signin' });
+            }, 3000);
+            return;
+          }
+          
+          // New user - redirect to signup with OAuth info
+          console.log('New OAuth user, redirecting to signup');
+          // Sign out and redirect to signup - the OAuth info will guide them
+          router.push('/signup/oauth');
           return;
         }
         throw new Error(`Failed to fetch backup: ${responseText}`);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { type BapMasterBackup, decryptBackup } from 'bitcoin-backup';
 import { getAuthToken } from 'bitcoin-auth';
@@ -13,7 +13,6 @@ const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
 function SignInPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

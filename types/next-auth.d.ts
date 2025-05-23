@@ -9,6 +9,8 @@ declare module "next-auth" {
       provider?: string
       providerAccountId?: string
       isOAuthOnly?: boolean
+      potentialBapId?: string
+      needsLinking?: boolean
     } & DefaultSession["user"]
   }
 
@@ -29,5 +31,8 @@ declare module "next-auth/jwt" {
     provider?: string
     providerAccountId?: string
     isOAuthOnly?: boolean
+    email?: string
+    potentialBapId?: string
+    needsLinking?: boolean
   }
 }
