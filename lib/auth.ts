@@ -214,6 +214,14 @@ export const authOptions = {
     error: '/signin',
   },
   callbacks: {
+    redirect: async ({ url, baseUrl }) => {
+      // If the URL contains oauth-restore, preserve it
+      if (url.includes('/signin/oauth-restore')) {
+        return url;
+      }
+      // Otherwise, use the URL or default to baseUrl
+      return url.startsWith(baseUrl) ? url : baseUrl;
+    },
     jwt: async ({ token, user, account }: { token: JWT, user: User, account: Account | null }) => {
       if (user) {
         token.sub = user.id;

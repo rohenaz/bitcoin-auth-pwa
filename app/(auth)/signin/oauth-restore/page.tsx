@@ -86,13 +86,17 @@ export default function OAuthRestorePage() {
   }, [session, router]);
 
   useEffect(() => {
+    console.log('OAuth restore - status:', status, 'session:', session);
+    
     if (status === 'loading') return;
     
     if (!session?.user) {
+      console.log('No session user, redirecting to signin');
       router.push('/signin');
       return;
     }
 
+    console.log('Session exists, fetching backup from OAuth');
     // Try to fetch backup using OAuth info
     fetchBackupFromOAuth();
   }, [session, status, router, fetchBackupFromOAuth]);
