@@ -3,13 +3,9 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { decryptBackup, type BapMasterBackup } from 'bitcoin-backup';
-import { BAP } from 'bsv-bap';
-import { getAuthToken } from 'bitcoin-auth';
-import { signIn } from 'next-auth/react';
+import { signInWithBackup } from '@/lib/auth-flows';
+import { STORAGE_KEYS } from '@/lib/storage-keys';
 import type { DeviceLinkValidateResponse } from '@/types/device-link';
-
-const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
-const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
 function LinkDeviceContent() {
   const searchParams = useSearchParams();
@@ -52,7 +48,7 @@ function LinkDeviceContent() {
         setTokenData(data);
         
         // Check if we already have the backup
-        const existingBackup = localStorage.getItem(ENCRYPTED_BACKUP_KEY);
+        const existingBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
         if (existingBackup) {
           // User already has backup, just sign them in
           router.push('/signin');
@@ -92,42 +88,11 @@ function LinkDeviceContent() {
         throw new Error('Invalid password or corrupted backup');
       }
 
-      // Store in session storage
-      sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(decrypted));
-      
       // Store encrypted backup in local storage for future sign-ins
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, encryptedBackup);
+      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, encryptedBackup);
       
-      // Get private key for auth
-      const bap = new BAP(decrypted.xprv);
-      bap.importIds(decrypted.ids);
-      const ids = bap.listIds();
-      const id = ids[0];
-      
-      if (!id) {
-        throw new Error('No identity found in backup');
-      }
-      
-      const master = bap.getId(id);
-      const memberBackup = master?.exportMemberBackup();
-      const pk = memberBackup?.derivedPrivateKey;
-      
-      if (!pk) {
-        throw new Error('No private key found in backup');
-      }
-
-      // Create auth token
-      const authToken = getAuthToken({
-        privateKeyWif: pk,
-        requestPath: '/api/auth/signin',
-        body: ''
-      });
-
-      // Sign in with Bitcoin credentials
-      const result = await signIn('credentials', {
-        token: authToken,
-        redirect: false,
-      });
+      // Sign in with the decrypted backup
+      const result = await signInWithBackup(decrypted);
 
       if (result?.error) {
         throw new Error(result.error);
@@ -195,8 +160,8 @@ function LinkDeviceContent() {
 
         {tokenData && (
           <div className="bg-gray-900 rounded-lg p-4 text-sm">
-            <p className="text-gray-400">Linking to account:</p>
-            <p className="font-mono text-xs mt-1">{tokenData.address}</p>
+            <p className="text-gray-400">Linking to BAP ID:</p>
+            <p className="font-mono text-xs mt-1">{tokenData.bapId}</p>
           </div>
         )}
 

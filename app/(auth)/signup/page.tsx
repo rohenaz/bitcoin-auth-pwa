@@ -8,9 +8,7 @@ import Link from 'next/link';
 import { HD, Mnemonic, PrivateKey } from '@bsv/sdk';
 import { getAuthToken } from 'bitcoin-auth';
 import { signIn } from 'next-auth/react';
-
-const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
-const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
+import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -26,7 +24,7 @@ export default function SignUpPage() {
 
   useEffect(() => {
     // Check if coming from OAuth
-    const oauthSignupInfo = sessionStorage.getItem('oauthSignupInfo');
+    const oauthSignupInfo = sessionStorage.getItem(STORAGE_KEYS.OAUTH_SIGNUP_INFO);
     if (oauthSignupInfo) {
       try {
         const info = JSON.parse(oauthSignupInfo);
@@ -104,10 +102,10 @@ export default function SignUpPage() {
       const encrypted = await encryptBackup(bapBackup, password);
 
       // Store encrypted backup locally
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, encrypted);
+      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, encrypted);
       
       // Store decrypted backup in session for immediate use
-      sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(bapBackup));
+      sessionStorage.setItem(STORAGE_KEYS.DECRYPTED_BACKUP, JSON.stringify(bapBackup));
 
       // Sign in with credentials to create the user account
       const bap = new BAP(bapBackup.xprv);
@@ -172,7 +170,7 @@ export default function SignUpPage() {
       }
       
       // Check if we have OAuth info from an OAuth-first signup
-      const oauthSignupInfo = sessionStorage.getItem('oauthSignupInfo');
+      const oauthSignupInfo = sessionStorage.getItem(STORAGE_KEYS.OAUTH_SIGNUP_INFO);
       if (oauthSignupInfo) {
         try {
           const { provider, providerAccountId, email } = JSON.parse(oauthSignupInfo);
@@ -197,7 +195,7 @@ export default function SignUpPage() {
             // This will be handled by the backup endpoint
           }
           
-          sessionStorage.removeItem('oauthSignupInfo');
+          sessionStorage.removeItem(STORAGE_KEYS.OAUTH_SIGNUP_INFO);
           
           // Skip OAuth linking page since they're already linked
           router.push('/success');
@@ -325,7 +323,7 @@ export default function SignUpPage() {
                     const parsed = JSON.parse(text);
                     if (parsed.encrypted && parsed.encryptedMnemonic) {
                       // It's already encrypted, store it and go to sign in
-                      localStorage.setItem(ENCRYPTED_BACKUP_KEY, text);
+                      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, text);
                       router.push('/signin');
                     } else if (parsed.xprv && parsed.mnemonic) {
                       // It's an unencrypted backup, we need to encrypt it

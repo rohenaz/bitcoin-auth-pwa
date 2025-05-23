@@ -1,15 +1,11 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import { decryptBackup, type BapMasterBackup } from 'bitcoin-backup';
-import { BAP } from 'bsv-bap';
-import { getAuthToken } from 'bitcoin-auth';
-import { signIn, signOut } from 'next-auth/react';
-
-const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
-const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
+import { signInWithBackup } from '@/lib/auth-flows';
+import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 export default function OAuthRestorePage() {
   const { data: session, status } = useSession();
@@ -95,7 +91,7 @@ export default function OAuthRestorePage() {
       const data = await response.json();
       
       // Store the encrypted backup in localStorage
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, data.backup);
+      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, data.backup);
       
       // Set the encrypted backup in state to show the decrypt form
       setEncryptedBackup(data.backup);
@@ -138,43 +134,14 @@ export default function OAuthRestorePage() {
         throw new Error('Invalid backup format');
       }
 
-      // Store in session storage
-      sessionStorage.setItem(DECRYPTED_BACKUP_KEY, JSON.stringify(decrypted));
-      
       // Store encrypted backup in local storage for future sign-ins
-      localStorage.setItem(ENCRYPTED_BACKUP_KEY, encryptedBackup);
+      localStorage.setItem(STORAGE_KEYS.ENCRYPTED_BACKUP, encryptedBackup);
       
-      // Get private key for auth
-      const bap = new BAP(decrypted.xprv);
-      bap.importIds(decrypted.ids);
-      const ids = bap.listIds();
-      let id = ids[0];
-      if (!id) {
-        id = bap.newId().identityKey;
-      }
-      const master = bap.getId(id);
-      const memberBackup = master?.exportMemberBackup();
-      const pk = memberBackup?.derivedPrivateKey;
-      
-      if (!pk) {
-        throw new Error('No private key found in backup');
-      }
-
-      // Create auth token
-      const authToken = getAuthToken({
-        privateKeyWif: pk,
-        requestPath: '/api/auth/signin',
-        body: ''
-      });
-
       // Sign out of OAuth session first
       await signOut({ redirect: false });
 
-      // Sign in with Bitcoin credentials
-      const result = await signIn('credentials', {
-        token: authToken,
-        redirect: false,
-      });
+      // Sign in with the decrypted backup
+      const result = await signInWithBackup(decrypted);
 
       if (result?.error) {
         throw new Error(result.error);

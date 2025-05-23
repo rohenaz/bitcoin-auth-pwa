@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Modal from "@/components/Modal";
 import { ENABLED_PROVIDERS, type EnabledProvider } from "@/lib/env";
+import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 interface ConnectedAccount {
   provider: string;
@@ -104,7 +105,7 @@ export default function SettingsPage() {
     // IMPORTANT: We only support linking OAuth when signed in with credentials
     // The app architecture requires credentials provider as the base authentication
     if (session?.user?.id && session?.user?.provider === 'credentials') {
-      const encryptedBackup = localStorage.getItem('encryptedBackup');
+      const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
       if (encryptedBackup) {
         // Use our custom OAuth linking endpoint that doesn't create a new session
         const params = new URLSearchParams({
