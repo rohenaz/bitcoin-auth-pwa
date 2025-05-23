@@ -64,17 +64,23 @@ export default function SettingsPage() {
             
             // If we're now logged in via OAuth and it matches the pending provider
             if (session.user.provider === pendingProvider && session.user.providerAccountId) {
-            // Create the OAuth mapping with the encrypted backup
-            const response = await fetch('/api/backup', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
+              console.log('Creating OAuth mapping:', {
                 bapId,
-                oauthProvider: pendingProvider,
-                oauthId: session.user.providerAccountId,
-                encryptedBackup
-              })
-            });
+                provider: pendingProvider,
+                providerAccountId: session.user.providerAccountId
+              });
+              
+              // Create the OAuth mapping with the encrypted backup
+              const response = await fetch('/api/backup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  bapId,
+                  oauthProvider: pendingProvider,
+                  oauthId: session.user.providerAccountId,
+                  encryptedBackup
+                })
+              });
             
             if (response.ok) {
               // Switch back to credentials session with the original BAP ID
@@ -143,12 +149,18 @@ export default function SettingsPage() {
     if (session?.user?.id && session?.user?.provider === 'credentials') {
       const encryptedBackup = localStorage.getItem('encryptedBackup');
       if (encryptedBackup) {
-        sessionStorage.setItem('pendingOAuthLink', JSON.stringify({
+        const pendingData = {
           bapId: session.user.id,
           provider: provider,
           encryptedBackup: encryptedBackup
-        }));
+        };
+        console.log('Setting pendingOAuthLink:', pendingData);
+        sessionStorage.setItem('pendingOAuthLink', JSON.stringify(pendingData));
+      } else {
+        console.warn('No encrypted backup found when trying to connect OAuth provider');
       }
+    } else {
+      console.warn('Cannot connect OAuth provider - not signed in with credentials or no user ID');
     }
     
     await signIn(provider, { 

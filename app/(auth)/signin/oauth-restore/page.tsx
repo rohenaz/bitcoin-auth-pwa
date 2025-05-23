@@ -55,17 +55,19 @@ export default function OAuthRestorePage() {
       const response = await fetch(`/api/backup?oauthId=${oauthId}`);
       
       if (!response.ok) {
+        const responseText = await response.text();
+        console.error('Backup fetch failed:', response.status, responseText);
+        
         if (response.status === 404) {
           // No backup found - this is a new user trying to sign in
           console.error('No backup found for OAuth ID:', oauthId);
-          console.error('Response:', await response.text());
           setError('No backup found for this account. Please create a new account first.');
           setTimeout(() => {
             signOut({ callbackUrl: '/signup' });
           }, 3000);
           return;
         }
-        throw new Error('Failed to fetch backup');
+        throw new Error(`Failed to fetch backup: ${responseText}`);
       }
 
       const data = await response.json();
