@@ -58,7 +58,10 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error('Error fetching BAP profile:', err);
-      setError('Failed to load profile');
+      // Don't show error for expected cases
+      if (err instanceof Error && !err.message.includes('fetch')) {
+        setError('Failed to load profile');
+      }
     } finally {
       setLoading(false);
     }
@@ -100,6 +103,8 @@ export default function DashboardPage() {
       // Refresh the BAP profile
       await fetchBAPProfile();
       setShowProfileEditor(false);
+      // Clear any errors
+      setError('');
     } catch (err) {
       console.error('Error saving profile:', err);
       setError('Failed to save profile');
@@ -160,7 +165,10 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold">Your Identity</h2>
               <button
                 type="button"
-                onClick={() => setShowProfileEditor(true)}
+                onClick={() => {
+                  setError('');
+                  setShowProfileEditor(true);
+                }}
                 className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition-colors"
               >
                 Edit Profile

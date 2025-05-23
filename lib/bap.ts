@@ -23,11 +23,13 @@ export async function resolveAddress(addr: string): Promise<APIIdentity | null> 
   const idx = await redis.hgetall<{ id: string; block: string }>(addrKey(addr));
   if (!idx?.id) return null;
   
-  const rawBapProfile = await redis.get<string>(bapKey(idx.id));
+  const rawBapProfile = await redis.get(bapKey(idx.id));
   if (!rawBapProfile) return null;
 
-  // Parse the stored BAP profile and cast to include currentHeight.
-  const bap = JSON.parse(rawBapProfile) as APIIdentity & { currentHeight: number };
+  // Parse the stored BAP profile if it's a string, otherwise use as-is
+  const bap = typeof rawBapProfile === 'string' 
+    ? JSON.parse(rawBapProfile) as APIIdentity & { currentHeight: number }
+    : rawBapProfile as APIIdentity & { currentHeight: number };
   
   // Self-heal stale index if currentAddress in profile doesn't match queried address.
   // Note: The original plan had `block: bap.currentHeight` (a number), 

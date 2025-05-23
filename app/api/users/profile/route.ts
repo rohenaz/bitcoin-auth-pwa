@@ -14,7 +14,9 @@ export async function GET() {
     
     // Get BAP profile
     const bapProfile = await redis.get(bapKey(session.user.id));
-    const profile = bapProfile ? JSON.parse(bapProfile as string) : null;
+    const profile = bapProfile 
+      ? (typeof bapProfile === 'string' ? JSON.parse(bapProfile) : bapProfile)
+      : null;
     
     return NextResponse.json({
       alternateName: userData?.displayName || profile?.identity?.alternateName || '',
@@ -54,7 +56,10 @@ export async function PUT(request: NextRequest) {
     let profile;
     
     if (existingProfile) {
-      profile = JSON.parse(existingProfile as string);
+      // Parse if string, otherwise use as-is
+      profile = typeof existingProfile === 'string' 
+        ? JSON.parse(existingProfile) 
+        : existingProfile;
       profile.identity = {
         ...profile.identity,
         alternateName,
