@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { type BapMasterBackup, encryptBackup } from 'bitcoin-backup';
 import { BAP } from 'bsv-bap';
 import Link from 'next/link';
-import { HD, Mnemonic } from '@bsv/sdk';
+import { HD, Mnemonic, PrivateKey } from '@bsv/sdk';
 import { getAuthToken } from 'bitcoin-auth';
 import { signIn } from 'next-auth/react';
 
@@ -125,7 +125,37 @@ export default function SignUpPage() {
         throw new Error('No private key found');
       }
 
-      // Create auth token and sign in
+      // Get the address for user creation
+      const pubkey = PrivateKey.fromWif(pk).toPublicKey();
+      const address = pubkey?.toAddress();
+
+      // Create auth token for user creation
+      const createUserToken = getAuthToken({
+        privateKeyWif: pk,
+        requestPath: '/api/users/create-from-backup',
+        body: JSON.stringify({ bapId: id, address, encryptedBackup: encrypted })
+      });
+
+      // Create the user first
+      const createUserResponse = await fetch('/api/users/create-from-backup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': createUserToken
+        },
+        body: JSON.stringify({
+          bapId: id,
+          address,
+          encryptedBackup: encrypted
+        })
+      });
+
+      if (!createUserResponse.ok) {
+        const error = await createUserResponse.json();
+        throw new Error(error.error || 'Failed to create user');
+      }
+
+      // Now sign in
       const authToken = getAuthToken({
         privateKeyWif: pk,
         requestPath: '/api/auth/signin',
