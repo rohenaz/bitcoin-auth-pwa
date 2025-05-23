@@ -55,6 +55,8 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 - **OAuth State Management**: OAuth linking uses crypto-secure state stored in Redis with 10-minute expiry
 - **Environment Validation**: Server-side only via `typeof window === 'undefined'` check
 - **Enabled Providers**: Configured in `lib/env.ts` as `ENABLED_PROVIDERS` constant (currently google, github)
+- **Device Linking**: Time-limited tokens stored in Redis as `device-link:{token}` with 10-minute expiry
+- **Dashboard Routing**: Uses Next.js 15 async params with catch-all route `/dashboard/[[...bapId]]`
 
 ### API Routes
 
@@ -72,6 +74,8 @@ This is a Bitcoin-based authentication PWA where users' Bitcoin keypairs ARE the
 - `/api/users/link-backup`: POST to link backup to OAuth provider
 - `/api/users/create-from-backup`: POST to create user record from existing backup
 - `/api/users/profile`: GET/PUT user profile data (alternateName, image, description)
+- `/api/users/profiles/create`: POST creates new BAP profile (calls newId()) and updates backup
+- `/api/users/transfer-oauth`: POST transfers OAuth link from one account to another (requires password verification)
 
 ### Environment Variables Required
 
@@ -115,6 +119,14 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - `addr:{address}`: Address to BAP ID mapping for unpublished profiles
 - `bap:{bapId}`: Cached BAP profile data
 - `block:height`: Current blockchain height for tracking
+- `device-link:{token}`: Time-limited device linking tokens with encrypted backup
+- `oauth-state:{state}`: OAuth linking state tokens for CSRF protection
+- `pending-backup:{bapId}`: Temporary storage for backups during OAuth linking flow
+
+### Utility Functions
+
+- **verifyProfileOwnership**: Verifies a user owns a specific BAP ID by checking their backup (`lib/profile-utils.ts`)
+- **getBapIdsFromBackup**: Extracts all BAP IDs from a backup (`lib/profile-utils.ts`)
 
 ### Key UI Components
 
@@ -125,6 +137,61 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - **Security Settings**: Cloud backup management and local backup export
 - **DeviceLinkQR**: QR code generator for direct device-to-device linking without OAuth
 - **LinkDevice**: Page that handles QR code scanning and password decryption for new devices
+- **ProfileSwitcher**: Dropdown component for switching between multiple BAP profiles
+- **OAuthConflictModal**: Modal that handles OAuth account conflicts, allowing users to transfer links or switch accounts
+
+### Multi-Profile Support
+
+Users can create and manage multiple BAP profiles (identities) from a single master backup:
+
+1. **Profile Creation**: 
+   - Call `/api/users/profiles/create` with decrypted backup and password
+   - Uses `bap.newId()` to generate new identity with incremented derivation path
+   - Updates encrypted backup with new IDs array
+   - Syncs updated backup to cloud storage automatically
+
+2. **Profile Switching**:
+   - Dashboard supports dynamic routing: `/dashboard/[bapId]`
+   - `/dashboard` defaults to first profile in backup
+   - ProfileSwitcher component shows all available profiles
+   - Each profile has its own Bitcoin address and can have unique profile data
+
+3. **Authorization**:
+   - User must own the BAP ID (exists in their backup) to access a profile
+   - Profile-specific actions require auth token signed with that profile's private key
+   - Profile updates verify both Bitcoin signature AND backup ownership
+   - The `X-Decrypted-Backup` header enables verification of secondary profile ownership
+   - Unauthorized access redirects to default dashboard
+
+4. **Data Structure**:
+   - Master backup contains array of profile IDs (`backup.ids`)
+   - Each profile can have separate BAP profile data in Redis
+   - OAuth mappings point to primary (first) profile's backup
+   - All profiles share the same encrypted backup file
+
+5. **Important Notes**:
+   - Profile data (name, bio, image) is stored separately from the backup
+   - Creating new profiles only updates the backup, not user accounts
+   - Each profile can be published to blockchain independently
+   - OAuth providers always retrieve the complete backup with all profiles
+
+### OAuth Conflict Resolution
+
+When users attempt to link an OAuth account that's already associated with another Bitcoin identity:
+
+1. **Conflict Detection**: System detects duplicate OAuth mappings and returns 409 status
+2. **User Options**: OAuthConflictModal presents two choices:
+   - **Transfer Link**: Move the OAuth link to current account (requires password verification of the old account)
+   - **Switch Account**: Abandon current account and use the existing one
+3. **Transfer Process**: 
+   - User provides password for the old account
+   - System verifies ownership by decrypting the old backup
+   - OAuth mapping is updated to point to new account
+   - Old account's backup is removed from OAuth provider
+4. **Implementation Locations**:
+   - Signup flow (`/signup` and `/signup/oauth`)
+   - Settings page (`/settings`)
+   - Link provider callback includes `existingBapId` in error redirects
 
 ### Important Implementation Notes
 
@@ -135,3 +202,7 @@ This template uses Vercel KV (Redis) which is automatically provisioned when dep
 - **BAP ID as Primary Key**: All user data is keyed by BAP ID, which is derived from the Bitcoin identity
 - **Signature Verification**: Uses `bitcoin-auth` library to verify signatures with configurable time windows
 - **Profile Updates**: User profile changes update Redis immediately but don't modify the encrypted backup
+- **Multi-Profile Sessions**: Active profile determined by URL path, not stored in session
+- **OAuth Conflict Handling**: Duplicate OAuth accounts can be resolved via transfer or account switching
+- **Multi-Profile Security**: Profile updates require both Bitcoin signature (proving key ownership) AND backup verification (proving profile ownership)
+- **Request Body Handling**: API routes clone requests before auth verification to avoid consuming body stream

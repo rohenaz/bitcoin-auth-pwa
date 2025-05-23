@@ -175,7 +175,13 @@ export async function GET(request: NextRequest) {
     
     if (!linkResult.success && linkResult.error === 'already-linked') {
       console.error(`OAuth account already linked: ${provider}|${providerAccountId} -> ${linkResult.existingBapId}`);
-      return NextResponse.redirect(new URL('/settings?error=OAuthAlreadyLinked', request.url));
+      const redirectUrl = new URL('/settings', request.url);
+      redirectUrl.searchParams.set('error', 'OAuthAlreadyLinked');
+      redirectUrl.searchParams.set('provider', provider);
+      if (linkResult.existingBapId) {
+        redirectUrl.searchParams.set('existingBapId', linkResult.existingBapId);
+      }
+      return NextResponse.redirect(redirectUrl);
     }
     
     // Store the encrypted backup if provided

@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ProfileEditor from '@/components/ProfileEditor';
 import DeviceLinkQR from '@/components/DeviceLinkQR';
+import ProfileSwitcher from '@/components/ProfileSwitcher';
+import { BAP } from 'bsv-bap';
+import { PrivateKey } from '@bsv/sdk';
+import type { BapMasterBackup } from 'bitcoin-backup';
 
 interface BAPProfile {
   idKey: string;
@@ -31,20 +35,91 @@ interface BAPProfile {
   currentHeight?: number;
 }
 
-export default function DashboardPage() {
+interface DashboardPageProps {
+  params: Promise<{
+    bapId?: string[];
+  }>;
+}
+
+export default function DashboardPage({ params }: DashboardPageProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [bapProfile, setBapProfile] = useState<BAPProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [currentBapId, setCurrentBapId] = useState<string>('');
+  const [currentAddress, setCurrentAddress] = useState<string>('');
+  const [resolvedParams, setResolvedParams] = useState<{ bapId?: string[] } | null>(null);
 
+  // Resolve async params
+  useEffect(() => {
+    params.then(p => setResolvedParams(p));
+  }, [params]);
+
+  // Initialize profile from route params
+  useEffect(() => {
+    if (!session?.user || !resolvedParams) return;
+    
+    const initializeProfile = async () => {
+      try {
+        // Get decrypted backup
+        const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
+        if (!decryptedBackupStr) {
+          router.push('/signin');
+          return;
+        }
+
+        const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
+        const bap = new BAP(backup.xprv);
+        bap.importIds(backup.ids);
+        
+        const ids = bap.listIds();
+        
+        // Get requested BAP ID from route or use first available
+        const requestedBapId = resolvedParams.bapId?.[0];
+        const targetBapId = requestedBapId || ids[0];
+        
+        if (!targetBapId) {
+          setError('No identity found in backup');
+          router.push('/signin');
+          return;
+        }
+        
+        // Verify user owns this BAP ID
+        if (requestedBapId && !ids.includes(requestedBapId)) {
+          setError('You do not have access to this profile');
+          router.push('/dashboard');
+          return;
+        }
+        
+        // Get address for the target BAP ID
+        const master = bap.getId(targetBapId);
+        const memberBackup = master?.exportMemberBackup();
+        
+        if (!memberBackup?.derivedPrivateKey) {
+          throw new Error('Invalid profile');
+        }
+        
+        const pubkey = PrivateKey.fromWif(memberBackup.derivedPrivateKey).toPublicKey();
+        const address = pubkey.toAddress().toString();
+        
+        setCurrentBapId(targetBapId);
+        setCurrentAddress(address);
+      } catch (err) {
+        console.error('Error initializing profile:', err);
+        setError('Failed to load profile');
+      }
+    };
+    
+    initializeProfile();
+  }, [session, resolvedParams, router]);
 
   const fetchBAPProfile = useCallback(async () => {
-    if (!session?.user?.address) return;
+    if (!currentAddress) return;
 
     try {
-      const response = await fetch(`/api/bap?address=${session.user.address}`);
+      const response = await fetch(`/api/bap?address=${currentAddress}`);
       if (!response.ok) {
         if (response.status === 404) {
           // This is expected for unpublished BAP IDs or profiles not in cache
@@ -66,7 +141,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, [currentAddress]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -76,10 +151,10 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    if (session?.user) {
+    if (currentAddress) {
       fetchBAPProfile();
     }
-  }, [session, fetchBAPProfile]);
+  }, [currentAddress, fetchBAPProfile]);
 
   const handleSignOut = async () => {
     // Only clear session storage, preserve encrypted backup in localStorage
@@ -91,10 +166,44 @@ export default function DashboardPage() {
 
   const handleSaveProfile = async (profile: { alternateName: string; image: string; description: string }) => {
     try {
+      // Get auth token for current profile
+      const decryptedBackupStr = sessionStorage.getItem('decryptedBackup');
+      if (!decryptedBackupStr) {
+        throw new Error('No backup found');
+      }
+
+      const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
+      const bap = new BAP(backup.xprv);
+      bap.importIds(backup.ids);
+      
+      const master = bap.getId(currentBapId);
+      const memberBackup = master?.exportMemberBackup();
+      
+      if (!memberBackup?.derivedPrivateKey) {
+        throw new Error('Invalid profile');
+      }
+
+      const { getAuthToken } = await import('bitcoin-auth');
+      const requestBody = JSON.stringify({
+        ...profile,
+        bapId: currentBapId,
+        address: currentAddress
+      });
+      
+      const authToken = getAuthToken({
+        privateKeyWif: memberBackup.derivedPrivateKey,
+        requestPath: '/api/users/profile',
+        body: requestBody
+      });
+
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile)
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Auth-Token': authToken,
+          'X-Decrypted-Backup': decryptedBackupStr
+        },
+        body: requestBody
       });
 
       if (!response.ok) {
@@ -146,13 +255,16 @@ export default function DashboardPage() {
                 </Link>
               </nav>
             </div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center space-x-4">
+              <ProfileSwitcher currentBapId={currentBapId} />
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -199,12 +311,12 @@ export default function DashboardPage() {
 
               <div>
                 <label htmlFor="bitcoinAddress" className="text-sm text-gray-500">Bitcoin Address</label>
-                <p className="font-mono text-sm break-all">{session?.user?.address || 'Loading...'}</p>
+                <p className="font-mono text-sm break-all">{currentAddress || 'Loading...'}</p>
               </div>
 
               <div>
                 <label htmlFor="identityKey" className="text-sm text-gray-500">Identity Key</label>
-                <p className="font-mono text-sm break-all">{session?.user?.idKey || 'Loading...'}</p>
+                <p className="font-mono text-sm break-all">{currentBapId || 'Loading...'}</p>
               </div>
             </div>
           </div>

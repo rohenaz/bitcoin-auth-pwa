@@ -9,6 +9,7 @@ import { HD, Mnemonic, PrivateKey } from '@bsv/sdk';
 import { getAuthToken } from 'bitcoin-auth';
 import { signIn } from 'next-auth/react';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
+import OAuthConflictModal from '@/components/OAuthConflictModal';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -18,9 +19,14 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [bapBackup, setBapBackup] = useState<BapMasterBackup | null>(null);
-  const [, setBapId] = useState<string | null>(null);
+  const [bapId, setBapId] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [oauthInfo, setOauthInfo] = useState<{ provider?: string; email?: string; name?: string } | null>(null);
+  const [conflictModal, setConflictModal] = useState<{
+    isOpen: boolean;
+    provider: string;
+    existingBapId: string;
+  } | null>(null);
 
   useEffect(() => {
     // Check if coming from OAuth
@@ -81,6 +87,62 @@ export default function SignUpPage() {
     setStep('confirm');
     setError('');
   };
+
+  const handleTransferComplete = useCallback(async () => {
+    if (!conflictModal || !bapBackup) return;
+    
+    setConflictModal(null);
+    
+    // OAuth link was transferred, continue with signup
+      setLoading(true);
+      try {
+        const encrypted = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
+        if (!encrypted) throw new Error('No encrypted backup found');
+        
+        const oauthSignupInfo = sessionStorage.getItem(STORAGE_KEYS.OAUTH_SIGNUP_INFO);
+        if (!oauthSignupInfo) throw new Error('OAuth info lost');
+        
+        const { provider, providerAccountId } = JSON.parse(oauthSignupInfo);
+        
+        // Get BAP ID from backup
+        const bap = new BAP(bapBackup.xprv);
+        bap.importIds(bapBackup.ids);
+        const bapId = bap.listIds()[0] || '';
+        
+        // Try to store the backup again now that the link has been transferred
+        const backupResponse = await fetch('/api/backup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            encryptedBackup: encrypted,
+            bapId,
+            oauthProvider: provider,
+            oauthId: providerAccountId
+          })
+        });
+        
+        if (backupResponse.ok) {
+          sessionStorage.removeItem(STORAGE_KEYS.OAUTH_SIGNUP_INFO);
+          router.push('/success');
+        } else {
+          throw new Error('Failed to link account after transfer');
+        }
+      } catch (err) {
+        console.error('Error after transfer:', err);
+        setError(err instanceof Error ? err.message : 'Failed to complete signup after transfer');
+      } finally {
+        setLoading(false);
+      }
+  }, [conflictModal, bapBackup, router]);
+
+  const handleSwitchAccount = useCallback(() => {
+    // User chose to switch to existing account, redirect to sign in
+    sessionStorage.removeItem(STORAGE_KEYS.OAUTH_SIGNUP_INFO);
+    localStorage.removeItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
+    sessionStorage.removeItem(STORAGE_KEYS.DECRYPTED_BACKUP);
+    setConflictModal(null);
+    router.push('/signin');
+  }, [router]);
 
   const handleConfirmSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,8 +254,13 @@ export default function SignUpPage() {
           
           if (backupResponse.status === 409) {
             // OAuth account already linked
-            await backupResponse.json();
-            setError(`This ${provider} account is already linked to another Bitcoin identity. Please sign out and use a different ${provider} account.`);
+            const conflictData = await backupResponse.json();
+            setConflictModal({
+              isOpen: true,
+              provider,
+              existingBapId: conflictData.existingBapId
+            });
+            setLoading(false);
             return;
           }
           
@@ -483,6 +550,18 @@ export default function SignUpPage() {
           </>
         )}
       </div>
+      
+      {conflictModal && (
+        <OAuthConflictModal
+          isOpen={conflictModal.isOpen}
+          onClose={() => setConflictModal(null)}
+          provider={conflictModal.provider}
+          existingBapId={conflictModal.existingBapId}
+          currentBapId={bapId || ''}
+          onTransferComplete={handleTransferComplete}
+          onSwitchAccount={handleSwitchAccount}
+        />
+      )}
     </div>
   );
 } 

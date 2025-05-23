@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
 import { redis, userKey, bapKey } from '@/lib/redis';
+import { verifyBitcoinAuth } from '@/lib/auth-middleware';
+import { verifyProfileOwnership } from '@/lib/profile-utils';
+import type { BapMasterBackup } from 'bitcoin-backup';
 
 export async function GET() {
   const session = await auth();
@@ -36,14 +39,48 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { alternateName, image, description } = await request.json();
+    // Clone request to read body twice
+    const requestClone = request.clone();
+    
+    // Parse request body first
+    const { alternateName, image, description, bapId, address } = await request.json();
+    
+    // Verify Bitcoin auth token with cloned request
+    const authResult = await verifyBitcoinAuth(requestClone, '/api/users/profile');
     
     // Validate inputs
     if (!alternateName || typeof alternateName !== 'string') {
       return NextResponse.json({ error: 'Invalid alternateName' }, { status: 400 });
     }
 
-    const bapId = session.user.id;
+    if (!bapId || !address) {
+      return NextResponse.json({ error: 'Missing profile identifiers' }, { status: 400 });
+    }
+
+    // Verify the address matches the auth token
+    if (authResult.address !== address) {
+      return NextResponse.json({ error: 'Address mismatch with auth token' }, { status: 403 });
+    }
+
+    // For multi-profile support: verify the user owns this BAP ID
+    // Get the user's decrypted backup from session storage (passed via request)
+    const decryptedBackupStr = request.headers.get('X-Decrypted-Backup');
+    if (!decryptedBackupStr) {
+      // Fall back to checking if it's the primary profile
+      if (bapId !== session.user.id) {
+        return NextResponse.json({ error: 'Cannot verify profile ownership' }, { status: 403 });
+      }
+    } else {
+      // Verify ownership through backup
+      try {
+        const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
+        if (!verifyProfileOwnership(backup, bapId)) {
+          return NextResponse.json({ error: 'Unauthorized to update this profile' }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: 'Invalid backup data' }, { status: 400 });
+      }
+    }
     
     // Update user record
     await redis.hset(userKey(bapId), {
@@ -66,11 +103,13 @@ export async function PUT(request: NextRequest) {
         image: image || undefined,
         description: description || undefined
       };
+      // Update current address if different
+      profile.currentAddress = address;
     } else {
       // Create new profile if it doesn't exist
       profile = {
         idKey: bapId,
-        currentAddress: session.user.address,
+        currentAddress: address,
         identity: {
           '@context': 'https://schema.org',
           '@type': 'Person',

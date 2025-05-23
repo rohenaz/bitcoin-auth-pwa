@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Modal from "@/components/Modal";
+import OAuthConflictModal from "@/components/OAuthConflictModal";
 import { ENABLED_PROVIDERS, type EnabledProvider } from "@/lib/env";
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 
@@ -23,6 +24,11 @@ export default function SettingsPage() {
     message: '', 
     type: 'info' 
   });
+  const [conflictModal, setConflictModal] = useState<{
+    isOpen: boolean;
+    provider: string;
+    existingBapId: string;
+  } | null>(null);
   
   const showMessage = useCallback((title: string, message: string, type: 'error' | 'warning' | 'info' = 'info') => {
     setModalContent({ title, message, type });
@@ -41,6 +47,23 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleTransferComplete = useCallback(async () => {
+    if (!conflictModal || !session?.user?.id) return;
+    
+    const provider = conflictModal.provider;
+    setConflictModal(null);
+    
+    // OAuth link was transferred, refresh connected accounts
+    await fetchConnectedAccounts();
+    showMessage('Success', `Your ${provider} account has been linked successfully.`, 'info');
+  }, [conflictModal, session, fetchConnectedAccounts, showMessage]);
+
+  const handleSwitchAccount = useCallback(async () => {
+    // User chose to switch to existing account - sign out and redirect
+    await signOut({ redirect: false });
+    window.location.href = '/signin';
   }, []);
 
   const ALL_PROVIDERS = [
@@ -68,6 +91,22 @@ export default function SettingsPage() {
     const error = urlParams.get('error');
     if (error) {
       window.history.replaceState({}, '', '/settings');
+      
+      // Handle OAuth conflict specially
+      if (error === 'OAuthAlreadyLinked') {
+        // Extract provider and existing BAP ID from URL if available
+        const provider = urlParams.get('provider') || 'OAuth';
+        const existingBapId = urlParams.get('existingBapId');
+        
+        if (existingBapId) {
+          setConflictModal({
+            isOpen: true,
+            provider,
+            existingBapId
+          });
+          return;
+        }
+      }
       
       const errorMessages: Record<string, string> = {
         'CredentialsRequired': 'You must be signed in with your Bitcoin credentials to link OAuth providers.',
@@ -343,6 +382,19 @@ export default function SettingsPage() {
           </button>
         </div>
       </Modal>
+
+      {/* OAuth Conflict Modal */}
+      {conflictModal && (
+        <OAuthConflictModal
+          isOpen={conflictModal.isOpen}
+          onClose={() => setConflictModal(null)}
+          provider={conflictModal.provider}
+          existingBapId={conflictModal.existingBapId}
+          currentBapId={session?.user?.id || ''}
+          onTransferComplete={handleTransferComplete}
+          onSwitchAccount={handleSwitchAccount}
+        />
+      )}
     </div>
   );
 }

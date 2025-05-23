@@ -5,12 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import OAuthProviders from '@/components/OAuthProviders';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
+import OAuthConflictModal from '@/components/OAuthConflictModal';
 
 export default function OAuthPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const [error, setError] = useState('');
   const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
+  const [conflictModal, setConflictModal] = useState<{
+    isOpen: boolean;
+    provider: string;
+    existingBapId: string;
+  } | null>(null);
 
   useEffect(() => {
     // Check if this is an OAuth-only user without Bitcoin credentials
@@ -90,8 +96,12 @@ export default function OAuthPage() {
               });
             } else if (response.status === 409) {
               // OAuth account already linked to another identity
-              await response.json();
-              setError(`This ${provider} account is already linked to another Bitcoin identity. Please use a different ${provider} account or sign in with your existing identity.`);
+              const data = await response.json();
+              setConflictModal({
+                isOpen: true,
+                provider: session.user.provider,
+                existingBapId: data.existingBapId
+              });
               return;
             }
 
@@ -293,6 +303,26 @@ export default function OAuthPage() {
           </button>
         </div>
       </div>
+
+      {conflictModal && (
+        <OAuthConflictModal
+          isOpen={conflictModal.isOpen}
+          onClose={() => setConflictModal(null)}
+          provider={conflictModal.provider}
+          existingBapId={conflictModal.existingBapId}
+          currentBapId={session?.user?.id || ''}
+          onTransferComplete={() => {
+            // Mark provider as linked and close modal
+            setLinkedProviders(prev => [...prev, conflictModal.provider]);
+            setConflictModal(null);
+            setError('');
+          }}
+          onSwitchAccount={() => {
+            // Redirect to signin to use existing account
+            router.push('/signin');
+          }}
+        />
+      )}
     </div>
   );
 } 
