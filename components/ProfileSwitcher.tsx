@@ -29,6 +29,16 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
 
   useEffect(() => {
     loadProfiles();
+    
+    // Listen for profile updates
+    const handleProfileUpdate = () => {
+      loadProfiles();
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
   }, []);
 
   const loadProfiles = async () => {
@@ -58,23 +68,40 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
           const pubkey = PrivateKey.fromWif(memberBackup.derivedPrivateKey).toPublicKey();
           const address = pubkey.toAddress().toString();
           
-          // Try to fetch BAP profile data
-          let profileData = null;
+          // Try to fetch profile data from both sources
+          let profileName = `Profile ${i + 1}`;
+          let profileImage = undefined;
+          
           try {
-            const response = await fetch(`/api/bap?address=${address}`);
-            if (response.ok) {
-              const data = await response.json();
-              profileData = data.result;
+            // First get user profile data (has latest updates)
+            const userResponse = await fetch(`/api/users/profile?bapId=${id}`);
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData.alternateName) {
+                profileName = userData.alternateName;
+                profileImage = userData.image;
+              }
+            }
+            
+            // If no user data, try BAP profile
+            if (profileName === `Profile ${i + 1}`) {
+              const bapResponse = await fetch(`/api/bap?address=${address}`);
+              if (bapResponse.ok) {
+                const bapData = await bapResponse.json();
+                const bapProfile = bapData.result;
+                profileName = bapProfile?.identity?.alternateName || bapProfile?.identity?.name || profileName;
+                profileImage = profileImage || bapProfile?.identity?.image;
+              }
             }
           } catch (error) {
-            console.error('Error fetching BAP profile:', error);
+            console.error('Error fetching profile data:', error);
           }
           
           profileList.push({
             idKey: id,
             address,
-            name: profileData?.identity?.alternateName || profileData?.identity?.name || `Profile ${i + 1}`,
-            image: profileData?.identity?.image,
+            name: profileName,
+            image: profileImage,
             isPrimary: i === 0
           });
         }

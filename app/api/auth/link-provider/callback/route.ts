@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
-import { redis } from '@/lib/redis';
+import { redis, userKey, bapKey } from '@/lib/redis';
 import { env, ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
 import { linkOAuthAccount } from '@/lib/oauth-utils';
 
@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
     
     const config = OAUTH_CONFIGS[provider];
     let providerAccountId: string | null = null;
+    let profileData: { name?: string; image?: string; bio?: string } = {};
     
     // Exchange code for access token based on provider
     if (provider === 'github') {
@@ -101,6 +102,11 @@ export async function GET(request: NextRequest) {
         
         const userData = await userResponse.json();
         providerAccountId = String(userData.id);
+        profileData = {
+          name: userData.name || userData.login,
+          image: userData.avatar_url,
+          bio: userData.bio
+        };
       }
       
     } else if (provider === 'google') {
@@ -130,6 +136,10 @@ export async function GET(request: NextRequest) {
         
         const userData = await userResponse.json();
         providerAccountId = userData.id;
+        profileData = {
+          name: userData.name,
+          image: userData.picture
+        };
       }
       
     } else if (provider === 'twitter') {
@@ -162,6 +172,11 @@ export async function GET(request: NextRequest) {
         
         const userData = await userResponse.json();
         providerAccountId = userData.data?.id;
+        profileData = {
+          name: userData.data?.name,
+          image: userData.data?.profile_image_url?.replace('_normal', ''),
+          bio: userData.data?.description
+        };
       }
     }
     
@@ -190,6 +205,79 @@ export async function GET(request: NextRequest) {
       const oauthId = `${provider}|${providerAccountId}`;
       await redis.set(`backup:${oauthId}`, encryptedBackup);
       await redis.del(`pending-backup:${session.user.id}`);
+    }
+    
+    // Import OAuth profile data if user doesn't have any
+    try {
+      const bapId = session.user.id;
+      const uKey = userKey(bapId);
+      const fullUserData = await redis.hgetall(uKey) as Record<string, string>;
+      
+      // Check if we should import profile data
+      const shouldImportName = !fullUserData.displayName && profileData.name;
+      const shouldImportImage = !fullUserData.avatar && profileData.image;
+      
+      if (shouldImportName || shouldImportImage) {
+        const updates: Record<string, string> = {};
+        
+        if (shouldImportName && profileData.name) {
+          updates.displayName = profileData.name;
+        }
+        if (shouldImportImage && profileData.image) {
+          updates.avatar = profileData.image;
+        }
+        
+        await redis.hset(uKey, updates);
+        console.log('✅ Imported OAuth profile data during linking:', { bapId, updates });
+      }
+      
+      // Update BAP profile if needed
+      const bKey = bapKey(bapId);
+      const existingBapData = await redis.get(bKey);
+      
+      let bapProfile: { idKey: string; currentAddress: string; identity: { '@context'?: string; '@type'?: string; alternateName?: string; image?: string; description?: string; [key: string]: unknown }; block: number; currentHeight: number };
+      if (existingBapData) {
+        bapProfile = typeof existingBapData === 'string' 
+          ? JSON.parse(existingBapData) 
+          : existingBapData;
+      } else {
+        // Create new BAP profile structure
+        bapProfile = {
+          idKey: bapId,
+          currentAddress: fullUserData.address || '',
+          identity: {
+            '@context': 'https://schema.org',
+            '@type': 'Person'
+          },
+          block: 0,
+          currentHeight: 0
+        };
+      }
+      
+      // Check if BAP profile needs updates
+      const needsBapUpdate = (!bapProfile.identity?.alternateName && profileData.name) ||
+        (!bapProfile.identity?.image && profileData.image) ||
+        (!bapProfile.identity?.description && profileData.bio);
+      
+      if (needsBapUpdate) {
+        bapProfile.identity = bapProfile.identity || {};
+        
+        if (!bapProfile.identity.alternateName && profileData.name) {
+          bapProfile.identity.alternateName = profileData.name;
+        }
+        if (!bapProfile.identity.image && profileData.image) {
+          bapProfile.identity.image = profileData.image;
+        }
+        if (!bapProfile.identity.description && profileData.bio) {
+          bapProfile.identity.description = profileData.bio;
+        }
+        
+        await redis.set(bKey, bapProfile);
+        console.log('✅ Updated BAP profile with OAuth data during linking:', { bapId, identity: bapProfile.identity });
+      }
+    } catch (error) {
+      console.error('Error importing OAuth profile data during linking:', error);
+      // Don't fail the linking if profile import fails
     }
     
     console.log(`Successfully linked ${provider} account ${providerAccountId} to user ${session.user.id}`);

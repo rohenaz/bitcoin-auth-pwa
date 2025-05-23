@@ -5,23 +5,29 @@ import { verifyBitcoinAuth } from '@/lib/auth-middleware';
 import { verifyProfileOwnership } from '@/lib/profile-utils';
 import type { BapMasterBackup } from 'bitcoin-backup';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    // Check if a specific BAP ID is requested
+    const { searchParams } = new URL(request.url);
+    const requestedBapId = searchParams.get('bapId');
+    const targetBapId = requestedBapId || session.user.id;
+    
     // Get user data
-    const userData = await redis.hgetall(userKey(session.user.id));
+    const userData = await redis.hgetall(userKey(targetBapId));
     
     // Get BAP profile
-    const bapProfile = await redis.get(bapKey(session.user.id));
+    const bapProfile = await redis.get(bapKey(targetBapId));
     const profile = bapProfile 
       ? (typeof bapProfile === 'string' ? JSON.parse(bapProfile) : bapProfile)
       : null;
     
     return NextResponse.json({
+      bapId: targetBapId,
       alternateName: userData?.displayName || profile?.identity?.alternateName || '',
       image: userData?.avatar || profile?.identity?.image || '',
       description: profile?.identity?.description || ''

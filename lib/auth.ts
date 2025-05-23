@@ -266,11 +266,82 @@ export const authOptions = {
             const userKey = `user:${mappedBapId}`;
             const userData = await redis.hgetall(userKey) as { address?: string; idKey?: string } | null;
             
-            if (userData && userData.address) {
+            if (userData?.address) {
               token.sub = mappedBapId as string;
               token.address = userData.address;
               token.idKey = userData.idKey || (mappedBapId as string);
               token.linkedProvider = account.provider;
+              
+              // Import OAuth profile data if user doesn't have any
+              try {
+                const bapKey = `bap:${mappedBapId}`;
+                const existingBapData = await redis.get(bapKey);
+                
+                // Retrieve full user data
+                const fullUserData = await redis.hgetall(userKey) as Record<string, string>;
+                
+                // Check if we should import profile data
+                const shouldImportName = !fullUserData.displayName && user.name;
+                const shouldImportImage = !fullUserData.avatar && user.image;
+                
+                if (shouldImportName || shouldImportImage) {
+                  const updates: Record<string, string> = {};
+                  
+                  // Update user data if empty
+                  if (shouldImportName && user.name) {
+                    updates.displayName = user.name;
+                  }
+                  if (shouldImportImage && user.image) {
+                    updates.avatar = user.image;
+                  }
+                  
+                  await redis.hset(userKey, updates);
+                  console.log('✅ Imported OAuth profile data to user:', { bapId: mappedBapId, updates });
+                }
+                
+                // Update BAP profile if needed
+                let bapProfile: { idKey: string; currentAddress: string; identity: { '@context'?: string; '@type'?: string; alternateName?: string; image?: string; description?: string; [key: string]: unknown }; block: number; currentHeight: number };
+                if (existingBapData) {
+                  // Parse if string, otherwise use as-is
+                  bapProfile = typeof existingBapData === 'string' 
+                    ? JSON.parse(existingBapData) 
+                    : existingBapData;
+                } else {
+                  // Create new BAP profile structure
+                  bapProfile = {
+                    idKey: String(mappedBapId),
+                    currentAddress: userData.address || '',
+                    identity: {
+                      '@context': 'https://schema.org',
+                      '@type': 'Person'
+                    },
+                    block: 0,
+                    currentHeight: 0
+                  };
+                }
+                
+                // Check if BAP profile needs updates
+                const needsBapUpdate = (!bapProfile.identity?.alternateName && user.name) ||
+                  (!bapProfile.identity?.image && user.image);
+                
+                if (needsBapUpdate) {
+                  bapProfile.identity = bapProfile.identity || {};
+                  
+                  // Update with OAuth data if not already set
+                  if (!bapProfile.identity.alternateName && user.name) {
+                    bapProfile.identity.alternateName = user.name;
+                  }
+                  if (!bapProfile.identity.image && user.image) {
+                    bapProfile.identity.image = user.image;
+                  }
+                  
+                  await redis.set(bapKey, bapProfile);
+                  console.log('✅ Updated BAP profile with OAuth data:', { bapId: mappedBapId, identity: bapProfile.identity });
+                }
+              } catch (error) {
+                console.error('Error importing OAuth profile data:', error);
+                // Don't fail auth if profile import fails
+              }
             }
           } else {
             // No linked identity yet

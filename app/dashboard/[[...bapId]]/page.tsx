@@ -124,21 +124,42 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   }, [session, resolvedParams, router]);
 
   const fetchBAPProfile = useCallback(async () => {
-    if (!currentAddress) return;
+    if (!currentAddress || !currentBapId) return;
 
     try {
-      const response = await fetch(`/api/bap?address=${currentAddress}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          // This is expected for unpublished BAP IDs or profiles not in cache
-          console.log('BAP profile not found in cache');
-          setBapProfile(null);
-        } else {
-          throw new Error('Failed to fetch BAP profile');
-        }
+      // First try to get BAP profile from blockchain cache
+      const bapResponse = await fetch(`/api/bap?address=${currentAddress}`);
+      let bapData = null;
+      
+      if (bapResponse.ok) {
+        const data = await bapResponse.json();
+        bapData = data.result;
+      }
+      
+      // Then get user profile data from Redis (this has the latest updates)
+      const profileResponse = await fetch('/api/users/profile');
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        
+        // Merge the data, with user profile taking precedence
+        setBapProfile({
+          idKey: currentBapId,
+          currentAddress: currentAddress,
+          identity: {
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            alternateName: profileData.alternateName || bapData?.identity?.alternateName || '',
+            image: profileData.image || bapData?.identity?.image || '',
+            description: profileData.description || bapData?.identity?.description || '',
+            ...bapData?.identity // Keep any other blockchain data
+          },
+          block: bapData?.block || 0,
+          currentHeight: bapData?.currentHeight || 0
+        });
+      } else if (bapData) {
+        setBapProfile(bapData);
       } else {
-        const data = await response.json();
-        setBapProfile(data.result);
+        setBapProfile(null);
       }
     } catch (err) {
       console.error('Error fetching BAP profile:', err);
@@ -149,7 +170,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [currentAddress]);
+  }, [currentAddress, currentBapId]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -223,6 +244,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       setShowProfileEditor(false);
       // Clear any errors
       setError('');
+      
+      // Trigger a custom event to refresh the profile switcher
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
     } catch (err) {
       console.error('Error saving profile:', err);
       setError('Failed to save profile');
