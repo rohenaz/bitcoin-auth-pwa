@@ -1,6 +1,8 @@
 import { redis, backupKey, oauthKey } from "@/lib/redis";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth-helpers";
+import { Hash, Utils } from "@bsv/sdk";
+const { toHex } = Utils;
 
 export const GET = async (req: Request) => {
   const url = new URL(req.url);
@@ -59,8 +61,8 @@ export const POST = async (req: Request) => {
     await redis.set(backupKey(bapId), encryptedBackup);
     
     // Store metadata about the backup
-    const { createHash } = await import('crypto');
-    const hash = createHash('sha256').update(encryptedBackup).digest('hex');
+
+    const hash =  toHex(Hash.sha256(encryptedBackup))
     await redis.set(`${backupKey(bapId)}:metadata`, {
       lastUpdated: new Date().toISOString(),
       hash

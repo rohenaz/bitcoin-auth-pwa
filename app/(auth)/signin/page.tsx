@@ -81,6 +81,8 @@ function SignInPageContent() {
       });
 
       console.log('Signing in with auth token:', authToken);
+      console.log('BAP ID:', id);
+      console.log('Address:', address);
 
       // Sign in with Bitcoin credentials
       const result = await signIn('credentials', {
@@ -93,11 +95,14 @@ function SignInPageContent() {
         if (result.error.includes('User not found')) {
           console.log('User not found, creating user record...');
           
+          // Also store the encrypted backup if we have it
+          const encryptedBackup = localStorage.getItem(ENCRYPTED_BACKUP_KEY);
+          
           // Create auth token for user creation
           const createUserToken = getAuthToken({
             privateKeyWif: pk,
             requestPath: '/api/users/create-from-backup',
-            body: JSON.stringify({ bapId: id, address })
+            body: JSON.stringify({ bapId: id, address, encryptedBackup })
           });
           
           const createResponse = await fetch('/api/users/create-from-backup', {
@@ -106,20 +111,31 @@ function SignInPageContent() {
               'Content-Type': 'application/json',
               'X-Auth-Token': createUserToken
             },
-            body: JSON.stringify({ bapId: id, address })
+            body: JSON.stringify({ 
+              bapId: id, 
+              address,
+              encryptedBackup 
+            })
           });
           
-          if (createResponse.ok) {
-            // Try signing in again
-            const retryResult = await signIn('credentials', {
-              token: authToken,
-              redirect: false,
-            });
-            
-            if (retryResult?.ok) {
-              window.location.href = callbackUrl;
-              return;
-            }
+          if (!createResponse.ok) {
+            const errorData = await createResponse.json();
+            console.error('Failed to create user:', errorData);
+            throw new Error(errorData.error || 'Failed to create user');
+          }
+          
+          // Try signing in again
+          const retryResult = await signIn('credentials', {
+            token: authToken,
+            redirect: false,
+          });
+          
+          if (retryResult?.ok) {
+            window.location.href = callbackUrl;
+            return;
+          } else {
+            console.error('Retry login failed:', retryResult);
+            throw new Error(retryResult?.error || 'Failed to sign in after creating user');
           }
         }
         

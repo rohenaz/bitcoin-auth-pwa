@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { parseAuthToken, verifyAuthToken } from 'bitcoin-auth';
 import { redis, userKey, addrKey } from '@/lib/redis';
-import { PublicKey } from '@bsv/sdk';
+import { PublicKey, Hash, Utils } from '@bsv/sdk';
+const { toHex } = Utils;
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bapId, address } = body;
+    const { bapId, address, encryptedBackup } = body;
     
     if (!bapId || !address) {
       return NextResponse.json({ error: 'BAP ID and address are required' }, { status: 400 });
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Verify the token
     const ok = verifyAuthToken(authToken, {
       requestPath: '/api/users/create-from-backup',
-      body: JSON.stringify({ bapId, address }),
+      body: JSON.stringify({ bapId, address, encryptedBackup }),
       timestamp: new Date().toISOString()
     }, 1000 * 60 * 10); // 10 minute time window
 
@@ -61,6 +62,20 @@ export async function POST(request: NextRequest) {
       id: bapId, 
       block: currentBlock.toString() 
     });
+    
+    // Store encrypted backup if provided
+    if (encryptedBackup) {
+      const { backupKey } = await import('@/lib/redis');
+      await redis.set(backupKey(bapId), encryptedBackup);
+      
+      // Store metadata about the backup
+      
+      const hash = toHex(Hash.sha256(encryptedBackup))
+      await redis.set(`${backupKey(bapId)}:metadata`, {
+        lastUpdated: new Date().toISOString(),
+        hash
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 
