@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Modal from "@/components/Modal";
@@ -41,52 +41,138 @@ export default function SettingsPage() {
     }
   }, []);
 
+
   const providers = [
     { id: 'google', name: 'Google', icon: '🔗' },
     { id: 'github', name: 'GitHub', icon: '🔗' },
     { id: 'twitter', name: 'X (Twitter)', icon: '🔗' },
   ];
 
-  // Handle OAuth callback return messages
-  const handleOAuthReturn = useCallback(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Handle successful linking
-    const linkedProvider = urlParams.get('linked');
-    if (linkedProvider) {
-      window.history.replaceState({}, '', '/settings');
-      showMessage('Success', `${linkedProvider.charAt(0).toUpperCase() + linkedProvider.slice(1)} account linked successfully!`, 'info');
-      fetchConnectedAccounts();
-      return;
-    }
-    
-    // Handle errors
-    const error = urlParams.get('error');
-    if (error) {
-      window.history.replaceState({}, '', '/settings');
-      
-      const errorMessages: Record<string, string> = {
-        'CredentialsRequired': 'You must be signed in with your Bitcoin credentials to link OAuth providers.',
-        'InvalidProvider': 'Invalid OAuth provider specified.',
-        'InvalidState': 'OAuth state validation failed. Please try again.',
-        'OAuthDenied': 'OAuth authorization was denied.',
-        'OAuthFailed': 'Failed to retrieve account information from OAuth provider.',
-        'LinkFailed': 'Failed to link OAuth account. Please try again.',
-        'SessionExpired': 'Your session has expired. Please sign in again.',
-        'MissingParams': 'Missing required OAuth parameters.',
-      };
-      
-      const message = errorMessages[error] || 'An error occurred while linking your account.';
-      showMessage('Error', message, 'error');
-      
-      // If session expired, redirect to signin
-      if (error === 'SessionExpired') {
-        setTimeout(() => {
-          window.location.href = '/signin';
-        }, 2000);
+    const handleOAuthReturn = useCallback(async () => {
+      if (session?.user) {
+        fetchConnectedAccounts();
+        
+        // Check if we're returning from OAuth connection
+        const urlParams = new URLSearchParams(window.location.search);
+        const connectedProvider = urlParams.get('connected');
+        
+        if (connectedProvider) {
+          // Clean up URL
+          window.history.replaceState({}, '', '/settings');
+          
+          // Check for pending OAuth link
+          const pendingLink = sessionStorage.getItem('pendingOAuthLink');
+          if (pendingLink) {
+            const { bapId, provider: pendingProvider, encryptedBackup } = JSON.parse(pendingLink);
+            
+            // If the current session is OAuth-based (user just signed in with OAuth)
+            if (session.user.provider && session.user.provider !== 'credentials') {
+              // Extract provider account ID - use providerAccountId if available, otherwise extract from composite ID
+              let providerAccountId = session.user.providerAccountId;
+              
+              if (!providerAccountId && session.user.id && session.user.id.includes('-')) {
+                // Fallback: extract from composite ID format "provider-providerAccountId"
+                const parts = session.user.id.split('-');
+                if (parts[0] === pendingProvider && parts.length >= 2) {
+                  providerAccountId = parts.slice(1).join('-');
+                }
+              }
+              
+              // If we're now logged in via OAuth and it matches the pending provider
+              if (session.user.provider === pendingProvider && providerAccountId) {
+              console.log('Creating OAuth mapping:', {
+                bapId,
+                provider: pendingProvider,
+                providerAccountId
+              });
+              
+              // Create the OAuth mapping with the encrypted backup
+              const response = await fetch('/api/backup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  bapId,
+                  oauthProvider: pendingProvider,
+                  oauthId: providerAccountId,
+                  encryptedBackup
+                })
+              });
+            
+            if (response.ok) {
+              console.log('OAuth mapping created successfully');
+              
+              // CRITICAL: We must restore the credentials session
+              // OAuth sign-in was only to get the provider account ID for mapping
+              const decryptedBackup = sessionStorage.getItem('decryptedBackup');
+              if (decryptedBackup) {
+                try {
+                  const backup = JSON.parse(decryptedBackup);
+                  const { BAP } = await import('bsv-bap');
+                  const { getAuthToken } = await import('bitcoin-auth');
+                  const { signIn } = await import('next-auth/react');
+                  
+                  const bap = new BAP(backup.xprv);
+                  bap.importIds(backup.ids);
+                  const ids = bap.listIds();
+                  const id = ids[0] || bap.newId().identityKey;
+                  const master = bap.getId(id);
+                  const memberBackup = master?.exportMemberBackup();
+                  const pk = memberBackup?.derivedPrivateKey;
+                  
+                  if (pk) {
+                    const authToken = getAuthToken({
+                      privateKeyWif: pk,
+                      requestPath: '/api/auth/signin',
+                      body: ''
+                    });
+                    
+                    // Sign back in with credentials - this is required!
+                    const result = await signIn('credentials', {
+                      token: authToken,
+                      redirect: false,
+                    });
+                    
+                    if (result?.ok) {
+                      // Refresh the page with credentials session restored
+                      window.location.href = '/settings';
+                      return;
+                    }
+                  }
+                } catch (err) {
+                  console.error('Error restoring credentials session:', err);
+                  // If we can't restore credentials, the app won't work properly
+                  showMessage('Error', 'Failed to link account. Please sign in again.', 'error');
+                  setTimeout(() => {
+                    window.location.href = '/signin';
+                  }, 2000);
+                  return;
+                }
+              } else {
+                // No backup means we can't restore credentials session
+                console.error('No decrypted backup found to restore credentials session');
+                showMessage('Session Error', 'Unable to maintain session. Please sign in again.', 'error');
+                setTimeout(() => {
+                  window.location.href = '/signin';
+                }, 2000);
+                return;
+              }
+            } else {
+              const errorText = await response.text();
+              console.error('Failed to create OAuth mapping:', response.status, errorText);
+              showMessage('Failed to Link Account', 'Unable to link your account. Please try again.', 'error');
+            }
+            } else {
+              console.warn('Missing provider or providerAccountId, cannot create OAuth mapping');
+            }
+          }
+          
+          sessionStorage.removeItem('pendingOAuthLink');
+        } else {
+          console.log('No pending OAuth link found');
+        }
       }
     }
-  }, [fetchConnectedAccounts, showMessage]);
+    }, [session, fetchConnectedAccounts, showMessage]);
     
   useEffect(() => {
     if (session?.user) {
