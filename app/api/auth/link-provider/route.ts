@@ -1,7 +1,14 @@
+/**
+ * Custom OAuth linking flow that doesn't create new sessions
+ * 
+ * This endpoint initiates OAuth authentication for linking providers
+ * to existing Bitcoin-authenticated accounts. Unlike NextAuth's default
+ * behavior, this maintains the current credentials session.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helpers';
 import { redis } from '@/lib/redis';
-import { env } from '@/lib/env';
+import { env, ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
 import crypto from 'crypto';
 
 // OAuth provider configurations
@@ -27,7 +34,7 @@ const OAUTH_CONFIGS = {
 };
 
 function getRedirectUri(provider: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
   return `${baseUrl}/api/auth/link-provider/callback?provider=${provider}`;
 }
 
@@ -45,6 +52,12 @@ export async function GET(request: NextRequest) {
     
     if (!provider || !OAUTH_CONFIGS[provider]) {
       return NextResponse.redirect(new URL('/settings?error=InvalidProvider', request.url));
+    }
+    
+    // Check if provider is enabled
+    if (!ENABLED_PROVIDERS.includes(provider as EnabledProvider)) {
+      console.log(`Provider ${provider} is not enabled`);
+      return NextResponse.redirect(new URL('/settings?error=ProviderDisabled', request.url));
     }
     
     // Generate state for CSRF protection
@@ -66,26 +79,14 @@ export async function GET(request: NextRequest) {
       redirect_uri: getRedirectUri(provider),
     });
     
-    // Provider-specific parameters
+    // Provider-specific parameters - env vars are guaranteed to exist for enabled providers
     if (provider === 'github') {
-      if (!env.AUTH_GITHUB_ID) {
-        console.error('AUTH_GITHUB_ID not configured');
-        return NextResponse.redirect(new URL('/settings?error=ProviderNotConfigured', request.url));
-      }
       params.set('client_id', env.AUTH_GITHUB_ID);
     } else if (provider === 'google') {
-      if (!env.AUTH_GOOGLE_ID) {
-        console.error('AUTH_GOOGLE_ID not configured');
-        return NextResponse.redirect(new URL('/settings?error=ProviderNotConfigured', request.url));
-      }
       params.set('client_id', env.AUTH_GOOGLE_ID);
       params.set('access_type', 'offline');
       params.set('prompt', 'consent');
     } else if (provider === 'twitter') {
-      if (!env.AUTH_TWITTER_ID) {
-        console.error('AUTH_TWITTER_ID not configured');
-        return NextResponse.redirect(new URL('/settings?error=ProviderNotConfigured', request.url));
-      }
       params.set('client_id', env.AUTH_TWITTER_ID);
       params.set('code_challenge', 'challenge'); // Twitter requires PKCE
       params.set('code_challenge_method', 'plain');

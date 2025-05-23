@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Modal from "@/components/Modal";
+import { ENABLED_PROVIDERS, type EnabledProvider } from "@/lib/env";
 
 interface ConnectedAccount {
   provider: string;
@@ -41,11 +42,13 @@ export default function SettingsPage() {
     }
   }, []);
 
-  const providers = [
+  const ALL_PROVIDERS = [
     { id: 'google', name: 'Google', icon: '🔗' },
     { id: 'github', name: 'GitHub', icon: '🔗' },
     { id: 'twitter', name: 'X (Twitter)', icon: '🔗' },
   ];
+  
+  const providers = ALL_PROVIDERS.filter(p => ENABLED_PROVIDERS.includes(p.id as EnabledProvider));
 
   // Handle OAuth callback return messages
   const handleOAuthReturn = useCallback(() => {
@@ -75,6 +78,7 @@ export default function SettingsPage() {
         'SessionExpired': 'Your session has expired. Please sign in again.',
         'MissingParams': 'Missing required OAuth parameters.',
         'ProviderNotConfigured': 'This OAuth provider is not configured. Please check environment variables.',
+        'ProviderDisabled': 'This OAuth provider is temporarily disabled.',
       };
       
       const message = errorMessages[error] || 'An error occurred while linking your account.';

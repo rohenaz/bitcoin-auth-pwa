@@ -9,7 +9,7 @@ import { upsertRootProfile } from "./bap";
 import type { APIResponse, APIIdentity, Organization } from "@/types/bap";
 import { PublicKey } from "@bsv/sdk";
 import { getLatestBlockHeight } from "./block";
-import { env } from "./env";
+import { env, ENABLED_PROVIDERS } from "./env";
 import type { JWT } from "next-auth/jwt";
 // amount of time to pad the timestamp in the token
 const TIME_PAD = 1000 * 60 * 10 // 10 minutes
@@ -18,8 +18,9 @@ const TIME_PAD = 1000 * 60 * 10 // 10 minutes
 // Build providers array dynamically based on available credentials
 const providers = [];
 
-// Add OAuth providers only if credentials are available
-if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
+// Add OAuth providers based on ENABLED_PROVIDERS from env
+// The env module guarantees these vars exist for enabled providers
+if (ENABLED_PROVIDERS.includes('google')) {
   providers.push(Google({
     clientId: env.AUTH_GOOGLE_ID,
     clientSecret: env.AUTH_GOOGLE_SECRET,
@@ -27,7 +28,7 @@ if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
   }));
 }
 
-if (env.AUTH_GITHUB_ID && env.AUTH_GITHUB_SECRET) {
+if (ENABLED_PROVIDERS.includes('github')) {
   providers.push(GitHub({
     clientId: env.AUTH_GITHUB_ID,
     clientSecret: env.AUTH_GITHUB_SECRET,
@@ -35,7 +36,7 @@ if (env.AUTH_GITHUB_ID && env.AUTH_GITHUB_SECRET) {
   }));
 }
 
-if (env.AUTH_TWITTER_ID && env.AUTH_TWITTER_SECRET) {
+if (ENABLED_PROVIDERS.includes('twitter')) {
   providers.push(Twitter({
     clientId: env.AUTH_TWITTER_ID,
     clientSecret: env.AUTH_TWITTER_SECRET,
