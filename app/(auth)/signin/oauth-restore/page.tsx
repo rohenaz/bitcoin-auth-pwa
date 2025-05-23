@@ -28,8 +28,24 @@ export default function OAuthRestorePage() {
     }
 
     try {
-      // For OAuth-only users, the ID format is "provider-providerAccountId"
-      const oauthId = session.user.id.replace('-', '|');
+      // Construct OAuth ID from session
+      let oauthId: string;
+      
+      if (session.user.isOAuthOnly && session.user.provider && session.user.providerAccountId) {
+        // OAuth-only user with provider info
+        oauthId = `${session.user.provider}|${session.user.providerAccountId}`;
+      } else if (session.user.id.includes('-') && !session.user.address) {
+        // Fallback: OAuth-only user with ID format "provider-providerAccountId"
+        oauthId = session.user.id.replace('-', '|');
+      } else {
+        setError('Invalid OAuth session. Please sign in again.');
+        setTimeout(() => {
+          signOut({ callbackUrl: '/signin' });
+        }, 2000);
+        return;
+      }
+      
+      console.log('Fetching backup for OAuth ID:', oauthId);
       const response = await fetch(`/api/backup?oauthId=${oauthId}`);
       
       if (!response.ok) {

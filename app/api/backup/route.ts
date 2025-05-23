@@ -66,18 +66,27 @@ export const POST = async (req: Request) => {
       hash
     });
 
-    // If OAuth info provided, create mapping
+    // Always store user data and address mapping
+    if (session.user.address) {
+      const userKey = `user:${bapId}`;
+      await redis.hset(userKey, {
+        address: session.user.address,
+        idKey: session.user.idKey || bapId,
+        createdAt: Date.now() / 1e3
+      });
+      
+      // Create address-to-BAP mapping for unpublished IDs
+      const { addrKey } = await import('@/lib/redis');
+      const currentBlock = await redis.get('block:height') || '0';
+      await redis.hset(addrKey(session.user.address), { 
+        id: bapId, 
+        block: currentBlock.toString() 
+      });
+    }
+
+    // If OAuth info provided, create OAuth mapping
     if (oauthProvider && oauthId) {
       await redis.set(oauthKey(oauthProvider, oauthId), bapId);
-      
-      // Also store user data for OAuth lookups
-      if (session.user.address) {
-        const userKey = `user:${bapId}`;
-        await redis.hset(userKey, {
-          address: session.user.address,
-          idKey: session.user.idKey || bapId
-        });
-      }
     }
 
     return NextResponse.json({ 

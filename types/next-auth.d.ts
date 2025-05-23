@@ -7,6 +7,8 @@ declare module "next-auth" {
       address?: string
       idKey?: string
       provider?: string
+      providerAccountId?: string
+      isOAuthOnly?: boolean
     } & DefaultSession["user"]
   }
 
@@ -25,5 +27,7 @@ declare module "next-auth/jwt" {
     address?: string
     idKey?: string
     provider?: string
+    providerAccountId?: string
+    isOAuthOnly?: boolean
   }
 }

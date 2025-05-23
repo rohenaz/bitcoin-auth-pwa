@@ -12,7 +12,6 @@ const DECRYPTED_BACKUP_KEY = 'decryptedBackup';
 const ENCRYPTED_BACKUP_KEY = 'encryptedBackup';
 
 function SignInPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -87,7 +86,10 @@ function SignInPageContent() {
         throw new Error(result.error);
       }
 
-      router.push(callbackUrl);
+      if (result?.ok) {
+        // Ensure we're redirecting to the dashboard
+        window.location.href = callbackUrl;
+      }
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Failed to login');

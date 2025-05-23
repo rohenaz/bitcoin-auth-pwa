@@ -43,10 +43,17 @@ export default function DashboardPage() {
       try {
         const response = await fetch(`/api/bap?address=${session.user.address}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch BAP profile');
+          if (response.status === 404) {
+            // This is expected for unpublished BAP IDs
+            console.log('BAP profile not published on-chain yet');
+            setBapProfile(null);
+          } else {
+            throw new Error('Failed to fetch BAP profile');
+          }
+        } else {
+          const data = await response.json();
+          setBapProfile(data.result);
         }
-        const data = await response.json();
-        setBapProfile(data);
       } catch (err) {
         console.error('Error fetching BAP profile:', err);
         setError('Failed to load profile');

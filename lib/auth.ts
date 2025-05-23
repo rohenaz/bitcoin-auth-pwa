@@ -4,7 +4,7 @@ import GitHub from "next-auth/providers/github";
 import Twitter from "next-auth/providers/twitter";
 import Credentials from "next-auth/providers/credentials";
 import { type AuthPayload, parseAuthToken, verifyAuthToken } from "bitcoin-auth";
-import { redis, oauthKey, userKey, latestBlockKey } from "./redis";
+import { redis, oauthKey, userKey, latestBlockKey, addrKey } from "./redis";
 import { upsertRootProfile } from "./bap";
 import { UpstashRedisAdapter } from "@auth/upstash-redis-adapter";
 import type { APIResponse, APIIdentity, Organization } from "@/types/bap";
@@ -122,32 +122,64 @@ const customProvider = Credentials({
             await redis.set(`bap:${address}:${bapProfile.idKey}:${pubkey}`, { result: bapProfile })
             console.log('✅ BAP profile stored successfully');
           } else {
-            console.log('⚠️ BAP profile is null, creating basic Bitcoin user');
-            // Create a basic user with just the Bitcoin address
+            console.log('⚠️ BAP profile is null, checking for existing user by address mapping');
+            // For unpublished BAP IDs, check if we have an address-to-BAP mapping
             const address = PublicKey.fromString(pubkey).toAddress()
-            const user = { 
-              id: address, 
-              name: `Bitcoin User (${address.substring(0, 8)}...)`, 
-              image: null,
-              address 
-            } as User;
-            console.log('👤 Returning basic Bitcoin user:', user);
-            return user;
+            
+            // Use the existing address-to-BAP mapping
+            const addrMapping = await redis.hgetall<{ id: string; block: string }>(addrKey(address));
+            
+            if (addrMapping?.id) {
+              // We have a BAP ID for this address, get the user data
+              const userData = await redis.hgetall(userKey(addrMapping.id)) as Record<string, string>;
+              
+              if (userData) {
+                const user = { 
+                  id: addrMapping.id, 
+                  name: userData.displayName || `Bitcoin User (${address.substring(0, 8)}...)`, 
+                  image: userData.avatar || null,
+                  address,
+                  idKey: userData.idKey || addrMapping.id
+                } as User;
+                console.log('👤 Found existing user with unpublished BAP ID:', user);
+                return user;
+              }
+            }
+            
+            // If we still don't have a user, this is an error
+            console.error('❌ No user found for address:', address);
+            throw new Error('User not found. Please sign up first.');
           }
         } catch (error) {
           console.error('❌ Failed to fetch BAP profile:', error);
-          console.log('🔄 Creating fallback Bitcoin user...');
+          console.log('🔄 Looking for existing user by address mapping...');
           
-          // Create a basic user with just the Bitcoin address
+          // For unpublished BAP IDs, check if we have an address-to-BAP mapping
           const address = PublicKey.fromString(pubkey).toAddress()
-          const user = { 
-            id: address, 
-            name: `Bitcoin User (${address.substring(0, 8)}...)`, 
-            image: null,
-            address 
-          } as User;
-          console.log('👤 Returning fallback Bitcoin user:', user);
-          return user;
+          
+          // Use the existing address-to-BAP mapping
+          const addrMapping = await redis.hgetall<{ id: string; block: string }>(addrKey(address));
+          
+          if (addrMapping?.id) {
+            // We have a BAP ID for this address, get the user data
+            const userData = await redis.hgetall(userKey(addrMapping.id)) as Record<string, string>;
+            
+            if (userData) {
+              const user = { 
+                id: addrMapping.id, 
+                name: userData.displayName || `Bitcoin User (${address.substring(0, 8)}...)`, 
+                image: userData.avatar || null,
+                address,
+                idKey: userData.idKey || addrMapping.id
+              } as User;
+              console.log('👤 Found existing user with unpublished BAP ID:', user);
+              return user;
+            }
+          }
+          
+          // If we still don't have a user, this is an error condition
+          console.error('❌ No user found for address:', address);
+          throw new Error('User not found. Please sign up first.');
         }
       }
       
@@ -185,6 +217,7 @@ export const authOptions = {
       }
       if (account?.provider && account.providerAccountId) {
         token.provider = account.provider;
+        token.providerAccountId = String(account.providerAccountId);
         
         // For OAuth providers, check if there's a linked BAP identity
         if (account.provider !== 'credentials') {
@@ -217,6 +250,8 @@ export const authOptions = {
         session.user.address = token.address as string;
         session.user.idKey = token.idKey as string;
         session.user.provider = token.provider as string;
+        session.user.providerAccountId = token.providerAccountId as string;
+        session.user.isOAuthOnly = token.isOAuthOnly as boolean;
       }
       return session;
     },
