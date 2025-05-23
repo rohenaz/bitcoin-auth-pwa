@@ -134,6 +134,9 @@ export default function OAuthRestorePage() {
         body: ''
       });
 
+      // Sign out of OAuth session first
+      await signOut({ redirect: false });
+
       // Sign in with Bitcoin credentials
       const result = await signIn('credentials', {
         token: authToken,
@@ -144,7 +147,8 @@ export default function OAuthRestorePage() {
         throw new Error(result.error);
       }
 
-      router.push('/dashboard');
+      // Force a hard redirect to ensure session is properly updated
+      window.location.href = '/dashboard';
     } catch (err) {
       console.error('Decryption error:', err);
       setError(err instanceof Error ? err.message : 'Failed to decrypt backup');

@@ -76,7 +76,7 @@ export default function OAuthPage() {
               const backup = JSON.parse(decryptedBackup);
               const { BAP } = await import('bsv-bap');
               const { getAuthToken } = await import('bitcoin-auth');
-              const { signIn } = await import('next-auth/react');
+              const { signIn, signOut } = await import('next-auth/react');
               
               const bap = new BAP(backup.xprv);
               bap.importIds(backup.ids);
@@ -95,10 +95,21 @@ export default function OAuthPage() {
                     body: ''
                   });
 
-                  await signIn('credentials', {
+                  // Sign out of OAuth session first
+                  await signOut({ redirect: false });
+
+                  const result = await signIn('credentials', {
                     token: authToken,
                     redirect: false,
                   });
+                  
+                  if (result?.ok) {
+                    // Successfully signed back in with Bitcoin credentials
+                    // Clean up and redirect
+                    sessionStorage.removeItem('oauth_linking');
+                    router.push('/dashboard');
+                    return;
+                  }
                 }
               }
             }

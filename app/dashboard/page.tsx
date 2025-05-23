@@ -187,18 +187,13 @@ export default function DashboardPage() {
               )}
 
               <div>
-                <label htmlFor="name" className="text-sm text-gray-500">Name</label>
-                <p className="font-medium">{bapProfile?.identity?.name || 'Not set'}</p>
-              </div>
-
-              <div>
-                <label htmlFor="handle" className="text-sm text-gray-500">Handle</label>
+                <label className="text-sm text-gray-500">Display Name</label>
                 <p className="font-medium">{bapProfile?.identity?.alternateName || 'Not set'}</p>
               </div>
 
               <div>
-                <label htmlFor="description" className="text-sm text-gray-500">Description</label>
-                <p className="text-sm">{bapProfile?.identity?.description || 'No description'}</p>
+                <label className="text-sm text-gray-500">Bio</label>
+                <p className="text-sm">{bapProfile?.identity?.description || 'No bio yet'}</p>
               </div>
 
               <div>
