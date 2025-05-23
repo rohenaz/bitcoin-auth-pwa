@@ -2,6 +2,34 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ✅ Dashboard Fully Restored
+
+The dashboard has been completely restored with all missing functionality while maintaining multi-profile support and React Query integration. The dashboard now features:
+
+### Restored Features:
+1. **DeviceLinkQR Component** - QR code generation for linking new devices ✅
+2. **Quick Actions Section** - Including "Edit BAP Profile" and "Security Settings" links ✅
+3. **Account Status Card** - Real-time status indicators for authentication, backup, and BAP profile ✅
+4. **Security Notice** - Prominent security reminder with proper styling ✅
+5. **Profile Image Display** - Clean profile image presentation ✅
+6. **Vercel-style Layout** - Modern three-column grid with proper spacing and borders ✅
+7. **Navigation Header** - Clean navigation with profile switching ✅
+8. **React Query Integration** - All data fetching uses React Query for optimal performance ✅
+
+### Design System:
+- **Vercel-style Dark Theme** - Clean, minimal design with subtle borders and lots of whitespace
+- **Consistent Color Palette** - Gray-based with minimal accent colors (green for status, amber for warnings)
+- **Outlined Containers** - Border-based design instead of filled boxes
+- **Proper Typography** - Clean hierarchy with appropriate font weights and sizes
+- **Responsive Design** - Works across all screen sizes with adaptive layouts
+
+### Multi-Profile Support:
+The dashboard maintains full multi-profile functionality:
+- Dynamic routing with `/dashboard/[bapId]` support
+- Profile switching via ProfileSwitcher component
+- Per-profile data fetching and caching
+- Secure profile ownership verification
+
 ## Development Commands
 
 ```bash

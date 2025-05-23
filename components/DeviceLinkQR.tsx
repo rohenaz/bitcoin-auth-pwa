@@ -69,41 +69,42 @@ export default function DeviceLinkQR() {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
-      <h2 className="text-lg font-semibold mb-4">Link New Device</h2>
+    <div className="border border-gray-800/50 rounded-lg p-6">
+      <h3 className="text-lg font-medium mb-6">Link New Device</h3>
       
       {!qrCodeUrl ? (
-        <div className="text-center">
-          <p className="text-gray-400 mb-4">
+        <div className="text-center space-y-4">
+          <p className="text-sm text-gray-400">
             Generate a QR code to quickly sign in on another device
           </p>
           <button
             type="button"
             onClick={generateQRCode}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors"
+            className="px-4 py-2 text-sm border border-gray-700 hover:border-gray-600 disabled:border-gray-800 disabled:text-gray-600 rounded-md transition-colors"
           >
             {loading ? 'Generating...' : 'Generate QR Code'}
           </button>
           {error && (
-            <p className="text-red-400 text-sm mt-2">{error}</p>
+            <p className="text-red-400 text-sm">{error}</p>
           )}
         </div>
       ) : (
-        <div className="text-center">
-          <p className="text-gray-400 mb-4">
+        <div className="text-center space-y-4">
+          <p className="text-sm text-gray-400 mb-4">
             Scan this QR code with your other device
           </p>
-          <div className="bg-white p-4 rounded-lg inline-block mb-4">
+          <div className="bg-white p-4 rounded-lg inline-block">
             <img src={qrCodeUrl} alt="Device link QR code" className="block" />
           </div>
           <div className="space-y-2">
-            <p className="text-sm text-gray-500">
-              Expires in: <span className="font-mono text-orange-400">{formatTime(timeRemaining)}</span>
+            <p className="text-sm text-gray-400">
+              Expires in: <span className="font-mono text-amber-400">{formatTime(timeRemaining)}</span>
             </p>
-            <p className="text-xs text-gray-600">
-              Or visit: <code className="bg-gray-800 px-2 py-1 rounded text-xs break-all">{linkUrl}</code>
-            </p>
+            <div className="bg-gray-900/50 border border-gray-800 rounded p-3">
+              <p className="text-xs text-gray-500 mb-1">Or visit manually:</p>
+              <code className="text-xs text-gray-300 break-all">{linkUrl}</code>
+            </div>
           </div>
           <button
             type="button"
@@ -112,15 +113,15 @@ export default function DeviceLinkQR() {
               setLinkUrl(null);
               setTimeRemaining(0);
             }}
-            className="mt-4 text-sm text-gray-400 hover:text-white"
+            className="text-sm text-gray-400 hover:text-white transition-colors"
           >
             Cancel
           </button>
         </div>
       )}
       
-      <div className="mt-4 pt-4 border-t border-gray-800">
-        <p className="text-xs text-gray-500">
+      <div className="mt-6 pt-4 border-t border-gray-800/50">
+        <p className="text-xs text-gray-500 leading-relaxed">
           The QR code contains a one-time link that expires in 10 minutes. 
           You'll need to enter your encryption password on the new device.
         </p>
