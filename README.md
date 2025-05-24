@@ -229,7 +229,7 @@ bun start
 ### Bitcoin Key Generation
 ```typescript
 // Client-side only
-const privateKey = bsv.PrivateKey.fromRandom();
+const privateKey = PrivateKey.fromRandom();
 const wif = privateKey.toWif();
 const publicKey = privateKey.toPublicKey().toString();
 ```

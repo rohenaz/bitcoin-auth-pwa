@@ -247,14 +247,20 @@ export const authOptions = {
     signIn: async ({ user, account }: { user: User, account: Account | null }) => {
       // Check if this is an OAuth image fetch by looking for our callback URL pattern
       if (account?.provider !== 'credentials' && user?.image) {
+        console.log('🔍 OAuth sign-in detected:', { provider: account?.provider, hasImage: !!user.image });
+        
         // If this OAuth sign-in has an image, check if there are any pending image fetch states
         // We'll store the image temporarily for all recent states from this user
         // This is a simple approach since the session will be very short-lived for image fetching
         const keys = await redis.keys('oauth-image-state:*');
+        console.log('🔍 Found image fetch states:', keys.length);
+        
         for (const key of keys) {
           const stateData = await redis.get(key);
           if (stateData) {
             const parsed = JSON.parse(stateData as string);
+            console.log('🔍 Checking state:', { provider: parsed.provider, purpose: parsed.purpose, accountProvider: account?.provider });
+            
             if (parsed.provider === account?.provider && parsed.purpose === 'fetch-image') {
               const state = key.replace('oauth-image-state:', '');
               await redis.setex(`oauth-temp-image:${state}`, 300, user.image); // 5 min expiry
