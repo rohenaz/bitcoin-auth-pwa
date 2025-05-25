@@ -13,6 +13,7 @@ import ProfileSwitcher from '@/components/ProfileSwitcher';
 import DeviceLinkQR from '@/components/DeviceLinkQR';
 import MobileMemberExport from '@/components/MobileMemberExport';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
+import type { APIIdentity } from '@/types/bap';
 
 interface DashboardPageProps {
   params: Promise<{ bapId?: string[] }>;
@@ -101,6 +102,26 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   // Use React Query hooks
   const { data: profileData, isLoading, error } = useProfile(currentBapId);
   const updateProfileMutation = useUpdateProfile();
+  const [bapProfile, setBapProfile] = useState<APIIdentity | null>(null);
+
+  // Fetch BAP profile data separately to check if published
+  useEffect(() => {
+    if (!currentAddress) return;
+    
+    const fetchBapProfile = async () => {
+      try {
+        const response = await fetch(`/api/bap?address=${encodeURIComponent(currentAddress)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBapProfile(data.result);
+        }
+      } catch (err) {
+        console.error('Error fetching BAP profile:', err);
+      }
+    };
+    
+    fetchBapProfile();
+  }, [currentAddress]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -219,6 +240,12 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       description: profileData.description || profileData.bapProfile?.identity?.description || '',
     }
   } : null;
+
+  // Check if BAP profile is published on-chain
+  const isPublished = !!(bapProfile?.addresses && 
+    bapProfile.addresses.length > 0 && 
+    bapProfile.addresses[0] &&
+    bapProfile.addresses[0].block > 0);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -406,9 +433,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">BAP Profile</span>
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${profile?.block && profile.block > 0 ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                    <span className={`text-sm ${profile?.block && profile.block > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                      {profile?.block && profile.block > 0 ? 'Published' : 'Not Published'}
+                    <div className={`w-2 h-2 rounded-full ${isPublished ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                    <span className={`text-sm ${isPublished ? 'text-green-400' : 'text-gray-400'}`}>
+                      {isPublished ? 'Published' : 'Not Published'}
                     </span>
                   </div>
                 </div>
