@@ -12,8 +12,10 @@ import ProfileEditor from '@/components/ProfileEditor';
 import ProfileSwitcher from '@/components/ProfileSwitcher';
 import DeviceLinkQR from '@/components/DeviceLinkQR';
 import MobileMemberExport from '@/components/MobileMemberExport';
+import Modal from '@/components/Modal';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 import type { APIIdentity } from '@/types/bap';
+import { encryptBackup } from 'bitcoin-backup';
 
 interface DashboardPageProps {
   params: Promise<{ bapId?: string[] }>;
@@ -23,6 +25,10 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportPassword, setExportPassword] = useState('');
+  const [exportError, setExportError] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
   const [currentBapId, setCurrentBapId] = useState<string>('');
   const [currentAddress, setCurrentAddress] = useState<string>('');
   const [resolvedParams, setResolvedParams] = useState<{ bapId?: string[] } | null>(null);
@@ -151,7 +157,12 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     }
   };
 
-  const handleExportMemberBackup = async () => {
+  const handleExportMemberBackup = () => {
+    // Show modal to choose export type
+    setShowExportModal(true);
+  };
+
+  const exportMemberBackupDecrypted = async () => {
     try {
       // Get decrypted backup from session storage
       const decryptedBackupStr = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
@@ -187,14 +198,88 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `member-backup-${currentBapId.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `member-backup-decrypted-${currentBapId.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      setShowExportModal(false);
     } catch (error) {
       console.error('Export error:', error);
       alert('Failed to export member backup');
+    }
+  };
+
+  const exportMemberBackupEncrypted = async () => {
+    if (!exportPassword) {
+      setExportError('Please enter a password');
+      return;
+    }
+
+    setExportLoading(true);
+    setExportError('');
+
+    try {
+      // Get decrypted backup from session storage
+      const decryptedBackupStr = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
+      if (!decryptedBackupStr) {
+        setExportError('No backup found. Please sign in again.');
+        return;
+      }
+
+      const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
+      const bap = new BAP(backup.xprv);
+      bap.importIds(backup.ids);
+      
+      // Verify user owns this profile
+      const ids = bap.listIds();
+      if (!ids.includes(currentBapId)) {
+        setExportError('You do not have access to this profile');
+        return;
+      }
+
+      // Export the member backup for this specific profile
+      const master = bap.getId(currentBapId);
+      const memberBackup = master?.exportMemberBackup();
+
+      if (!memberBackup) {
+        setExportError('Failed to export member backup');
+        return;
+      }
+
+      // Create a BapMemberBackup structure for encryption
+      const memberBackupForEncryption = {
+        wif: memberBackup.derivedPrivateKey,
+        id: memberBackup.identityKey,
+        label: memberBackup.name || `Profile ${currentBapId.substring(0, 8)}`,
+        createdAt: new Date().toISOString()
+      };
+      
+      const encryptedMemberBackup = await encryptBackup(memberBackupForEncryption, exportPassword);
+
+      // Create a downloadable file
+      const blob = new Blob([JSON.stringify(encryptedMemberBackup, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `member-backup-encrypted-${currentBapId.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Close modal and reset form
+      setShowExportModal(false);
+      setExportPassword('');
+      setExportError('');
+    } catch (error) {
+      console.error('Export error:', error);
+      setExportError('Failed to encrypt and export member backup');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -479,6 +564,90 @@ export default function DashboardPage({ params }: DashboardPageProps) {
             console.log('Publishing to blockchain not yet implemented');
           }}
         />
+      )}
+
+      {/* Member Export Modal */}
+      {showExportModal && (
+        <Modal
+          isOpen={showExportModal}
+          onClose={() => {
+            setShowExportModal(false);
+            setExportPassword('');
+            setExportError('');
+          }}
+          title="Export Member Backup"
+        >
+          <div className="space-y-6">
+            <div className="text-sm text-gray-400">
+              Choose how you want to export this member backup:
+            </div>
+
+            {/* Decrypted Option */}
+            <div className="space-y-4">
+              <button
+                onClick={exportMemberBackupDecrypted}
+                className="w-full p-4 text-left border border-gray-800 hover:border-gray-700 rounded-lg transition-colors group"
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-medium group-hover:text-white transition-colors">Quick Export (Decrypted)</div>
+                    <div className="text-sm text-gray-400">Download ready-to-use member backup</div>
+                    <div className="text-xs text-amber-400 mt-1">⚠️ Private key will be visible in the file</div>
+                  </div>
+                </div>
+              </button>
+
+              {/* Encrypted Option */}
+              <div className="border border-gray-800 rounded-lg p-4">
+                <div className="flex items-start space-x-3 mb-4">
+                  <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium">Secure Export (Encrypted)</div>
+                    <div className="text-sm text-gray-400 mb-3">Password-protect the member backup file</div>
+                    
+                    <div className="space-y-3">
+                      <input
+                        type="password"
+                        value={exportPassword}
+                        onChange={(e) => {
+                          setExportPassword(e.target.value);
+                          setExportError('');
+                        }}
+                        placeholder="Enter encryption password"
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      />
+                      
+                      {exportError && (
+                        <div className="text-xs text-red-400">{exportError}</div>
+                      )}
+                      
+                      <button
+                        onClick={exportMemberBackupEncrypted}
+                        disabled={exportLoading || !exportPassword}
+                        className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors text-sm"
+                      >
+                        {exportLoading ? 'Encrypting...' : 'Export Encrypted'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              <strong>Recommendation:</strong> Use encrypted export for maximum security. You'll need the password to import this backup later.
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

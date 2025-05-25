@@ -65,7 +65,7 @@ export default function MobileMemberExport({ bapId }: MobileMemberExportProps) {
               Export to Mobile
             </div>
             <div className="text-sm text-gray-400">
-              Scan QR code to download on phone
+              Scan QR code to download on phone (decrypted)
             </div>
           </div>
           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
