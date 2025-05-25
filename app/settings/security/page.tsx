@@ -3,10 +3,16 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { type BapMasterBackup, decryptBackup } from "bitcoin-backup";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
 
 export default function SecuritySettingsPage() {
   const { data: session } = useSession();
   const [showBackupData, setShowBackupData] = useState(false);
+  const [showMnemonic, setShowMnemonic] = useState(false);
+  const [passwordForMnemonic, setPasswordForMnemonic] = useState("");
+  const [mnemonicError, setMnemonicError] = useState("");
+  const [decryptedBackup, setDecryptedBackup] = useState<BapMasterBackup | null>(null);
   const [cloudBackupStatus, setCloudBackupStatus] = useState<{
     lastUpdated?: string;
     hasCloudBackup: boolean;
@@ -79,8 +85,53 @@ export default function SecuritySettingsPage() {
     }
   };
 
-  const handleExportBackup = async () => {
-    const encryptedBackup = localStorage.getItem('encryptedBackup');
+  const handleShowMnemonic = async () => {
+    if (!passwordForMnemonic) {
+      setMnemonicError("Please enter your password");
+      return;
+    }
+
+    const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
+    if (!encryptedBackup) {
+      setMnemonicError("No backup found");
+      return;
+    }
+
+    try {
+      // The encrypted backup is already a JSON string, parse it
+      const encryptedData = JSON.parse(encryptedBackup);
+      console.log('Encrypted backup structure:', { 
+        hasEncrypted: !!encryptedData.encrypted,
+        hasEncryptedMnemonic: !!encryptedData.encryptedMnemonic,
+        hasNonce: !!encryptedData.nonce,
+        hasSalt: !!encryptedData.salt
+      });
+      
+      // Decrypt using the bitcoin-backup library
+      const decrypted = await decryptBackup(encryptedData, passwordForMnemonic);
+      console.log('Decrypted backup type:', {
+        hasMnemonic: 'mnemonic' in decrypted,
+        hasXprv: 'xprv' in decrypted,
+        hasIds: 'ids' in decrypted
+      });
+      
+      // Check if it's a master backup
+      if ('mnemonic' in decrypted && 'xprv' in decrypted) {
+        setDecryptedBackup(decrypted as BapMasterBackup);
+        setShowMnemonic(true);
+        setMnemonicError("");
+        setPasswordForMnemonic(""); // Clear password after successful decrypt
+      } else {
+        setMnemonicError("This is not a master backup");
+      }
+    } catch (error) {
+      console.error('Decryption error details:', error);
+      setMnemonicError("Invalid password or corrupted backup");
+    }
+  };
+
+  const handleExportMasterBackup = async () => {
+    const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
     if (!encryptedBackup) {
       alert("No local backup found");
       return;
@@ -92,7 +143,7 @@ export default function SecuritySettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bitcoin-auth-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `bitcoin-auth-master-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -102,6 +153,7 @@ export default function SecuritySettingsPage() {
       alert("Export failed");
     }
   };
+
 
   if (!session) {
     return (
@@ -170,6 +222,7 @@ export default function SecuritySettingsPage() {
               <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
                 <div className="text-gray-400">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <title>Client-Side Encryption</title>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                   </svg>
                 </div>
@@ -184,6 +237,7 @@ export default function SecuritySettingsPage() {
               <div className="flex items-start space-x-4 p-6 border border-gray-800/50 rounded-lg">
                 <div className="text-gray-400">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <title>Time-Bound Tokens</title>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -233,6 +287,7 @@ export default function SecuritySettingsPage() {
                     </div>
                   )}
                   <button
+                    type="button"
                     onClick={handleUpdateCloudBackup}
                     disabled={updating || !cloudBackupStatus.isOutdated}
                     className="px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -246,6 +301,7 @@ export default function SecuritySettingsPage() {
                     No cloud backup found. Create one to access your identity from other devices.
                   </p>
                   <button
+                    type="button"
                     onClick={handleUpdateCloudBackup}
                     disabled={updating}
                     className="px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -264,18 +320,118 @@ export default function SecuritySettingsPage() {
               Export your encrypted backup for safekeeping or manual restoration.
             </p>
 
-            <div className="border border-gray-800/50 rounded-lg p-6">
-              <h3 className="font-medium mb-2">Export Encrypted Backup</h3>
-              <p className="text-sm text-gray-400 mb-6">
-                Download a copy of your encrypted backup file. You'll need your original password to decrypt it when importing.
-              </p>
-              
-              <button
-                onClick={handleExportBackup}
-                className="px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 transition-colors"
-              >
-                Download Backup
-              </button>
+            <div className="space-y-6">
+              {/* Master Backup */}
+              <div className="border border-gray-800/50 rounded-lg p-6">
+                <h3 className="font-medium mb-2">Master Backup</h3>
+                <p className="text-sm text-gray-400 mb-6">
+                  Your master backup contains all your identities and is essential for recovery. Keep this extremely secure.
+                </p>
+                
+                <div className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={handleExportMasterBackup}
+                    className="w-full px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 transition-colors"
+                  >
+                    Download Master Backup
+                  </button>
+
+                  {!showMnemonic && !decryptedBackup && (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => setShowMnemonic(!showMnemonic)}
+                        className="w-full px-4 py-2 text-sm border border-amber-600 text-amber-400 rounded-lg hover:border-amber-500 transition-colors"
+                      >
+                        View Recovery Phrase
+                      </button>
+                    </div>
+                  )}
+
+                  {showMnemonic && !decryptedBackup && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-amber-400">Enter your password to view the recovery phrase:</p>
+                      <input
+                        type="password"
+                        value={passwordForMnemonic}
+                        onChange={(e) => {
+                          setPasswordForMnemonic(e.target.value);
+                          setMnemonicError("");
+                        }}
+                        placeholder="Enter your password"
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      />
+                      {mnemonicError && (
+                        <p className="text-xs text-red-400">{mnemonicError}</p>
+                      )}
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={handleShowMnemonic}
+                          className="flex-1 px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors"
+                        >
+                          Show Phrase
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowMnemonic(false);
+                            setPasswordForMnemonic("");
+                            setMnemonicError("");
+                          }}
+                          className="flex-1 px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {decryptedBackup?.mnemonic && (
+                    <div className="space-y-3">
+                      <div className="bg-amber-900/20 border border-amber-900 rounded-lg p-3">
+                        <p className="text-xs text-amber-400 mb-2">⚠️ Keep this phrase secure and never share it with anyone</p>
+                      </div>
+                      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                        <h4 className="text-sm font-medium mb-3">Recovery Phrase</h4>
+                        <div className="grid grid-cols-3 gap-2">
+                          {decryptedBackup.mnemonic.split(' ').map((word, index) => (
+                            <div key={index} className="bg-black/50 rounded px-2 py-1 text-xs font-mono">
+                              <span className="text-gray-500 mr-1">{index + 1}.</span>
+                              {word}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDecryptedBackup(null);
+                          setShowMnemonic(false);
+                        }}
+                        className="w-full px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 transition-colors"
+                      >
+                        Hide Recovery Phrase
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Member Backup */}
+              <div className="border border-gray-800/50 rounded-lg p-6">
+                <h3 className="font-medium mb-2">Member Backup</h3>
+                <p className="text-sm text-gray-400 mb-6">
+                  Export individual member backups for specific identities. Use this for signing into services without exposing your master key.
+                </p>
+                
+                <Link
+                  href="/dashboard"
+                  className="inline-flex px-4 py-2 text-sm border border-gray-600 rounded-lg hover:border-gray-500 transition-colors"
+                >
+                  Go to Dashboard to Export Member Backup
+                </Link>
+              </div>
             </div>
           </div>
 

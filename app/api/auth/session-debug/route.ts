@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       cookies: cookies.map(c => ({ name: c.name, length: c.value.length })),
       sessionCookieName: sessionCookie?.name,
       sessionCookieLength: sessionCookie?.value.length,
-      authUrl: env.AUTH_URL || process.env.NEXTAUTH_URL,
+      authUrl: process.env.AUTH_URL || env.NEXTAUTH_URL || process.env.NEXTAUTH_URL,
       nodeEnv: process.env.NODE_ENV,
     });
   } catch (error) {

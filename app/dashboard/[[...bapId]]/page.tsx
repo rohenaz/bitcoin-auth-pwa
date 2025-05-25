@@ -11,6 +11,7 @@ import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
 import ProfileEditor from '@/components/ProfileEditor';
 import ProfileSwitcher from '@/components/ProfileSwitcher';
 import DeviceLinkQR from '@/components/DeviceLinkQR';
+import MobileMemberExport from '@/components/MobileMemberExport';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 
 interface DashboardPageProps {
@@ -358,20 +359,24 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   </div>
                 </Link>
                 
-                <button
-                  onClick={handleExportMemberBackup}
-                  className="w-full p-4 text-left border border-gray-800 hover:border-gray-700 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium group-hover:text-white transition-colors">Export Member Backup</div>
-                      <div className="text-sm text-gray-400">Download backup for this identity only</div>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleExportMemberBackup}
+                    className="w-full p-4 text-left border border-gray-800 hover:border-gray-700 rounded-lg transition-colors group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium group-hover:text-white transition-colors">Export Member Backup</div>
+                        <div className="text-sm text-gray-400">Download backup for this identity only</div>
+                      </div>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                      </svg>
                     </div>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                </button>
+                  </button>
+                  
+                  <MobileMemberExport bapId={currentBapId} />
+                </div>
               </div>
             </div>
           </div>
@@ -401,9 +406,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">BAP Profile</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm text-blue-400">
-                      {profile?.identity.alternateName ? 'Published' : 'Draft'}
+                    <div className={`w-2 h-2 rounded-full ${profile?.block && profile.block > 0 ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                    <span className={`text-sm ${profile?.block && profile.block > 0 ? 'text-green-400' : 'text-gray-400'}`}>
+                      {profile?.block && profile.block > 0 ? 'Published' : 'Not Published'}
                     </span>
                   </div>
                 </div>

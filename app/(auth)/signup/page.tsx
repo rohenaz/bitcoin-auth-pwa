@@ -21,6 +21,7 @@ export default function SignUpPage() {
   const [bapBackup, setBapBackup] = useState<BapMasterBackup | null>(null);
   const [bapId, setBapId] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [backupDownloaded, setBackupDownloaded] = useState(false);
   const [oauthInfo, setOauthInfo] = useState<{ provider?: string; email?: string; name?: string } | null>(null);
   const [conflictModal, setConflictModal] = useState<{
     isOpen: boolean;
@@ -503,11 +504,78 @@ export default function SignUpPage() {
         {step === 'confirm' && (
           <>
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Confirm Your Password</h2>
+              <h2 className="text-2xl font-bold mb-2">Secure Your Identity</h2>
               <p className="text-gray-400">
-                Enter your password again to confirm
+                Save your recovery phrase and backup before continuing
               </p>
             </div>
+
+            {/* Show mnemonic phrase */}
+            {bapBackup?.mnemonic && (
+              <div className="space-y-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <svg className="w-5 h-5 text-amber-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <title>Key</title>
+                      <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
+                    </svg>
+                    Recovery Phrase
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {bapBackup.mnemonic.split(' ').map((word, index) => (
+                      <div key={index} className="bg-black/50 rounded px-2 py-1 text-sm font-mono">
+                        <span className="text-gray-500 mr-1">{index + 1}.</span>
+                        {word}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-amber-400">
+                    Write down these words in order. This is the ONLY way to recover your master identity if you lose your password.
+                  </p>
+                </div>
+
+                {/* Master backup download */}
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">Master Backup</h3>
+                  <p className="text-sm text-gray-400 mb-3">
+                    Download your encrypted master backup. This file contains your complete identity.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Create a temporary encrypted backup for download
+                      const tempBackup = encryptBackup(bapBackup, password);
+                      const blob = new Blob([JSON.stringify(tempBackup, null, 2)], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `bitcoin-auth-master-backup-${Date.now()}.json`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                      setBackupDownloaded(true);
+                    }}
+                    className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors flex items-center justify-center"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <title>Download</title>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                    Download Master Backup
+                  </button>
+                  {backupDownloaded && (
+                    <p className="text-xs text-green-400 mt-2 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <title>Check</title>
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Backup downloaded
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleConfirmSubmit} className="space-y-4">
               <div>
@@ -520,7 +588,7 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Re-enter your password"
+                  placeholder="Re-enter your password to continue"
                   required
                 />
               </div>
@@ -531,12 +599,18 @@ export default function SignUpPage() {
                 </div>
               )}
 
+              {!backupDownloaded && (
+                <div className="bg-amber-900/20 border border-amber-900 rounded-lg p-3 text-amber-400 text-sm">
+                  Please download your master backup before continuing
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={loading || !confirmPassword}
+                disabled={loading || !confirmPassword || !backupDownloaded}
                 className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors"
               >
-                {loading ? 'Encrypting...' : 'Encrypt & Continue'}
+                {loading ? 'Encrypting...' : 'Continue'}
               </button>
 
               <button
@@ -545,6 +619,7 @@ export default function SignUpPage() {
                   setStep('password');
                   setConfirmPassword('');
                   setError('');
+                  setBackupDownloaded(false);
                 }}
                 className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-lg font-medium transition-colors"
               >
