@@ -187,7 +187,7 @@ export default function SignUpPage() {
 
       // Get the address for user creation
       const pubkey = PrivateKey.fromWif(pk).toPublicKey();
-      const address = pubkey?.toAddress();
+      const address = pubkey?.toAddress().toString(); // Convert to string!
 
       // Create auth token for user creation
       const createUserToken = getAuthToken({
@@ -229,6 +229,10 @@ export default function SignUpPage() {
 
       if (result?.error) {
         throw new Error(result.error);
+      }
+
+      if (!result?.ok) {
+        throw new Error('Sign in failed');
       }
       
       // Check if we have OAuth info from an OAuth-first signup
@@ -279,7 +283,7 @@ export default function SignUpPage() {
         }
       }
 
-      // Now redirect to OAuth linking with an active session
+      // Now redirect to OAuth linking page
       router.push('/signup/oauth');
     } catch (err) {
       console.error('Encryption error:', err);

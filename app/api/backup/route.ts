@@ -47,7 +47,7 @@ export const POST = async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { encryptedBackup, oauthProvider, oauthId } = body;
+    const { encryptedBackup, oauthProvider, oauthId, address, idKey } = body;
 
     if (!encryptedBackup) {
       return NextResponse.json({ error: "encryptedBackup required" }, { status: 400 });
@@ -71,18 +71,22 @@ export const POST = async (req: Request) => {
     });
 
     // Always store user data and address mapping
-    if (session.user.address) {
+    // Use address from request body or session
+    const userAddress = address || session.user.address;
+    const userIdKey = idKey || session.user.idKey || bapId;
+    
+    if (userAddress) {
       const userKey = `user:${bapId}`;
       await redis.hset(userKey, {
-        address: session.user.address,
-        idKey: session.user.idKey || bapId,
+        address: userAddress,
+        idKey: userIdKey,
         createdAt: Date.now() / 1e3
       });
       
       // Create address-to-BAP mapping for unpublished IDs
       const { addrKey, bapKey } = await import('@/lib/redis');
       const currentBlock = await redis.get('block:height') || '0';
-      await redis.hset(addrKey(session.user.address), { 
+      await redis.hset(addrKey(userAddress), { 
         id: bapId, 
         block: currentBlock.toString() 
       });
@@ -93,17 +97,19 @@ export const POST = async (req: Request) => {
       if (!existingProfile) {
         const basicProfile = {
           idKey: bapId,
-          currentAddress: session.user.address,
+          currentAddress: userAddress,
           identity: {
             '@context': 'https://schema.org',
             '@type': 'Person',
-            alternateName: `Bitcoin User (${session.user.address.substring(0, 8)}...)`,
+            alternateName: `Bitcoin User (${userAddress.substring(0, 8)}...)`,
           },
           block: Number(currentBlock) || 0,
           currentHeight: Number(currentBlock) || 0
         };
         await redis.set(bapKey(bapId), JSON.stringify(basicProfile));
       }
+    } else {
+      console.error('WARNING: No address available for user creation');
     }
 
     // If OAuth info provided, create OAuth mapping

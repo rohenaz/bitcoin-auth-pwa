@@ -129,6 +129,53 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     }
   };
 
+  const handleExportMemberBackup = async () => {
+    try {
+      // Get decrypted backup from session storage
+      const decryptedBackupStr = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
+      if (!decryptedBackupStr) {
+        alert('No backup found. Please sign in again.');
+        return;
+      }
+
+      const backup = JSON.parse(decryptedBackupStr) as BapMasterBackup;
+      const bap = new BAP(backup.xprv);
+      bap.importIds(backup.ids);
+      
+      // Verify user owns this profile
+      const ids = bap.listIds();
+      if (!ids.includes(currentBapId)) {
+        alert('You do not have access to this profile');
+        return;
+      }
+
+      // Export the member backup for this specific profile (locally, no network)
+      const master = bap.getId(currentBapId);
+      const memberBackup = master?.exportMemberBackup();
+
+      if (!memberBackup) {
+        alert('Failed to export member backup');
+        return;
+      }
+
+      // Create a downloadable file
+      const blob = new Blob([JSON.stringify(memberBackup, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `member-backup-${currentBapId.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export member backup');
+    }
+  };
+
   if (status === 'loading' || !currentBapId) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -310,6 +357,21 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                     </svg>
                   </div>
                 </Link>
+                
+                <button
+                  onClick={handleExportMemberBackup}
+                  className="w-full p-4 text-left border border-gray-800 hover:border-gray-700 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium group-hover:text-white transition-colors">Export Member Backup</div>
+                      <div className="text-sm text-gray-400">Download backup for this identity only</div>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                </button>
               </div>
             </div>
           </div>

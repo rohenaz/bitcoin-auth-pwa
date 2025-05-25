@@ -46,7 +46,7 @@ Create a `.env.local` file with:
 ```bash
 # Core (Required)
 AUTH_SECRET=your-32-char-secret  # Generate: openssl rand -base64 32
-AUTH_URL=http://localhost:3000   # Your app URL
+AUTH_URL=http://localhost:4100   # Your app URL
 
 # OAuth Providers (Required for each enabled provider)
 AUTH_GOOGLE_ID=your-google-client-id

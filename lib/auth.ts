@@ -103,7 +103,10 @@ const customProvider = Credentials({
           const bapProfile = await getBapProfile(pubkey)
           console.log('✅ BAP profile fetched successfully:', !!bapProfile);
           
-          const address = PublicKey.fromString(pubkey).toAddress()
+          const addressObj = PublicKey.fromString(pubkey).toAddress()
+          const address = addressObj.toString(); // Ensure it's a string
+          console.log('📍 Address derived from pubkey:', { address, type: typeof address });
+          
           if (bapProfile) {
             console.log('💾 Storing BAP profile in cache and upserting root profile...');
             
@@ -125,7 +128,9 @@ const customProvider = Credentials({
           } else {
             console.log('⚠️ BAP profile is null, checking for existing user by address mapping');
             // For unpublished BAP IDs, check if we have an address-to-BAP mapping
-            const address = PublicKey.fromString(pubkey).toAddress()
+            const addressObj = PublicKey.fromString(pubkey).toAddress()
+            const address = addressObj.toString(); // Ensure it's a string
+            console.log('🔍 Looking up unpublished BAP ID for address:', { address, type: typeof address });
             
             // Use the existing address-to-BAP mapping
             const addrMapping = await redis.hgetall<{ id: string; block: string }>(addrKey(address));
@@ -162,16 +167,20 @@ const customProvider = Credentials({
           console.log('🔄 Looking for existing user by address mapping...');
           
           // For unpublished BAP IDs, check if we have an address-to-BAP mapping
-          const address = PublicKey.fromString(pubkey).toAddress()
+          const addressObj = PublicKey.fromString(pubkey).toAddress()
+          const address = addressObj.toString(); // Ensure it's a string
+          console.log('🔍 Looking up unpublished BAP ID for address (error path):', { address, type: typeof address });
           
           // Use the existing address-to-BAP mapping
           const addrMapping = await redis.hgetall<{ id: string; block: string }>(addrKey(address));
+          console.log('🔍 Address mapping lookup:', { address, addrMapping });
           
           if (addrMapping?.id) {
             // We have a BAP ID for this address, get the user data
             const userData = await redis.hgetall(userKey(addrMapping.id)) as Record<string, string>;
+            console.log('🔍 User data lookup:', { bapId: addrMapping.id, userData });
             
-            if (userData) {
+            if (userData && Object.keys(userData).length > 0) {
               const user = { 
                 id: addrMapping.id, 
                 name: userData.displayName || `Bitcoin User (${address.substring(0, 8)}...)`, 
@@ -181,7 +190,11 @@ const customProvider = Credentials({
               } as User;
               console.log('👤 Found existing user with unpublished BAP ID:', user);
               return user;
+            } else {
+              console.error('❌ User data is empty for BAP ID:', addrMapping.id);
             }
+          } else {
+            console.error('❌ No address mapping found for:', address);
           }
           
           // If we still don't have a user, this is an error condition

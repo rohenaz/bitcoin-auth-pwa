@@ -27,7 +27,7 @@ const OAUTH_CONFIGS = {
 };
 
 function getRedirectUri(provider: string) {
-  const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = env.NEXTAUTH_URL || 'http://localhost:4100';
   return `${baseUrl}/api/auth/link-provider/callback?provider=${provider}`;
 }
 

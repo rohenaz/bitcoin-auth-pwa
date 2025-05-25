@@ -94,6 +94,14 @@ export default function OAuthPage() {
                 }
                 return prev;
               });
+              
+              // Clean up linking data
+              sessionStorage.removeItem(STORAGE_KEYS.OAUTH_LINKING);
+              
+              // Don't try to sign out and back in - just stay in OAuth session for now
+              // The user can continue to link more providers or click continue
+              console.log('✅ OAuth account linked successfully');
+              return;
             } else if (response.status === 409) {
               // OAuth account already linked to another identity
               const data = await response.json();
@@ -129,19 +137,31 @@ export default function OAuthPage() {
                 });
 
                 // Sign out of OAuth session first
+                console.log('🔄 Signing out of OAuth session...');
                 await signOut({ redirect: false });
 
+                // Add a small delay to ensure sign out completes
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                console.log('🔐 Signing in with Bitcoin credentials...');
                 const result = await signIn('credentials', {
                   token: authToken,
                   redirect: false,
                 });
                 
+                console.log('🔐 Sign in result:', result);
+                
                 if (result?.ok) {
                   // Successfully signed back in with Bitcoin credentials
+                  console.log('✅ Successfully signed in with Bitcoin credentials');
                   // Clean up and redirect
                   sessionStorage.removeItem(STORAGE_KEYS.OAUTH_LINKING);
                   router.push('/dashboard');
                   return;
+                } else {
+                  console.error('❌ Failed to sign in with Bitcoin credentials:', result?.error);
+                  // Don't leave user in limbo - redirect to signin
+                  router.push('/signin');
                 }
               }
             }
@@ -151,6 +171,8 @@ export default function OAuthPage() {
           }
         } catch (err) {
           console.error('Error handling OAuth return:', err);
+          // Don't leave user stuck - redirect to signin
+          router.push('/signin');
         }
       }
     };
@@ -163,16 +185,39 @@ export default function OAuthPage() {
       // Store backup info in session storage for after OAuth
       const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
       const decryptedBackup = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
-      if (!encryptedBackup || !decryptedBackup || !session?.user?.id) {
-        throw new Error('Missing backup or session');
+      
+      if (!encryptedBackup || !decryptedBackup) {
+        throw new Error('No backup found. Please complete signup first.');
       }
-
+      
+      // Always extract BAP ID from backup, don't rely on session during signup
+      const backup = JSON.parse(decryptedBackup);
+      const { BAP } = await import('bsv-bap');
+      const bap = new BAP(backup.xprv);
+      bap.importIds(backup.ids);
+      const bapId = bap.listIds()[0];
+      
+      if (!bapId) {
+        throw new Error('No identity found in backup');
+      }
+      
+      // Extract address from backup
+      const master = bap.getId(bapId);
+      const memberBackup = master?.exportMemberBackup();
+      if (!memberBackup?.derivedPrivateKey) {
+        throw new Error('Invalid backup format');
+      }
+      
+      const { PrivateKey } = await import('@bsv/sdk');
+      const pubkey = PrivateKey.fromWif(memberBackup.derivedPrivateKey).toPublicKey();
+      const address = pubkey.toAddress().toString();
+      
       // Store info for after OAuth callback
       sessionStorage.setItem(STORAGE_KEYS.OAUTH_LINKING, JSON.stringify({
-        bapId: session.user.id,
+        bapId,
         provider,
-        address: session.user.address,
-        idKey: session.user.idKey
+        address,
+        idKey: bapId
       }));
 
       // Sign in with OAuth provider
@@ -191,31 +236,47 @@ export default function OAuthPage() {
       return;
     }
 
-    // We should already be signed in from the signup flow
-    if (!session?.user) {
+    // Get BAP ID from backup instead of session
+    const decryptedBackup = sessionStorage.getItem(STORAGE_KEYS.DECRYPTED_BACKUP);
+    if (!decryptedBackup) {
       router.push('/signin');
       return;
     }
 
-    // Store the backup if we haven't already
-    const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
-    if (encryptedBackup && linkedProviders.length > 0) {
-      try {
-        await fetch('/api/backup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            encryptedBackup,
-            bapId: session.user.id
-          })
-        });
-      } catch (err) {
-        console.error('Error storing backup:', err);
-      }
-    }
+    try {
+      const backup = JSON.parse(decryptedBackup);
+      const { BAP } = await import('bsv-bap');
+      const bap = new BAP(backup.xprv);
+      bap.importIds(backup.ids);
+      const bapId = bap.listIds()[0];
 
-    // Redirect to success/dashboard
-    router.push('/success');
+      if (!bapId) {
+        throw new Error('No identity found in backup');
+      }
+
+      // Store the backup if we haven't already and have linked providers
+      const encryptedBackup = localStorage.getItem(STORAGE_KEYS.ENCRYPTED_BACKUP);
+      if (encryptedBackup && linkedProviders.length > 0) {
+        try {
+          await fetch('/api/backup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              encryptedBackup,
+              bapId
+            })
+          });
+        } catch (err) {
+          console.error('Error storing backup:', err);
+        }
+      }
+
+      // Redirect to success/dashboard
+      router.push('/success');
+    } catch (err) {
+      console.error('Error processing backup:', err);
+      setError('Failed to process backup. Please try again.');
+    }
   };
 
 

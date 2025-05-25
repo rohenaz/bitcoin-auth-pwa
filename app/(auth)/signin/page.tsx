@@ -45,7 +45,17 @@ function SignInPageContent() {
       }
 
       // Decrypt the backup with the password
-      const decrypted = await decryptBackup(encryptedBackup, password) as BapMasterBackup
+      let decrypted: BapMasterBackup;
+      try {
+        decrypted = await decryptBackup(encryptedBackup, password) as BapMasterBackup;
+      } catch (decryptError) {
+        console.error('Decryption error details:', decryptError);
+        // Check if this is the specific iteration count error
+        if (decryptError instanceof Error && decryptError.message.includes('Invalid passphrase or corrupted data')) {
+          throw new Error('Incorrect password. Please try again.');
+        }
+        throw decryptError;
+      }
 
       if (!decrypted) {
         throw new Error('Invalid backup format');
