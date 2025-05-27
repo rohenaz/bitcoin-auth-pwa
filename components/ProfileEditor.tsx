@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useOAuthImage } from '@/hooks/useOAuthImage';
 import { ENABLED_PROVIDERS, type EnabledProvider } from '@/lib/env';
+import { useBlockchainImage } from 'bitcoin-image/react';
 
 interface ProfileData {
   alternateName?: string;
@@ -29,6 +30,9 @@ export default function ProfileEditor({ isOpen, onClose, profile, onSave }: Prof
   });
   const [isSaving, setIsSaving] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  
+  // Process blockchain image URL for preview
+  const { displayUrl: previewImageUrl } = useBlockchainImage(formData.image);
 
   useEffect(() => {
     if (isOpen) {
@@ -187,10 +191,10 @@ export default function ProfileEditor({ isOpen, onClose, profile, onSave }: Prof
                 )}
               </div>
             </div>
-            {formData.image && (
+            {previewImageUrl && (
               <div className="mt-2 flex items-center justify-center">
                 <img 
-                  src={formData.image} 
+                  src={previewImageUrl} 
                   alt="Profile preview" 
                   className="w-16 h-16 rounded-full object-cover border border-gray-700"
                   onError={(e) => {

@@ -16,6 +16,7 @@ import Modal from '@/components/Modal';
 import { STORAGE_KEYS } from '@/lib/storage-keys';
 import type { APIIdentity } from '@/types/bap';
 import { encryptBackup } from 'bitcoin-backup';
+import { useBlockchainImage } from 'bitcoin-image/react';
 
 interface DashboardPageProps {
   params: Promise<{ bapId?: string[] }>;
@@ -134,6 +135,23 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       router.push('/signin');
     }
   }, [status, router]);
+  
+  // Merge BAP profile and user profile data
+  const profile = profileData ? {
+    idKey: currentBapId,
+    currentAddress: currentAddress,
+    identity: {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      alternateName: profileData.alternateName || profileData.displayName || profileData.bapProfile?.identity?.alternateName || '',
+      image: profileData.image || profileData.avatar || profileData.bapProfile?.identity?.image || '',
+      description: profileData.description || profileData.bapProfile?.identity?.description || '',
+    }
+  } : null;
+
+  // Process image URL for blockchain formats (hook must be called unconditionally)
+  const profileImageUrl = profile?.identity.image || '';
+  const { displayUrl: displayImageUrl } = useBlockchainImage(profileImageUrl);
 
   const handleSignOut = async () => {
     // Only clear session storage, preserve encrypted backup in localStorage
@@ -241,18 +259,19 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
       // Export the member backup for this specific profile
       const master = bap.getId(currentBapId);
-      const memberBackup = master?.exportMemberBackup();
-
-      if (!memberBackup) {
-        setExportError('Failed to export member backup');
+      if (!master) {
+        setExportError('Failed to get master identity');
         return;
       }
 
+      // Use the new exportMember() method
+      const memberExport = master.exportMember();
+
       // Create a BapMemberBackup structure for encryption
       const memberBackupForEncryption = {
-        wif: memberBackup.derivedPrivateKey,
-        id: memberBackup.identityKey,
-        label: memberBackup.name || `Profile ${currentBapId.substring(0, 8)}`,
+        wif: memberExport.wif,
+        id: currentBapId,
+        label: master.idName || `Profile ${currentBapId.substring(0, 8)}`,
         createdAt: new Date().toISOString()
       };
       
@@ -313,19 +332,6 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     );
   }
 
-  // Merge BAP profile and user profile data
-  const profile = profileData ? {
-    idKey: currentBapId,
-    currentAddress: currentAddress,
-    identity: {
-      '@context': 'https://schema.org',
-      '@type': 'Person',
-      alternateName: profileData.alternateName || profileData.displayName || profileData.bapProfile?.identity?.alternateName || '',
-      image: profileData.image || profileData.avatar || profileData.bapProfile?.identity?.image || '',
-      description: profileData.description || profileData.bapProfile?.identity?.description || '',
-    }
-  } : null;
-
   // Check if BAP profile is published on-chain
   const isPublished = !!(bapProfile?.addresses && 
     bapProfile.addresses.length > 0 && 
@@ -373,10 +379,10 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 <div className="flex items-start space-x-6">
                   {/* Profile Image */}
                   <div className="flex-shrink-0">
-                    {profile?.identity.image ? (
+                    {displayImageUrl ? (
                       <img
-                        src={profile.identity.image}
-                        alt={profile.identity.alternateName || 'Profile'}
+                        src={displayImageUrl}
+                        alt={profile?.identity.alternateName || 'Profile'}
                         className="w-20 h-20 rounded-lg object-cover border border-gray-800"
                       />
                     ) : (

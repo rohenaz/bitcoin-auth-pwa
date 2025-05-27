@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProfiles, useCreateProfile } from '@/hooks/useProfiles';
+import { useBlockchainImage } from 'bitcoin-image/react';
+import ProfileListItem from './ProfileListItem';
 
 interface ProfileSwitcherProps {
   currentBapId?: string;
@@ -52,6 +54,10 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
   };
 
   const currentProfile = profiles.find(p => p.id === currentBapId) || profiles[0];
+  
+  // Process current profile image URL
+  const currentProfileImageUrl = currentProfile?.userData?.avatar || currentProfile?.identity.image || '';
+  const { displayUrl: displayImageUrl } = useBlockchainImage(currentProfileImageUrl);
 
   if (isLoading) {
     return (
@@ -73,10 +79,10 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
       >
-        {(currentProfile?.userData?.avatar || currentProfile?.identity.image) && (
+        {displayImageUrl && (
           <img 
-            src={currentProfile.userData?.avatar || currentProfile.identity.image} 
-            alt={currentProfile.userData?.displayName || currentProfile.identity.alternateName} 
+            src={displayImageUrl} 
+            alt={currentProfile?.userData?.displayName || currentProfile?.identity.alternateName} 
             className="w-6 h-6 rounded-full"
           />
         )}
@@ -118,51 +124,15 @@ export default function ProfileSwitcher({ currentBapId, onProfileChange }: Profi
                 Your Profiles
               </div>
               
-              {profiles.map((profile, index) => {
-                const profileName = profile.userData?.displayName || 
-                                  profile.identity.alternateName || 
-                                  `Profile ${index + 1}`;
-                const profileImage = profile.userData?.avatar || profile.identity.image;
-                
-                return (
-                  <button
-                    key={profile.id}
-                    type="button"
-                    onClick={() => handleProfileSelect(profile.id)}
-                    className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
-                      profile.id === currentBapId 
-                        ? 'bg-blue-600/20 text-blue-400' 
-                        : 'hover:bg-gray-800 text-gray-300'
-                    }`}
-                  >
-                    {profileImage ? (
-                      <img 
-                        src={profileImage} 
-                        alt={profileName} 
-                        className="w-8 h-8 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-medium">
-                          {profileName.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-medium">{profileName}</p>
-                      {index === 0 && (
-                        <p className="text-xs text-gray-500">Primary</p>
-                      )}
-                    </div>
-                    {profile.id === currentBapId && (
-                      <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <title>Current Profile</title>
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                );
-              })}
+              {profiles.map((profile, index) => (
+                <ProfileListItem
+                  key={profile.id}
+                  profile={profile}
+                  index={index}
+                  isSelected={profile.id === currentBapId}
+                  onSelect={handleProfileSelect}
+                />
+              ))}
               
               {/* Create New Profile Button */}
               <div className="border-t border-gray-800 mt-2 pt-2">
