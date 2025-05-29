@@ -643,8 +643,8 @@ function ImportBackup() {
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               {/* Cyberpunk themed component */}
               <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-lg blur-lg opacity-75 animate-pulse" />
-                <div className="relative bg-black rounded-lg p-8 border border-gray-800">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/50 via-purple-500/50 to-pink-500/50 rounded-lg blur-md opacity-60" />
+                <div className="relative bg-black rounded-lg p-8 border border-cyan-500/30">
                   <div className="mb-8">
                     <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
                       SYSTEM ACCESS
