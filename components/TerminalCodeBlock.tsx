@@ -28,14 +28,14 @@ export function TerminalCodeBlock({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Custom Mac terminal theme
+  // Custom Mac terminal theme with darker background
   const macTerminalTheme = {
     ...oneDark,
     'pre[class*="language-"]': {
       ...oneDark['pre[class*="language-"]'],
-      background: '#1a1a1a',
-      border: '1px solid #333',
-      borderRadius: '12px',
+      background: '#0c0c0c',
+      border: 'none',
+      borderRadius: '0',
       padding: '0',
       margin: '0',
       overflow: 'hidden',
@@ -99,7 +99,7 @@ export function TerminalCodeBlock({
       </div>
 
       {/* Code content */}
-      <div className="relative overflow-hidden rounded-b-xl border border-t-0 border-gray-700 bg-[#1a1a1a]">
+      <div className="relative overflow-hidden rounded-b-xl border border-t-0 border-gray-700 bg-[#0c0c0c]">
         <SyntaxHighlighter
           language={language}
           style={macTerminalTheme}
@@ -107,9 +107,10 @@ export function TerminalCodeBlock({
           customStyle={{
             margin: 0,
             padding: '24px',
-            background: 'transparent',
+            background: '#0c0c0c',
             fontSize: '14px',
             lineHeight: '1.6',
+            borderRadius: 0,
           }}
           lineNumberStyle={{
             color: '#6e7681',
@@ -122,7 +123,7 @@ export function TerminalCodeBlock({
         </SyntaxHighlighter>
         
         {/* Subtle gradient overlay for depth */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-transparent via-transparent to-black/5"></div>
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-transparent via-transparent to-black/10"></div>
       </div>
     </div>
   );
