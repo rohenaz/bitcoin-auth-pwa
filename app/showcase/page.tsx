@@ -16,14 +16,21 @@ import {
   MarketTable,
   type MarketListing,
   type AssetType,
+  // bSocial components
+  PostButton,
+  LikeButton,
+  FollowButton,
+  SocialFeed,
+  PostCard,
+  // Wallet components
+  SendBSVButton,
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
   Zap, 
   Shield, 
-  Package,
-  Code2
+  Package
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
@@ -121,7 +128,7 @@ export default function ShowcasePage() {
         <div className="min-h-screen bg-black text-white">
           {/* Navigation Header */}
           <header className="border-b border-gray-800/50 sticky top-0 bg-black/95 backdrop-blur-sm z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
                 <nav className="flex items-center space-x-8">
                   <Link href="/" className="text-gray-400 hover:text-white transition-colors">
@@ -151,7 +158,7 @@ export default function ShowcasePage() {
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
             </div>
             
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+            <div className="relative max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -188,7 +195,7 @@ export default function ShowcasePage() {
                 </div>
 
                 {/* Quick Access to Demo Categories */}
-                <div className="mt-16 grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto">
+                <div className="mt-16 grid grid-cols-2 md:grid-cols-6 gap-4 max-w-5xl mx-auto">
                   <a href="#api-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-orange-500/50 rounded-lg transition-all group">
                     <div className="text-orange-500 mb-2">
                       <Zap className="w-6 h-6 mx-auto" />
@@ -210,19 +217,26 @@ export default function ShowcasePage() {
                     <div className="text-sm font-medium">Marketplace</div>
                     <div className="text-xs text-gray-500 mt-1">Trading components</div>
                   </a>
+                  <a href="#bsocial-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-pink-500/50 rounded-lg transition-all group">
+                    <div className="text-pink-500 mb-2">
+                      <Package className="w-6 h-6 mx-auto" />
+                    </div>
+                    <div className="text-sm font-medium">Social</div>
+                    <div className="text-xs text-gray-500 mt-1">bSocial components</div>
+                  </a>
+                  <a href="#wallet-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-yellow-500/50 rounded-lg transition-all group">
+                    <div className="text-yellow-500 mb-2">
+                      <Package className="w-6 h-6 mx-auto" />
+                    </div>
+                    <div className="text-sm font-medium">Wallet</div>
+                    <div className="text-xs text-gray-500 mt-1">BSV transactions</div>
+                  </a>
                   <a href="#backup-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group">
                     <div className="text-blue-500 mb-2">
                       <Package className="w-6 h-6 mx-auto" />
                     </div>
                     <div className="text-sm font-medium">Backup & QR</div>
                     <div className="text-xs text-gray-500 mt-1">File validation & QR codes</div>
-                  </a>
-                  <a href="#integration-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group">
-                    <div className="text-blue-500 mb-2">
-                      <Code2 className="w-6 h-6 mx-auto" />
-                    </div>
-                    <div className="text-sm font-medium">Integration</div>
-                    <div className="text-xs text-gray-500 mt-1">Copy-paste examples</div>
                   </a>
                 </div>
               </motion.div>
@@ -231,7 +245,7 @@ export default function ShowcasePage() {
 
           {/* Live API Demos Section */}
           <section id="api-demos" className="border-b border-gray-800/50 bg-gray-950/50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-4">🚀 Live API Demos</h2>
                 <p className="text-gray-400 text-lg">Real public APIs integrated with Bitcoin Auth components</p>
@@ -311,7 +325,7 @@ export default function ShowcasePage() {
 
           {/* Authentication Flow Demos */}
           <section id="auth-demos" className="border-b border-gray-800/50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-4">🔐 Authentication Flow Demos</h2>
                 <p className="text-gray-400 text-lg">Complete authentication experiences using Bitcoin Auth UI components</p>
@@ -413,7 +427,7 @@ export default function ShowcasePage() {
 
           {/* Market Components Demo */}
           <section id="market-demos" className="border-b border-gray-800/50 bg-gray-950/50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-4">🛒 Marketplace Components</h2>
                 <p className="text-gray-400 text-lg">Complete marketplace functionality for trading BSV-based assets</p>
@@ -724,9 +738,329 @@ function CustomBuyFlow() {
             </div>
           </section>
 
+          {/* bSocial Components Demo */}
+          <section id="bsocial-demos" className="border-b border-gray-800/50">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4">🎭 Social Components</h2>
+                <p className="text-gray-400 text-lg">Complete social media functionality on Bitcoin</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Social Actions */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-3">Social Actions</h3>
+                    <p className="text-gray-400 mb-4">Post, like, and follow actions on Bitcoin</p>
+                    
+                    {/* Backend Requirements */}
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                      <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Endpoints:</h4>
+                      <div className="text-sm text-gray-300 space-y-1">
+                        <p>• <code className="text-orange-400">/api/social/post</code> - Create social posts</p>
+                        <p>• <code className="text-orange-400">/api/social/like</code> - Like/unlike posts</p>
+                        <p>• <code className="text-orange-400">/api/social/follow</code> - Follow/unfollow users</p>
+                        <p>• <strong className="text-yellow-400">BSocial Protocol</strong> - For social transactions</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-950 border border-gray-800 rounded-lg p-6 space-y-4">
+                    <div>
+                      <h4 className="text-lg font-semibold mb-3">Create Post</h4>
+                      {isClient ? (
+                        <div className="space-y-3">
+                          <PostButton />
+                          <div className="text-xs text-gray-500 mt-2">💡 Demo: PostButton component rendered</div>
+                        </div>
+                      ) : (
+                        <div className="animate-pulse bg-gray-800 h-12 rounded-lg" />
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-lg font-semibold mb-3">Social Actions</h4>
+                      <div className="flex gap-3">
+                        {isClient ? (
+                          <>
+                            <div className="flex-1">
+                              <LikeButton txid="demo-post-1" />
+                              <div className="text-xs text-gray-500 mt-1">LikeButton</div>
+                            </div>
+                            <div className="flex-1">
+                              <FollowButton bapId="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" />
+                              <div className="text-xs text-gray-500 mt-1">FollowButton</div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="animate-pulse bg-gray-800 h-10 rounded-lg flex-1" />
+                            <div className="animate-pulse bg-gray-800 h-10 rounded-lg flex-1" />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <TerminalCodeBlock
+                    code={`import { 
+                      PostButton,
+                      LikeButton,
+                      FollowButton 
+                    } from 'bitcoin-auth-ui';
+
+// Create social post
+<PostButton
+  onSuccess={(result) => {
+    toast.success('Post created!');
+    router.push(\`/post/\${result.txid}\`);
+  }}
+  onError={(error) => {
+    toast.error(error.message);
+  }}
+  buttonText="Share Your Thoughts"
+  variant="solid"
+/>
+
+// Like a post
+<LikeButton
+  txid={post.txid}
+  onSuccess={() => {
+    toast.success('Post liked!');
+    refetchPosts();
+  }}
+  variant="soft"
+/>
+
+// Follow user
+<FollowButton
+  bapId={user.bapId}
+  onSuccess={() => {
+    toast.success('User followed!');
+    refetchFollowing();
+  }}
+  variant="outline"
+/>`}
+                    language="jsx"
+                    filename="SocialActions.jsx"
+                  />
+                </div>
+
+                {/* Social Feed */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-3">Social Feed</h3>
+                    <p className="text-gray-400 mb-4">Display posts and social interactions</p>
+                    
+                    {/* Backend Requirements */}
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                      <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Endpoints:</h4>
+                      <div className="text-sm text-gray-300 space-y-1">
+                        <p>• <code className="text-orange-400">/api/social/feed</code> - Get paginated posts</p>
+                        <p>• <code className="text-orange-400">/api/social/reactions</code> - Get post reactions</p>
+                        <p>• <code className="text-orange-400">/api/users/profile</code> - Get user profiles</p>
+                        <p>• <strong className="text-yellow-400">BSocial API</strong> - For social data queries</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                    <h4 className="text-lg font-semibold mb-4">Live Social Feed</h4>
+                    {isClient ? (
+                      <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="p-4 bg-gray-800 rounded-lg">
+                          <p className="text-gray-300 mb-2">Just deployed my first Bitcoin Auth app! 🚀 #BitcoinAuth #BSV</p>
+                          <p className="text-xs text-gray-500">Demo social post - PostCard component</p>
+                        </div>
+                        <div className="p-4 bg-gray-800 rounded-lg">
+                          <p className="text-gray-300 mb-2">The marketplace components are incredibly smooth. Love the React Query integration!</p>
+                          <p className="text-xs text-gray-500">Demo social post - PostCard component</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="animate-pulse bg-gray-800 h-24 rounded-lg" />
+                        <div className="animate-pulse bg-gray-800 h-24 rounded-lg" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <TerminalCodeBlock
+                    code={`import { SocialFeed, PostCard } from 'bitcoin-auth-ui';
+
+// Social feed with infinite scroll
+<SocialFeed
+  config={{
+    algorithm: 'following',
+    limit: 20,
+    bapId: user.bapId
+  }}
+  onPostClick={(post) => {
+    router.push(\`/post/\${post.txid}\`);
+  }}
+  onAuthorClick={(bapId) => {
+    router.push(\`/profile/\${bapId}\`);
+  }}
+  showLoadMore={true}
+  variant="default"
+/>
+
+// Individual post card
+<PostCard
+  post={post}
+  onLike={(txid) => {
+    likePost(txid);
+  }}
+  onReply={(txid) => {
+    setReplyingTo(txid);
+  }}
+  showActions={true}
+  variant="compact"
+/>`}
+                    language="jsx"
+                    filename="SocialFeed.jsx"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Wallet Components Demo */}
+          <section id="wallet-demos" className="border-b border-gray-800/50 bg-gray-950/50">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4">💰 Wallet Components</h2>
+                <p className="text-gray-400 text-lg">Bitcoin wallet functionality and balance management</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Send BSV */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-3">Send BSV</h3>
+                    <p className="text-gray-400 mb-4">Send Bitcoin with fee estimation</p>
+                    
+                    {/* Backend Requirements */}
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                      <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Endpoints:</h4>
+                      <div className="text-sm text-gray-300 space-y-1">
+                        <p>• <code className="text-orange-400">/api/wallet/utxos</code> - Get user UTXOs</p>
+                        <p>• <code className="text-orange-400">/api/wallet/send</code> - Create send transaction</p>
+                        <p>• <code className="text-orange-400">/api/wallet/broadcast</code> - Broadcast transaction</p>
+                        <p>• <strong className="text-yellow-400">BSV SDK</strong> - For transaction building</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                    <h4 className="text-lg font-semibold mb-4">Send Transaction</h4>
+                    {isClient ? (
+                      <div className="space-y-3">
+                        <SendBSVButton />
+                        <div className="text-xs text-gray-500">💡 Demo: SendBSVButton component rendered</div>
+                      </div>
+                    ) : (
+                      <div className="animate-pulse bg-gray-800 h-12 rounded-lg" />
+                    )}
+                    
+                    <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
+                      <p className="text-blue-400 text-sm">💡 Demo: Click to simulate a BSV transaction</p>
+                    </div>
+                  </div>
+                  
+                  <TerminalCodeBlock
+                    code={`import { SendBSVButton } from 'bitcoin-auth-ui';
+
+<SendBSVButton
+  onSuccess={(result) => {
+    toast.success(\`Sent! TXID: \${result.txid}\`);
+    router.push(\`/tx/\${result.txid}\`);
+    refreshBalance();
+  }}
+  onError={(error) => {
+    toast.error(error.message);
+  }}
+  buttonText="Send BSV"
+  showFeeEstimate={true}
+  variant="solid"
+/>`}
+                    language="jsx"
+                    filename="SendBSV.jsx"
+                  />
+                </div>
+
+                {/* Wallet Overview */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-3">Wallet Overview</h3>
+                    <p className="text-gray-400 mb-4">Display balance and wallet information</p>
+                    
+                    {/* Backend Requirements */}
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                      <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Endpoints:</h4>
+                      <div className="text-sm text-gray-300 space-y-1">
+                        <p>• <code className="text-orange-400">/api/wallet/balance</code> - Get wallet balance</p>
+                        <p>• <code className="text-orange-400">/api/wallet/transactions</code> - Get transaction history</p>
+                        <p>• <code className="text-orange-400">/api/wallet/tokens</code> - Get token balances</p>
+                        <p>• <strong className="text-yellow-400">Exchange APIs</strong> - For BSV/USD rates</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                    <h4 className="text-lg font-semibold mb-4">Live Wallet Balance</h4>
+                    {isClient ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gray-800 rounded-lg">
+                          <div className="text-2xl font-bold text-green-400">0.05234 BSV</div>
+                          <div className="text-gray-400">≈ $3.42 USD</div>
+                          <div className="text-xs text-gray-500 mt-2">💡 Demo: WalletOverview component</div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-sm font-semibold">Recent Transactions:</div>
+                          <div className="p-2 bg-gray-800 rounded text-xs">
+                            <div className="text-green-400">+0.001 BSV (Received)</div>
+                            <div className="text-gray-500">3 confirmations</div>
+                          </div>
+                          <div className="p-2 bg-gray-800 rounded text-xs">
+                            <div className="text-red-400">-0.0005 BSV (Sent)</div>
+                            <div className="text-gray-500">6 confirmations</div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="animate-pulse bg-gray-800 h-48 rounded-lg" />
+                    )}
+                  </div>
+                  
+                  <TerminalCodeBlock
+                    code={`import { WalletOverview } from 'bitcoin-auth-ui';
+
+<WalletOverview
+  balance={walletBalance}
+  recentTransactions={transactions}
+  onTransactionClick={(txid) => {
+    router.push(\`/tx/\${txid}\`);
+  }}
+  onRefresh={() => {
+    refetchBalance();
+    refetchTransactions();
+  }}
+  showTokens={true}
+  showTransactions={true}
+  variant="default"
+/>`}
+                    language="jsx"
+                    filename="WalletOverview.jsx"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Backup & QR Code Demos */}
           <section id="backup-demos" className="border-b border-gray-800/50 bg-gray-950/30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-4">📱 Backup & QR Code Demos</h2>
                 <p className="text-gray-400 text-lg">File validation, device linking, and secure backup features</p>
@@ -914,7 +1248,7 @@ function CustomBuyFlow() {
 
           {/* Integration Examples */}
           <section id="integration-demos" className="border-b border-gray-800/50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-4">⚡ Integration Examples</h2>
                 <p className="text-gray-400 text-lg">Real-world integration patterns you can copy and paste</p>
@@ -1080,7 +1414,7 @@ export async function verifyBitcoinAuth(request: Request, requestPath: string) {
 
           {/* Footer */}
           <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
-            <div className="max-w-7xl mx-auto text-center">
+            <div className="max-w-8xl mx-auto text-center">
               <p className="text-gray-400">
                 Built with ❤️ by the <a href="https://1satordinals.com" className="text-orange-500 hover:text-orange-400">1Sat</a> team. MIT Licensed.
               </p>
