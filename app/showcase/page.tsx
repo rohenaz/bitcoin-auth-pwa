@@ -609,135 +609,67 @@ onError?: (error) => void`}</code>
                     <p className="text-cyan-300/70 text-sm uppercase tracking-wider">Initialize Neural Link</p>
                   </div>
                   
-                  {/* Custom styled SignupFlow */}
+                  {/* Custom styled LoginForm with Tailwind */}
                   <div className="cyberpunk-theme">
                     <style jsx global>{`
-                      .cyberpunk-theme {
-                        --primary: #00ffff;
-                        --secondary: #ff00ff;
-                        --accent: #ffff00;
+                      @keyframes grid-move {
+                        0% { transform: translate(0, 0); }
+                        100% { transform: translate(50px, 50px); }
+                      }
+                      
+                      @keyframes shimmer {
+                        0% { transform: translateX(-100%); }
+                        100% { transform: translateX(100%); }
                       }
                       
                       .cyberpunk-theme button {
-                        position: relative;
+                        @apply relative overflow-hidden;
                         background: linear-gradient(45deg, #00ffff, #ff00ff);
-                        border: none;
-                        color: black;
-                        font-weight: bold;
-                        text-transform: uppercase;
-                        letter-spacing: 2px;
-                        padding: 12px 24px;
-                        overflow: hidden;
-                        transition: all 0.3s;
+                        transition: all 0.3s ease;
                       }
                       
                       .cyberpunk-theme button::before {
                         content: '';
                         position: absolute;
                         inset: 0;
-                        background: linear-gradient(45deg, transparent, white, transparent);
+                        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.6), transparent);
                         transform: translateX(-100%);
                         transition: transform 0.6s;
                       }
                       
                       .cyberpunk-theme button:hover::before {
-                        transform: translateX(100%);
+                        animation: shimmer 0.6s ease-out;
                       }
                       
                       .cyberpunk-theme button:hover {
                         transform: scale(1.05);
-                        box-shadow: 0 0 20px cyan, 0 0 40px cyan, 0 0 60px cyan;
+                        box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff;
                       }
                       
                       .cyberpunk-theme input {
-                        background: rgba(0, 255, 255, 0.1);
-                        border: 2px solid cyan;
-                        color: cyan;
-                        padding: 12px;
-                        font-family: 'Courier New', monospace;
-                        transition: all 0.3s;
+                        background: rgba(0, 255, 255, 0.1) !important;
+                        border: 2px solid #00ffff !important;
+                        color: #00ffff !important;
+                        font-family: 'Courier New', monospace !important;
                       }
                       
                       .cyberpunk-theme input:focus {
-                        outline: none;
-                        border-color: #ff00ff;
-                        box-shadow: 0 0 10px #ff00ff, inset 0 0 10px rgba(255, 0, 255, 0.2);
-                        background: rgba(255, 0, 255, 0.1);
+                        border-color: #ff00ff !important;
+                        box-shadow: 0 0 10px #ff00ff, inset 0 0 10px rgba(255, 0, 255, 0.2) !important;
+                        background: rgba(255, 0, 255, 0.1) !important;
                       }
                       
                       .cyberpunk-theme input::placeholder {
-                        color: rgba(0, 255, 255, 0.5);
-                      }
-                      
-                      .cyberpunk-theme h1, .cyberpunk-theme h2, .cyberpunk-theme h3 {
-                        text-transform: uppercase;
-                        letter-spacing: 3px;
-                        text-shadow: 0 0 10px currentColor;
-                      }
-                      
-                      .cyberpunk-theme .error-message {
-                        color: #ff0080;
-                        text-shadow: 0 0 10px #ff0080;
-                      }
-                      
-                      .cyberpunk-theme .success-message {
-                        color: #00ff00;
-                        text-shadow: 0 0 10px #00ff00;
-                      }
-                      
-                      @keyframes grid-move {
-                        0% { transform: translate(0, 0); }
-                        100% { transform: translate(50px, 50px); }
-                      }
-                      
-                      @keyframes glitch {
-                        0%, 100% { 
-                          text-shadow: 
-                            0.05em 0 0 rgba(255, 0, 0, 0.75),
-                            -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
-                            0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
-                        }
-                        14% {
-                          text-shadow: 
-                            0.05em 0 0 rgba(255, 0, 0, 0.75),
-                            -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
-                            0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
-                        }
-                        15% {
-                          text-shadow: 
-                            -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
-                            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
-                            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
-                        }
-                        49% {
-                          text-shadow: 
-                            -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
-                            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
-                            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
-                        }
-                        50% {
-                          text-shadow: 
-                            0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
-                            0.05em 0 0 rgba(0, 255, 0, 0.75),
-                            0 -0.05em 0 rgba(0, 0, 255, 0.75);
-                        }
-                        99% {
-                          text-shadow: 
-                            0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
-                            0.05em 0 0 rgba(0, 255, 0, 0.75),
-                            0 -0.05em 0 rgba(0, 0, 255, 0.75);
-                        }
-                      }
-                      
-                      .cyberpunk-theme .glitch {
-                        animation: glitch 2s infinite;
+                        color: rgba(0, 255, 255, 0.5) !important;
                       }
                     `}</style>
-                    <LoginForm
-                      mode="signin"
-                      onSuccess={() => console.log('Access granted')}
-                      onError={() => console.log('Access denied')}
-                    />
+                    <div className="[&_button]:bg-gradient-to-r [&_button]:from-cyan-400 [&_button]:to-fuchsia-500 [&_button]:text-black [&_button]:font-bold [&_button]:uppercase [&_button]:tracking-widest [&_button]:px-6 [&_button]:py-3 [&_button]:border-none [&_button]:transition-all [&_button]:duration-300 [&_h1]:uppercase [&_h1]:tracking-[3px] [&_h2]:uppercase [&_h2]:tracking-[3px] [&_h3]:uppercase [&_h3]:tracking-[3px] [&_h1]:drop-shadow-[0_0_10px_currentColor] [&_h2]:drop-shadow-[0_0_10px_currentColor] [&_h3]:drop-shadow-[0_0_10px_currentColor]">
+                      <LoginForm
+                        mode="signin"
+                        onSuccess={() => console.log('Access granted')}
+                        onError={() => console.log('Access denied')}
+                      />
+                    </div>
                   </div>
                   
                   <div className="mt-6 p-4 border border-cyan-500/30 rounded bg-cyan-500/5">
@@ -753,32 +685,42 @@ onError?: (error) => void`}</code>
 
               {/* Code example */}
               <div>
-                <h3 className="text-xl font-bold mb-4">Customize with CSS</h3>
+                <h3 className="text-xl font-bold mb-4">Customize with Tailwind CSS</h3>
                 <p className="text-gray-400 mb-6">
-                  Components use CSS variables and classes that you can override. Use your own CSS framework or custom styles.
+                  bitcoin-auth-ui is built with Tailwind CSS. Override styles using arbitrary value selectors, @apply directive, or custom classes.
                 </p>
                 
                 <div className="bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto mb-6">
                   <pre className="text-sm text-gray-300">
-                    <code>{`// Wrap components in a custom class
-<div className="cyberpunk-theme">
-  <LoginForm
-    mode="signin"
-    onSuccess={handleSuccess}
-  />
+                    <code>{`// Method 1: Use Tailwind arbitrary value selectors
+<div className="[&_button]:bg-gradient-to-r [&_button]:from-cyan-400 [&_button]:to-fuchsia-500 [&_button]:text-black [&_button]:font-bold [&_button]:uppercase [&_button]:tracking-widest">
+  <LoginForm mode="signin" onSuccess={handleSuccess} />
 </div>
 
-// Add your custom CSS
-.cyberpunk-theme button {
-  background: linear-gradient(45deg, #00ffff, #ff00ff);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
+// Method 2: CSS + Tailwind @apply
+<style jsx global>{\`
+  .cyberpunk-theme button {
+    @apply relative overflow-hidden;
+    background: linear-gradient(45deg, #00ffff, #ff00ff);
+  }
+  
+  .cyberpunk-theme input {
+    @apply font-mono text-cyan-400 border-2 border-cyan-400;
+    background: rgba(0, 255, 255, 0.1) !important;
+  }
+\`}</style>
 
-.cyberpunk-theme input {
-  background: rgba(0, 255, 255, 0.1);
-  border: 2px solid cyan;
-  color: cyan;
+// Method 3: Custom CSS classes
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        'neon-cyan': '#00ffff',
+        'neon-pink': '#ff00ff',
+      }
+    }
+  }
 }`}</code>
                   </pre>
                 </div>
@@ -796,13 +738,13 @@ onError?: (error) => void`}</code>
                   </div>
                   
                   <div className="p-4 bg-gray-950 border border-gray-900 rounded-lg">
-                    <h4 className="font-semibold mb-2">Customization Options</h4>
+                    <h4 className="font-semibold mb-2">Customization Methods</h4>
                     <ul className="space-y-2 text-sm text-gray-400">
-                      <li>✓ Override any CSS class</li>
-                      <li>✓ Use CSS-in-JS libraries</li>
-                      <li>✓ Apply custom animations</li>
-                      <li>✓ Change layouts and spacing</li>
-                      <li>✓ Add your own components</li>
+                      <li>✓ Tailwind arbitrary value selectors <code className="text-cyan-400">[&_button]:bg-red-500</code></li>
+                      <li>✓ CSS-in-JS with <code className="text-cyan-400">@apply</code> directive</li>
+                      <li>✓ Custom Tailwind config extensions</li>
+                      <li>✓ CSS custom properties and variables</li>
+                      <li>✓ Component composition patterns</li>
                     </ul>
                   </div>
                 </div>
