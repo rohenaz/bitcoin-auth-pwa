@@ -11,6 +11,8 @@ import {
   MemberExport,
   FileImport,
   StepIndicator,
+  HandCashConnector,
+  YoursWalletConnector,
   type Step
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
@@ -259,7 +261,11 @@ function ImportBackup() {
                     <ul className="space-y-2 text-gray-300">
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>Handcash and Yours Wallet support</span>
+                        <span>Google, GitHub, Twitter integration</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                        <span>HandCash and Yours Wallet support</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
@@ -267,11 +273,7 @@ function ImportBackup() {
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>Linked provider indicators</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>Fully customizable</span>
+                        <span>Extensible provider system</span>
                       </li>
                     </ul>
                   </div>
@@ -282,6 +284,68 @@ function ImportBackup() {
                   <p className="text-sm text-gray-400 mt-4">
                     Guide users through multi-step processes with clear visual progress
                   </p>
+                </div>
+              </div>
+
+              {/* BSV Wallet Integration */}
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-4">BSV Wallet Integration</h3>
+                  <p className="text-gray-400 mb-6">
+                    Native BSV wallet connectors for HandCash and Yours Wallet with OAuth flows and transaction support.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
+                      <h4 className="font-semibold mb-4 text-orange-500">HandCash Connector</h4>
+                      <HandCashConnector
+                        config={{
+                          appId: "demo-app-id",
+                          appSecret: "demo-app-secret",
+                          redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/handcash` : '',
+                          environment: "iae"
+                        }}
+                        onSuccess={(result) => console.log('HandCash connected:', result)}
+                        onError={(error) => console.error('HandCash error:', error)}
+                      />
+                    </div>
+                    
+                    <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
+                      <h4 className="font-semibold mb-4 text-blue-500">Yours Wallet Connector</h4>
+                      <YoursWalletConnector
+                        onSuccess={(result) => console.log('Yours Wallet connected:', result)}
+                        onError={(error) => console.error('Yours Wallet error:', error)}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 border border-gray-900 rounded-lg p-4 overflow-x-auto">
+                  <pre className="text-sm text-gray-300">
+                    <code>{`// HandCash OAuth Integration
+<HandCashConnector
+  config={{
+    appId: process.env.HANDCASH_APP_ID,
+    appSecret: process.env.HANDCASH_APP_SECRET,
+    redirectUrl: "/auth/handcash",
+    environment: "prod"
+  }}
+  onSuccess={(result) => {
+    console.log('Auth token:', result.authToken);
+    console.log('Profile:', result.profile);
+    // Access encrypted backups using HandCash keys
+  }}
+/>
+
+// Yours Wallet Browser Extension
+<YoursWalletConnector
+  onSuccess={(result) => {
+    console.log('Public key:', result.publicKey);
+    // Wallet operations via browser extension
+  }}
+  onError={console.error}
+/>`}</code>
+                  </pre>
                 </div>
               </div>
             </div>
