@@ -661,27 +661,42 @@ function ImportBackup() {
                       }
                       
                       @keyframes shimmer {
-                        0% { transform: translateX(-100%); }
-                        100% { transform: translateX(100%); }
+                        0% { 
+                          left: -100%;
+                          opacity: 0;
+                        }
+                        50% {
+                          opacity: 1;
+                        }
+                        100% { 
+                          left: 100%;
+                          opacity: 0;
+                        }
                       }
                       
                       .cyberpunk-theme button {
-                        @apply relative overflow-hidden;
+                        @apply relative;
                         background: linear-gradient(45deg, #00ffff, #ff00ff);
                         transition: all 0.3s ease;
+                        overflow: hidden !important;
+                        isolation: isolate;
                       }
                       
                       .cyberpunk-theme button::before {
                         content: '';
                         position: absolute;
-                        inset: 0;
-                        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.6), transparent);
-                        transform: translateX(-100%);
-                        transition: transform 0.6s;
+                        top: 0;
+                        left: -100%;
+                        width: 100%;
+                        height: 100%;
+                        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+                        transition: none;
+                        opacity: 0;
                       }
                       
                       .cyberpunk-theme button:hover::before {
                         animation: shimmer 0.6s ease-out;
+                        opacity: 1;
                       }
                       
                       .cyberpunk-theme button:hover {
