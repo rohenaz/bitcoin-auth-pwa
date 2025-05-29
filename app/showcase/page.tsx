@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { 
   BitcoinAuthProvider, 
   AuthButton,
@@ -95,6 +96,28 @@ function ImportBackup() {
   return (
     <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
       <div className="min-h-screen bg-black text-white">
+        {/* Navigation Header */}
+        <header className="border-b border-gray-800/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <nav className="flex items-center space-x-8">
+                <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+                  Home
+                </Link>
+                <Link href="/showcase" className="text-white">
+                  Components
+                </Link>
+                <Link href="/mcp-server" className="text-gray-400 hover:text-white transition-colors">
+                  MCP Server
+                </Link>
+                <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                  Dashboard
+                </Link>
+              </nav>
+            </div>
+          </div>
+        </header>
+        
         {/* Hero Section */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-transparent to-purple-600/20" />

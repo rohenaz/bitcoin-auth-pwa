@@ -219,6 +219,12 @@ export default function SettingsPage() {
                 <Link href="/settings" className="text-white">
                   Settings
                 </Link>
+                <Link href="/showcase" className="text-gray-400 hover:text-white transition-colors">
+                  Components
+                </Link>
+                <Link href="/mcp-server" className="text-gray-400 hover:text-white transition-colors">
+                  MCP Server
+                </Link>
               </nav>
             </div>
             <button
