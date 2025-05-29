@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   BitcoinAuthProvider, 
@@ -14,79 +14,88 @@ import {
   StepIndicator,
   HandCashConnector,
   YoursWalletConnector,
+  Modal,
+  LoadingButton,
+  PasswordInput,
+  ErrorDisplay,
+  WarningCard,
   type Step
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Code2, Sparkles, Shield, Zap, Globe, Key, QrCode, Download, Workflow } from 'lucide-react';
+import { 
+  Search, 
+  Sparkles, 
+  Shield, 
+  Zap, 
+  Globe, 
+  Code2, 
+  Package,
+  Wallet,
+  Layout,
+  Layers,
+  Workflow,
+  ChevronRight,
+  Copy,
+  Check,
+  Filter
+} from 'lucide-react';
 import QRCode from 'qrcode';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
+import { components, componentCategories, type ComponentExample } from './components-data';
+
+// Icon mapping for categories
+const categoryIcons: Record<string, React.ElementType> = {
+  'Workflow': Workflow,
+  'Package': Package,
+  'Wallet': Wallet,
+  'Shield': Shield,
+  'Layers': Layers,
+  'Layout': Layout,
+  'Code2': Code2
+};
 
 export default function ShowcasePage() {
-  const [selectedFlow, setSelectedFlow] = useState<'unified' | 'signin' | 'signup' | 'oauth-restore'>('unified');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedComponent, setSelectedComponent] = useState<ComponentExample | null>(components[0] || null);
+  const [copiedCode, setCopiedCode] = useState<string>('');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const codeExamples = {
-    authButton: `import { BitcoinAuthProvider, AuthButton } from 'bitcoin-auth-ui';
+  // Filter components based on category and search
+  const filteredComponents = useMemo(() => {
+    return components.filter(component => {
+      const matchesCategory = selectedCategory === 'all' || component.category === selectedCategory;
+      const matchesSearch = searchQuery === '' || 
+        component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        component.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [selectedCategory, searchQuery]);
 
-function App() {
-  return (
-    <BitcoinAuthProvider>
-      <AuthButton>Sign In with Bitcoin</AuthButton>
-    </BitcoinAuthProvider>
-  );
-}`,
-    loginForm: `import { LoginForm } from 'bitcoin-auth-ui';
+  // Group components by category
+  const groupedComponents = useMemo(() => {
+    const groups: Record<string, ComponentExample[]> = {};
+    filteredComponents.forEach(component => {
+      if (!groups[component.category]) {
+        groups[component.category] = [];
+      }
+      groups[component.category]!.push(component);
+    });
+    return groups;
+  }, [filteredComponents]);
 
-function SignInPage() {
-  return (
-    <LoginForm
-      mode="signin"
-      onSuccess={(user) => console.log('Signed in:', user)}
-      onError={(error) => console.error('Error:', error)}
-    />
-  );
-}`,
-    authFlow: `import { AuthFlowOrchestrator } from 'bitcoin-auth-ui';
-
-function AuthPage() {
-  return (
-    <AuthFlowOrchestrator
-      flowType="unified"
-      enableOAuth={true}
-      enableDeviceLink={true}
-      onSuccess={(user) => router.push('/dashboard')}
-    />
-  );
-}`,
-    deviceLink: `import { DeviceLinkQR } from 'bitcoin-auth-ui';
-
-function DeviceLinkPage() {
-  return (
-    <DeviceLinkQR
-      onGenerateQR={async () => {
-        const res = await fetch('/api/device-link/generate');
-        const { qrData, token } = await res.json();
-        return { qrData, token, expiresAt };
-      }}
-      baseUrl={window.location.origin}
-    />
-  );
-}`,
-    fileImport: `import { FileImport } from 'bitcoin-auth-ui';
-
-function ImportBackup() {
-  return (
-    <FileImport
-      onFileValidated={(file, result) => {
-        // Handle validated backup file
-        console.log('Backup type:', result.type);
-      }}
-      onError={(error) => alert(error)}
-    />
-  );
-}`
+  const handleCopyCode = (code: string, id: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(id);
+    setTimeout(() => setCopiedCode(''), 2000);
   };
 
-  const steps: Step[] = [
+  // Demo states for interactive components
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const demoSteps: Step[] = [
     { id: 'generate', label: 'Generate Identity', status: 'complete' },
     { id: 'password', label: 'Set Password', status: 'active' },
     { id: 'backup', label: 'Save Backup', status: 'pending' },
@@ -97,7 +106,7 @@ function ImportBackup() {
     <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
       <div className="min-h-screen bg-black text-white">
         {/* Navigation Header */}
-        <header className="border-b border-gray-800/50">
+        <header className="border-b border-gray-800/50 sticky top-0 bg-black/95 backdrop-blur-sm z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <nav className="flex items-center space-x-8">
@@ -114,18 +123,26 @@ function ImportBackup() {
                   Dashboard
                 </Link>
               </nav>
+              
+              {/* Mobile menu button */}
+              <button
+                className="lg:hidden p-2"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+              >
+                <Filter className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </header>
         
-        {/* Hero Section */}
-        <section className="relative overflow-hidden">
+        {/* Hero Section - Keep existing */}
+        <section className="relative overflow-hidden border-b border-gray-800/50">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-transparent to-purple-600/20" />
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
           </div>
           
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -146,7 +163,7 @@ function ImportBackup() {
                 Built with TypeScript, TailwindCSS, and Framer Motion.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
                   href="https://github.com/bitcoin-auth/bitcoin-auth-ui"
                   className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
@@ -158,683 +175,448 @@ function ImportBackup() {
                 </code>
               </div>
 
-              <div className="grid md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-orange-600/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Shield className="w-6 h-6 text-orange-500" />
+              {/* Quick Access */}
+              <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                <button
+                  onClick={() => {
+                    const authButton = components.find(c => c.id === 'auth-button');
+                    if (authButton) setSelectedComponent(authButton);
+                  }}
+                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-orange-500/50 rounded-lg transition-all group"
+                >
+                  <div className="text-orange-500 mb-2">
+                    <Zap className="w-6 h-6 mx-auto" />
                   </div>
-                  <h3 className="font-semibold mb-1">Secure by Default</h3>
-                  <p className="text-sm text-gray-500">Client-side encryption</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-purple-600/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Zap className="w-6 h-6 text-purple-500" />
+                  <div className="text-sm font-medium">AuthButton</div>
+                  <div className="text-xs text-gray-500 mt-1">Drop-in auth</div>
+                </button>
+                <button
+                  onClick={() => {
+                    const flow = components.find(c => c.id === 'auth-flow-orchestrator');
+                    if (flow) setSelectedComponent(flow);
+                  }}
+                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 rounded-lg transition-all group"
+                >
+                  <div className="text-purple-500 mb-2">
+                    <Workflow className="w-6 h-6 mx-auto" />
                   </div>
-                  <h3 className="font-semibold mb-1">Lightning Fast</h3>
-                  <p className="text-sm text-gray-500">Optimized performance</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Code2 className="w-6 h-6 text-blue-500" />
+                  <div className="text-sm font-medium">Auth Flows</div>
+                  <div className="text-xs text-gray-500 mt-1">Complete flows</div>
+                </button>
+                <button
+                  onClick={() => {
+                    const oauth = components.find(c => c.id === 'oauth-providers');
+                    if (oauth) setSelectedComponent(oauth);
+                  }}
+                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group"
+                >
+                  <div className="text-blue-500 mb-2">
+                    <Globe className="w-6 h-6 mx-auto" />
                   </div>
-                  <h3 className="font-semibold mb-1">Developer Friendly</h3>
-                  <p className="text-sm text-gray-500">Great DX with TypeScript</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-green-600/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Globe className="w-6 h-6 text-green-500" />
+                  <div className="text-sm font-medium">OAuth</div>
+                  <div className="text-xs text-gray-500 mt-1">Cloud backup</div>
+                </button>
+                <button
+                  onClick={() => {
+                    const hook = components.find(c => c.id === 'use-bitcoin-auth');
+                    if (hook) setSelectedComponent(hook);
+                  }}
+                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-green-500/50 rounded-lg transition-all group"
+                >
+                  <div className="text-green-500 mb-2">
+                    <Code2 className="w-6 h-6 mx-auto" />
                   </div>
-                  <h3 className="font-semibold mb-1">Fully Accessible</h3>
-                  <p className="text-sm text-gray-500">WCAG 2.1 compliant</p>
-                </div>
+                  <div className="text-sm font-medium">Hooks</div>
+                  <div className="text-xs text-gray-500 mt-1">React hooks</div>
+                </button>
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* Authentication Components */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full mb-4">
-                <Key className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-400">Authentication</span>
-              </div>
-              <h2 className="text-4xl font-bold mb-4">Core Authentication Components</h2>
-              <p className="text-xl text-gray-400">
-                Everything you need for Bitcoin-based authentication
-              </p>
-            </div>
-
-            <div className="space-y-24">
-              {/* Auth Button Demo */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                  <h3 className="text-2xl font-bold mb-4">Drop-in Authentication</h3>
-                  <p className="text-gray-400 mb-6">
-                    The simplest way to add Bitcoin authentication. Just one component that handles everything.
-                  </p>
-                  <div className="bg-gray-950 border border-gray-900 rounded-lg p-6 mb-6">
-                    <AuthButton>Sign In with Bitcoin</AuthButton>
-                  </div>
-                </div>
-                <TerminalCodeBlock
-                  code={codeExamples.authButton}
-                  language="jsx"
-                  filename="App.jsx"
+        {/* Component Browser */}
+        <div className="flex">
+          {/* Sidebar */}
+          <aside className={`
+            fixed lg:sticky lg:top-16 inset-y-0 lg:inset-y-auto left-0 z-40
+            transform ${showMobileMenu ? 'translate-x-0' : '-translate-x-full'}
+            lg:translate-x-0 transition-transform duration-300
+            w-80 bg-gray-950 border-r border-gray-800/50
+            h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-y-auto
+          `}>
+            <div className="p-6">
+              {/* Search */}
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search components..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:border-orange-500 focus:outline-none"
                 />
               </div>
 
-              {/* Login Form Demo */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div className="order-2 lg:order-1">
-                  <TerminalCodeBlock
-                    code={codeExamples.loginForm}
-                    language="jsx"
-                    filename="SignInPage.jsx"
-                  />
-                </div>
-                <div className="order-1 lg:order-2">
-                  <h3 className="text-2xl font-bold mb-4">Customizable Login Form</h3>
-                  <p className="text-gray-400 mb-6">
-                    A complete login form with password input, error handling, and loading states.
-                  </p>
-                  <div className="bg-gray-950 border border-gray-900 rounded-lg p-6 mb-6">
-                    <LoginForm 
-                      mode="signin"
-                      onSuccess={() => console.log('Demo success')}
-                      onError={() => console.log('Demo error')}
-                    />
+              {/* Categories */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                    selectedCategory === 'all'
+                      ? 'bg-orange-500/10 text-orange-500'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>All Components</span>
+                    <span className="text-xs bg-gray-800 px-2 py-1 rounded">
+                      {components.length}
+                    </span>
                   </div>
-                </div>
-              </div>
+                </button>
 
-              {/* OAuth Providers */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                  <h3 className="text-2xl font-bold mb-4">OAuth Cloud Backup</h3>
-                  <p className="text-gray-400 mb-6">
-                    Let users store encrypted backups with their favorite OAuth providers. No more lost keys!
-                  </p>
-                  <div className="bg-gray-950 border border-gray-900 rounded-lg p-6 mb-6">
-                    <OAuthProviders
-                      onProviderClick={(provider) => console.log('Selected:', provider)}
-                    />
-                  </div>
-                  <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
-                    <h4 className="text-lg font-semibold mb-4">Features:</h4>
-                    <ul className="space-y-2 text-gray-300">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>Google, GitHub, Twitter integration</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>HandCash and Yours Wallet support</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>Loading states and animations</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>Extensible provider system</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
-                  <h4 className="font-semibold mb-4">Step Indicator</h4>
-                  <StepIndicator steps={steps} />
-                  <p className="text-sm text-gray-400 mt-4">
-                    Guide users through multi-step processes with clear visual progress
-                  </p>
-                </div>
-              </div>
-
-              {/* BSV Wallet Integration */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                  <h3 className="text-2xl font-bold mb-4">BSV Wallet Integration</h3>
-                  <p className="text-gray-400 mb-6">
-                    Native BSV wallet connectors for HandCash and Yours Wallet with OAuth flows and transaction support.
-                  </p>
+                {componentCategories.map(category => {
+                  const Icon = categoryIcons[category.icon] || Package;
+                  const count = components.filter(c => c.category === category.id).length;
                   
-                  <div className="space-y-4">
-                    <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
-                      <h4 className="font-semibold mb-4 text-orange-500">HandCash Connector</h4>
-                      <HandCashConnector
-                        config={{
-                          appId: "demo-app-id",
-                          appSecret: "demo-app-secret",
-                          redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/handcash` : '',
-                          environment: "iae"
-                        }}
-                        onSuccess={(result) => console.log('HandCash connected:', result)}
-                        onError={(error) => console.error('HandCash error:', error)}
-                      />
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                        selectedCategory === category.id
+                          ? 'bg-orange-500/10 text-orange-500'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Icon className="w-4 h-4" />
+                          <span>{category.name}</span>
+                        </div>
+                        <span className="text-xs bg-gray-800 px-2 py-1 rounded">
+                          {count}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Component List */}
+              <div className="mt-8 space-y-6">
+                {Object.entries(groupedComponents).map(([categoryId, categoryComponents]) => {
+                  const category = componentCategories.find(c => c.id === categoryId);
+                  if (!category) return null;
+
+                  return (
+                    <div key={categoryId}>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                        {category.name}
+                      </h3>
+                      <div className="space-y-1">
+                        {categoryComponents.map(component => (
+                          <button
+                            key={component.id}
+                            onClick={() => setSelectedComponent(component)}
+                            className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                              selectedComponent?.id === component.id
+                                ? 'bg-gray-800 text-white'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-900/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">{component.name}</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    
-                    <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
-                      <h4 className="font-semibold mb-4 text-blue-500">Yours Wallet Connector</h4>
-                      <YoursWalletConnector
-                        onSuccess={(result) => console.log('Yours Wallet connected:', result)}
-                        onError={(error) => console.error('Yours Wallet error:', error)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <TerminalCodeBlock
-                  code={`// HandCash OAuth Integration
-<HandCashConnector
-  config={{
-    appId: process.env.HANDCASH_APP_ID,
-    appSecret: process.env.HANDCASH_APP_SECRET,
-    redirectUrl: "/auth/handcash",
-    environment: "prod"
-  }}
-  onSuccess={(result) => {
-    console.log('Auth token:', result.authToken);
-    console.log('Profile:', result.profile);
-    // Access encrypted backups using HandCash keys
-  }}
-/>
-
-// Yours Wallet Browser Extension
-<YoursWalletConnector
-  onSuccess={(result) => {
-    console.log('Public key:', result.publicKey);
-    // Wallet operations via browser extension
-  }}
-  onError={console.error}
-/>`}
-                  language="jsx"
-                  filename="WalletIntegration.jsx"
-                />
+                  );
+                })}
               </div>
             </div>
-          </div>
-        </section>
+          </aside>
 
-        {/* Device Linking Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950 border-t border-gray-900">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full mb-4">
-                <QrCode className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-400">Device Linking</span>
-              </div>
-              <h2 className="text-4xl font-bold mb-4">Cross-Device Authentication</h2>
-              <p className="text-xl text-gray-400">
-                Link devices securely without relying on cloud providers
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12">
-              <div>
-                <h3 className="text-2xl font-bold mb-4">Device Link QR</h3>
-                <p className="text-gray-400 mb-6">
-                  Generate time-limited QR codes for secure device-to-device linking. Perfect for onboarding new devices.
-                </p>
-                <div className="bg-black border border-gray-900 rounded-lg p-6">
-                  <DeviceLinkQR 
-                    onGenerateQR={async () => {
-                      const url = 'https://example.com/link/demo-token-12345';
-                      const qrDataUrl = await QRCode.toDataURL(url);
-                      return {
-                        qrData: qrDataUrl,
-                        token: 'demo-token-12345',
-                        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-                      };
-                    }}
-                    baseUrl="https://example.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-2xl font-bold mb-4">Member Export</h3>
-                <p className="text-gray-400 mb-6">
-                  Export member profiles with QR codes for easy sharing between devices or users.
-                </p>
-                <div className="bg-black border border-gray-900 rounded-lg p-6">
-                  <MemberExport 
-                    profileName="Demo Profile"
-                    onGenerateExport={async () => {
-                      const url = 'https://example.com/export/demo-token';
-                      const qrDataUrl = await QRCode.toDataURL(url);
-                      return {
-                        qrData: qrDataUrl,
-                        token: 'demo-export-token',
-                        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-                      };
-                    }}
-                    baseUrl="https://example.com"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-12">
-              <TerminalCodeBlock
-                code={codeExamples.deviceLink}
-                language="jsx"
-                filename="DeviceLinkPage.jsx"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Backup Management Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full mb-4">
-                <Download className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-400">Backup Management</span>
-              </div>
-              <h2 className="text-4xl font-bold mb-4">Secure Backup & Recovery</h2>
-              <p className="text-xl text-gray-400">
-                Multiple ways to backup and restore Bitcoin identities
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 mb-16">
-              <div>
-                <h3 className="text-2xl font-bold mb-4">File Import</h3>
-                <p className="text-gray-400 mb-6">
-                  Import existing backups from multiple formats with automatic detection and validation.
-                </p>
-                <div className="bg-gray-950 border border-gray-900 rounded-lg p-6">
-                  <FileImport 
-                    onFileValidated={(file, result) => {
-                      console.log('File validated:', file.name, result);
-                    }}
-                    onError={(error) => console.log('Import error:', error)}
-                  />
-                </div>
-                <div className="mt-4 p-4 bg-gray-950 border border-gray-900 rounded-lg">
-                  <p className="text-sm text-gray-400 mb-2">Supported formats:</p>
-                  <ul className="text-sm text-gray-300 space-y-1">
-                    <li>• Encrypted backups (.txt)</li>
-                    <li>• WIF format (.txt)</li>
-                    <li>• BapMasterBackup (.json)</li>
-                    <li>• BapMemberBackup (.json)</li>
-                    <li>• OneSatBackup (.json)</li>
-                  </ul>
-                </div>
-              </div>
-
-              <TerminalCodeBlock
-                code={codeExamples.fileImport}
-                language="jsx"
-                filename="ImportBackup.jsx"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Complete Flows Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-950 border-t border-gray-900">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-gray-900 px-4 py-2 rounded-full mb-4">
-                <Workflow className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-400">Complete Flows</span>
-              </div>
-              <h2 className="text-4xl font-bold mb-4">Authentication Flows</h2>
-              <p className="text-xl text-gray-400">
-                Pre-built flows that handle the entire authentication journey
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-start mb-16">
-              <div>
-                <h3 className="text-xl font-bold mb-4">Available Flows</h3>
-                <p className="text-gray-400 mb-6">Click on a flow to see it in action</p>
-                <div className="space-y-4">
-                  <button
-                    onClick={() => setSelectedFlow('unified')}
-                    className={`w-full text-left p-4 rounded-lg border transition-all ${
-                      selectedFlow === 'unified' 
-                        ? 'bg-orange-500/10 border-orange-500/50' 
-                        : 'bg-black border-gray-900 hover:border-gray-800'
-                    }`}
-                  >
-                    <h4 className="font-semibold text-orange-500 mb-2">Unified Flow</h4>
-                    <p className="text-sm text-gray-400">
-                      Smart detection of new vs returning users with seamless transitions
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setSelectedFlow('signin')}
-                    className={`w-full text-left p-4 rounded-lg border transition-all ${
-                      selectedFlow === 'signin' 
-                        ? 'bg-blue-500/10 border-blue-500/50' 
-                        : 'bg-black border-gray-900 hover:border-gray-800'
-                    }`}
-                  >
-                    <h4 className="font-semibold text-blue-500 mb-2">Sign In Flow</h4>
-                    <p className="text-sm text-gray-400">
-                      For returning users with local backup, OAuth restore, or import options
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setSelectedFlow('signup')}
-                    className={`w-full text-left p-4 rounded-lg border transition-all ${
-                      selectedFlow === 'signup' 
-                        ? 'bg-green-500/10 border-green-500/50' 
-                        : 'bg-black border-gray-900 hover:border-gray-800'
-                    }`}
-                  >
-                    <h4 className="font-semibold text-green-500 mb-2">Sign Up Flow</h4>
-                    <p className="text-sm text-gray-400">
-                      New user onboarding with identity generation and backup creation
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setSelectedFlow('oauth-restore')}
-                    className={`w-full text-left p-4 rounded-lg border transition-all ${
-                      selectedFlow === 'oauth-restore' 
-                        ? 'bg-purple-500/10 border-purple-500/50' 
-                        : 'bg-black border-gray-900 hover:border-gray-800'
-                    }`}
-                  >
-                    <h4 className="font-semibold text-purple-500 mb-2">OAuth Restore</h4>
-                    <p className="text-sm text-gray-400">
-                      Recover encrypted backups from cloud providers
-                    </p>
-                  </button>
-                </div>
-              </div>
-              
-              <div className="bg-black border border-gray-900 rounded-lg p-8">
-                <h3 className="text-xl font-bold mb-2">
-                  {selectedFlow === 'unified' && 'Unified Flow'}
-                  {selectedFlow === 'signin' && 'Sign In Flow'}
-                  {selectedFlow === 'signup' && 'Sign Up Flow'}
-                  {selectedFlow === 'oauth-restore' && 'OAuth Restore Flow'}
-                </h3>
-                <p className="text-gray-400 mb-6 text-sm">
-                  {selectedFlow === 'unified' && 'Automatically detects new vs returning users'}
-                  {selectedFlow === 'signin' && 'For users with existing Bitcoin identities'}
-                  {selectedFlow === 'signup' && 'Create a new Bitcoin identity from scratch'}
-                  {selectedFlow === 'oauth-restore' && 'Restore from cloud backup providers'}
-                </p>
-                <AuthFlowOrchestrator
-                  key={selectedFlow}
-                  flowType={selectedFlow}
-                  enableOAuth={true}
-                  enableDeviceLink={selectedFlow !== 'oauth-restore'}
-                  enableFileImport={selectedFlow !== 'oauth-restore'}
-                  onSuccess={(user) => console.log('Demo success:', user)}
-                />
-              </div>
-            </div>
-
-            {/* AuthFlowOrchestrator Code Section */}
-            <div className="border-t border-gray-900 pt-16">
-              <h3 className="text-2xl font-bold mb-4 text-center">How AuthFlowOrchestrator Works</h3>
-              <p className="text-gray-400 text-center mb-12 max-w-3xl mx-auto">
-                The AuthFlowOrchestrator is a smart component that manages the entire authentication experience. 
-                It automatically detects the user's state and guides them through the appropriate flow.
-              </p>
-              
-              <div className="grid lg:grid-cols-2 gap-12">
-                <div>
-                  <h4 className="text-lg font-semibold mb-4">Features</h4>
-                  <ul className="space-y-3 text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                      <span>Automatic flow detection based on local storage</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                      <span>Seamless transitions between different states</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                      <span>Built-in error handling and recovery</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                      <span>OAuth, device linking, and file import support</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                      <span>Fully customizable with props and callbacks</span>
-                    </li>
-                  </ul>
-                  
-                  <h4 className="text-lg font-semibold mb-4 mt-8">Configuration Options</h4>
-                  <TerminalCodeBlock
-                    code={`interface AuthFlowOrchestratorProps {
-  flowType: 'unified' | 'signin' | 'signup' | 'oauth-restore';
-  enableOAuth?: boolean;
-  enableDeviceLink?: boolean;
-  enableFileImport?: boolean;
-  onSuccess: (user: AuthUser) => void;
-  onError?: (error: AuthError) => void;
-}`}
-                    language="typescript"
-                    filename="types.ts"
-                  />
-                </div>
-                
-                <TerminalCodeBlock
-                  code={codeExamples.authFlow}
-                  language="jsx"
-                  filename="AuthPage.jsx"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Customization Showcase Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900 bg-black relative overflow-hidden">
-          {/* Animated background grid */}
-          <div className="absolute inset-0 opacity-20">
-            <div 
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `
-                  linear-gradient(cyan 1px, transparent 1px),
-                  linear-gradient(90deg, cyan 1px, transparent 1px)
-                `,
-                backgroundSize: '50px 50px',
-                animation: 'grid-move 20s linear infinite',
-              }}
+          {/* Mobile overlay */}
+          {showMobileMenu && (
+            <div
+              className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+              onClick={() => setShowMobileMenu(false)}
             />
-          </div>
+          )}
 
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 px-4 py-2 rounded-full mb-4">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-medium text-cyan-400 uppercase tracking-wider">Fully Customizable</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500">
-                Make It Your Own
-              </h2>
-              <p className="text-xl text-gray-300">
-                Every component can be styled to match your brand. Here's a cyberpunk theme example.
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Cyberpunk themed component */}
-              <div className="relative">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/50 via-purple-500/50 to-pink-500/50 rounded-lg blur-md opacity-60" />
-                <div className="relative bg-black rounded-lg p-8 border border-cyan-500/30">
+          {/* Main Content */}
+          <main className="flex-1 min-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div className="max-w-5xl mx-auto p-8">
+              {selectedComponent ? (
+                <motion.div
+                  key={selectedComponent.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Component Header */}
                   <div className="mb-8">
-                    <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-                      SYSTEM ACCESS
-                    </h3>
-                    <p className="text-cyan-300/70 text-sm uppercase tracking-wider">Initialize Neural Link</p>
+                    <h2 className="text-3xl font-bold mb-2">{selectedComponent.name}</h2>
+                    <p className="text-gray-400 text-lg">{selectedComponent.description}</p>
                   </div>
-                  
-                  {/* Custom styled LoginForm with Tailwind */}
-                  <div className="cyberpunk-theme">
-                    <style jsx global>{`
-                      @keyframes grid-move {
-                        0% { transform: translate(0, 0); }
-                        100% { transform: translate(50px, 50px); }
-                      }
-                      
-                      @keyframes shimmer {
-                        0% { 
-                          left: -100%;
-                          opacity: 0;
-                        }
-                        50% {
-                          opacity: 1;
-                        }
-                        100% { 
-                          left: 100%;
-                          opacity: 0;
-                        }
-                      }
-                      
-                      .cyberpunk-theme button {
-                        @apply relative;
-                        background: linear-gradient(45deg, #00ffff, #ff00ff);
-                        transition: all 0.3s ease;
-                        overflow: hidden !important;
-                        isolation: isolate;
-                      }
-                      
-                      .cyberpunk-theme button::before {
-                        content: '';
-                        position: absolute;
-                        top: 0;
-                        left: -100%;
-                        width: 100%;
-                        height: 100%;
-                        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
-                        transition: none;
-                        opacity: 0;
-                      }
-                      
-                      .cyberpunk-theme button:hover::before {
-                        animation: shimmer 0.6s ease-out;
-                        opacity: 1;
-                      }
-                      
-                      .cyberpunk-theme button:hover {
-                        transform: scale(1.05);
-                        box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff;
-                      }
-                      
-                      .cyberpunk-theme input {
-                        background: rgba(0, 255, 255, 0.1) !important;
-                        border: 2px solid #00ffff !important;
-                        color: #00ffff !important;
-                        font-family: 'Courier New', monospace !important;
-                      }
-                      
-                      .cyberpunk-theme input:focus {
-                        border-color: #ff00ff !important;
-                        box-shadow: 0 0 10px #ff00ff, inset 0 0 10px rgba(255, 0, 255, 0.2) !important;
-                        background: rgba(255, 0, 255, 0.1) !important;
-                      }
-                      
-                      .cyberpunk-theme input::placeholder {
-                        color: rgba(0, 255, 255, 0.5) !important;
-                      }
-                    `}</style>
-                    <div className="[&_button]:bg-gradient-to-r [&_button]:from-cyan-400 [&_button]:to-fuchsia-500 [&_button]:text-black [&_button]:font-bold [&_button]:uppercase [&_button]:tracking-widest [&_button]:px-6 [&_button]:py-3 [&_button]:border-none [&_button]:transition-all [&_button]:duration-300 [&_h1]:uppercase [&_h1]:tracking-[3px] [&_h2]:uppercase [&_h2]:tracking-[3px] [&_h3]:uppercase [&_h3]:tracking-[3px] [&_h1]:drop-shadow-[0_0_10px_currentColor] [&_h2]:drop-shadow-[0_0_10px_currentColor] [&_h3]:drop-shadow-[0_0_10px_currentColor]">
-                      <LoginForm
-                        mode="signin"
-                        onSuccess={() => console.log('Access granted')}
-                        onError={() => console.log('Access denied')}
-                      />
+
+                  {/* Import Statement */}
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                        Installation
+                      </h3>
+                      <button
+                        onClick={() => handleCopyCode(selectedComponent.importStatement, 'import')}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        {copiedCode === 'import' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
+                      <code className="text-sm text-gray-300">{selectedComponent.importStatement}</code>
                     </div>
                   </div>
-                  
-                  <div className="mt-6 p-4 border border-cyan-500/30 rounded bg-cyan-500/5">
-                    <p className="text-xs text-cyan-400 font-mono">
-                      SYSTEM STATUS: <span className="text-green-400">ONLINE</span>
-                    </p>
-                    <p className="text-xs text-cyan-400 font-mono">
-                      SECURITY LEVEL: <span className="text-yellow-400">MAXIMUM</span>
-                    </p>
+
+                  {/* Live Demo */}
+                  <div className="mb-8">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                      Live Demo
+                    </h3>
+                    <div className="bg-gray-950 border border-gray-800 rounded-lg p-8">
+                      {/* Render component based on ID */}
+                      {selectedComponent.id === 'auth-button' && (
+                        <AuthButton>Sign In with Bitcoin</AuthButton>
+                      )}
+                      {selectedComponent.id === 'login-form' && (
+                        <LoginForm 
+                          mode="signin"
+                          onSuccess={() => console.log('Demo success')}
+                          onError={() => console.log('Demo error')}
+                        />
+                      )}
+                      {selectedComponent.id === 'oauth-providers' && (
+                        <OAuthProviders
+                          onProviderClick={(provider) => console.log('Selected:', provider)}
+                        />
+                      )}
+                      {selectedComponent.id === 'loading-button' && (
+                        <div className="space-y-4">
+                          <LoadingButton
+                            onClick={() => {
+                              setIsLoading(true);
+                              setTimeout(() => setIsLoading(false), 2000);
+                            }}
+                            loading={isLoading}
+                          >
+                            Click Me
+                          </LoadingButton>
+                        </div>
+                      )}
+                      {selectedComponent.id === 'password-input' && (
+                        <PasswordInput
+                          value={password}
+                          onChange={(value) => setPassword(value)}
+                          placeholder="Enter your password"
+                        />
+                      )}
+                      {selectedComponent.id === 'step-indicator' && (
+                        <StepIndicator steps={demoSteps} />
+                      )}
+                      {selectedComponent.id === 'modal' && (
+                        <>
+                          <button
+                            onClick={() => setModalOpen(true)}
+                            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
+                          >
+                            Open Modal
+                          </button>
+                          <Modal
+                            isOpen={modalOpen}
+                            onClose={() => setModalOpen(false)}
+                            title="Example Modal"
+                          >
+                            <p>This is a modal dialog component.</p>
+                          </Modal>
+                        </>
+                      )}
+                      {selectedComponent.id === 'error-display' && (
+                        <ErrorDisplay error="This is an error message" />
+                      )}
+                      {selectedComponent.id === 'warning-card' && (
+                        <WarningCard
+                          title="Important Notice"
+                          message="Please backup your recovery phrase in a safe place."
+                        />
+                      )}
+                      {selectedComponent.id === 'file-import' && (
+                        <FileImport
+                          onFileValidated={(file) => console.log('File validated:', file.name)}
+                          onError={(error) => console.log('Error:', error)}
+                        />
+                      )}
+                      {selectedComponent.id === 'device-link-qr' && (
+                        <DeviceLinkQR 
+                          onGenerateQR={async () => {
+                            const url = 'https://example.com/link/demo-token';
+                            const qrDataUrl = await QRCode.toDataURL(url);
+                            return {
+                              qrData: qrDataUrl,
+                              token: 'demo-token',
+                              expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+                            };
+                          }}
+                          baseUrl="https://example.com"
+                        />
+                      )}
+                      {selectedComponent.id === 'member-export' && (
+                        <MemberExport 
+                          profileName="Demo Profile"
+                          onGenerateExport={async () => {
+                            const url = 'https://example.com/export/demo-token';
+                            const qrDataUrl = await QRCode.toDataURL(url);
+                            return {
+                              qrData: qrDataUrl,
+                              token: 'demo-export-token',
+                              expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+                            };
+                          }}
+                          baseUrl="https://example.com"
+                        />
+                      )}
+                      {selectedComponent.id === 'handcash-connector' && (
+                        <HandCashConnector
+                          config={{
+                            appId: "demo-app-id",
+                            appSecret: "demo-app-secret",
+                            redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/handcash` : '',
+                            environment: "iae"
+                          }}
+                          onSuccess={(result) => console.log('HandCash connected:', result)}
+                          onError={(error) => console.error('HandCash error:', error)}
+                        />
+                      )}
+                      {selectedComponent.id === 'yours-wallet-connector' && (
+                        <YoursWalletConnector
+                          onSuccess={(result) => console.log('Yours Wallet connected:', result)}
+                          onError={(error) => console.error('Yours Wallet error:', error)}
+                        />
+                      )}
+                      {selectedComponent.id === 'auth-flow-orchestrator' && (
+                        <div className="max-w-md mx-auto">
+                          <AuthFlowOrchestrator
+                            flowType="unified"
+                            enableOAuth={true}
+                            enableDeviceLink={true}
+                            onSuccess={(user) => console.log('Auth success:', user)}
+                          />
+                        </div>
+                      )}
+                      {/* Hook examples show code only since they can't be demoed visually */}
+                      {selectedComponent.category === 'hooks' && (
+                        <div className="text-center py-8">
+                          <Code2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                          <p className="text-gray-400">Hooks are demonstrated through code examples only.</p>
+                          <p className="text-sm text-gray-500 mt-2">See the usage example below for implementation details.</p>
+                        </div>
+                      )}
+                      {/* Layout components need special handling */}
+                      {selectedComponent.category === 'layouts' && (
+                        <div className="text-center py-8">
+                          <Layout className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                          <p className="text-gray-400">Layout components wrap entire pages.</p>
+                          <p className="text-sm text-gray-500 mt-2">See the code example for proper usage.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Code example */}
-              <div>
-                <h3 className="text-xl font-bold mb-4">Customize with Tailwind CSS</h3>
-                <p className="text-gray-400 mb-6">
-                  bitcoin-auth-ui is built with Tailwind CSS. Override styles using arbitrary value selectors, @apply directive, or custom classes.
-                </p>
-                
-                <div className="mb-6">
-                  <TerminalCodeBlock
-                    code={`// Method 1: Use Tailwind arbitrary value selectors
-<div className="[&_button]:bg-gradient-to-r [&_button]:from-cyan-400 [&_button]:to-fuchsia-500 [&_button]:text-black [&_button]:font-bold [&_button]:uppercase [&_button]:tracking-widest">
-  <LoginForm mode="signin" onSuccess={handleSuccess} />
-</div>
-
-// Method 2: CSS + Tailwind @apply
-<style jsx global>{\`
-  .cyberpunk-theme button {
-    @apply relative overflow-hidden;
-    background: linear-gradient(45deg, #00ffff, #ff00ff);
-  }
-  
-  .cyberpunk-theme input {
-    @apply font-mono text-cyan-400 border-2 border-cyan-400;
-    background: rgba(0, 255, 255, 0.1) !important;
-  }
-\`}</style>
-
-// Method 3: Custom CSS classes
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        'neon-cyan': '#00ffff',
-        'neon-pink': '#ff00ff',
-      }
-    }
-  }
-}`}
-                    language="jsx"
-                    filename="CustomTheme.jsx"
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-950 border border-gray-900 rounded-lg">
-                    <h4 className="font-semibold mb-2">Theme Ideas</h4>
-                    <ul className="space-y-2 text-sm text-gray-400">
-                      <li>• <span className="text-cyan-400">Cyberpunk</span> - Neon colors, glowing effects</li>
-                      <li>• <span className="text-green-400">Matrix</span> - Green terminals, cascading text</li>
-                      <li>• <span className="text-purple-400">Synthwave</span> - Retro 80s aesthetics</li>
-                      <li>• <span className="text-orange-400">Minimal</span> - Clean, modern design</li>
-                      <li>• <span className="text-blue-400">Corporate</span> - Professional look</li>
-                    </ul>
+                  {/* Code Example */}
+                  <div className="mb-8">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                      Usage Example
+                    </h3>
+                    <TerminalCodeBlock
+                      code={selectedComponent.codeExample}
+                      language="jsx"
+                      filename="Example.jsx"
+                    />
                   </div>
-                  
-                  <div className="p-4 bg-gray-950 border border-gray-900 rounded-lg">
-                    <h4 className="font-semibold mb-2">Customization Methods</h4>
-                    <ul className="space-y-2 text-sm text-gray-400">
-                      <li>✓ Tailwind arbitrary value selectors <code className="text-cyan-400">[&_button]:bg-red-500</code></li>
-                      <li>✓ CSS-in-JS with <code className="text-cyan-400">@apply</code> directive</li>
-                      <li>✓ Custom Tailwind config extensions</li>
-                      <li>✓ CSS custom properties and variables</li>
-                      <li>✓ Component composition patterns</li>
-                    </ul>
-                  </div>
+
+                  {/* Props Documentation */}
+                  {selectedComponent.props && selectedComponent.props.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                        Props
+                      </h3>
+                      <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-gray-800">
+                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Prop</th>
+                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Type</th>
+                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Required</th>
+                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Description</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedComponent.props.map((prop, index) => (
+                              <tr key={prop.name} className={index < selectedComponent.props!.length - 1 ? 'border-b border-gray-800/50' : ''}>
+                                <td className="px-4 py-3 text-sm font-mono text-orange-400">{prop.name}</td>
+                                <td className="px-4 py-3 text-sm font-mono text-blue-400">{prop.type}</td>
+                                <td className="px-4 py-3 text-sm">
+                                  {prop.required ? (
+                                    <span className="text-green-400">✓</span>
+                                  ) : (
+                                    <span className="text-gray-500">-</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-300">{prop.description}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Variations */}
+                  {selectedComponent.variations && selectedComponent.variations.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                        Variations
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedComponent.variations.map(variation => (
+                          <div key={variation.name} className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                            <h4 className="font-medium mb-3">{variation.name}</h4>
+                            {/* Render variation based on component type */}
+                            {selectedComponent.id === 'auth-button' && (
+                              <AuthButton {...variation.props}>{variation.props.children as React.ReactNode}</AuthButton>
+                            )}
+                            {selectedComponent.id === 'loading-button' && (
+                              <LoadingButton {...variation.props}>{variation.props.children as React.ReactNode}</LoadingButton>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                /* Default view when no component selected */
+                <div className="text-center py-20">
+                  <Package className="w-16 h-16 text-gray-700 mx-auto mb-4" />
+                  <h3 className="text-xl font-medium text-gray-400 mb-2">Select a Component</h3>
+                  <p className="text-gray-500">Choose a component from the sidebar to view its documentation and demo</p>
                 </div>
-              </div>
+              )}
             </div>
-          </div>
-        </section>
+          </main>
+        </div>
 
         {/* Footer */}
         <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">

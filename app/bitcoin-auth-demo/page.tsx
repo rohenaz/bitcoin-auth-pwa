@@ -83,6 +83,7 @@ function CustomAuthStatus() {
           )}
         </div>
         <button
+          type="button"
           onClick={() => signOut()}
           className="mt-3 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm transition-colors"
         >
@@ -147,6 +148,7 @@ export default function BitcoinAuthDemoPage() {
                 { key: 'headless', label: 'Headless Hook', description: 'useBitcoinAuth hook' }
               ].map((demo) => (
                 <button
+                  type="button"
                   key={demo.key}
                   onClick={() => setSelectedDemo(demo.key as 'simple' | 'custom' | 'headless')}
                   className={`p-4 rounded-lg border transition-colors ${
@@ -206,6 +208,7 @@ export default function BitcoinAuthDemoPage() {
                     </p>
                     <div className="space-y-3">
                       <button
+                        type="button"
                         onClick={() => setShowLoginForm(true)}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                       >
@@ -216,6 +219,7 @@ export default function BitcoinAuthDemoPage() {
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                           <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full relative">
                             <button
+                              type="button"
                               onClick={() => setShowLoginForm(false)}
                               className="absolute top-4 right-4 text-gray-400 hover:text-white"
                             >
@@ -268,6 +272,7 @@ export default function BitcoinAuthDemoPage() {
                   )}
                 </div>
                 <button
+                  type="button"
                   onClick={() => setLogs([])}
                   className="mt-2 text-xs text-gray-400 hover:text-white"
                 >
@@ -418,6 +423,7 @@ function HeadlessDemo({ onLog }: { onLog: (message: string) => void }) {
               className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm"
             />
             <button
+              type="button"
               onClick={handleSignIn}
               disabled={!password || isLoading}
               className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 rounded text-sm"
@@ -428,12 +434,14 @@ function HeadlessDemo({ onLog }: { onLog: (message: string) => void }) {
           
           <div className="flex space-x-2">
             <button
+              type="button"
               onClick={handleGenerateBackup}
               className="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-sm"
             >
               Generate Backup
             </button>
             <button
+              type="button"
               onClick={() => {
                 setMode('signup');
                 onLog('Switched to signup mode');
@@ -443,6 +451,7 @@ function HeadlessDemo({ onLog }: { onLog: (message: string) => void }) {
               Switch to Signup
             </button>
             <button
+              type="button"
               onClick={() => {
                 reset();
                 onLog('Reset authentication state');
@@ -453,7 +462,8 @@ function HeadlessDemo({ onLog }: { onLog: (message: string) => void }) {
             </button>
             {isAuthenticated && (
               <button
-                onClick={() => {
+                type="button"
+                  onClick={() => {
                   signOut();
                   onLog('Signed out via headless hook');
                 }}
@@ -467,7 +477,7 @@ function HeadlessDemo({ onLog }: { onLog: (message: string) => void }) {
       </div>
 
       <div className="text-xs text-gray-500 font-mono bg-gray-900 p-3 rounded">
-        {`const { signIn, signUp, signOut, user, isLoading } = useBitcoinAuth();`}
+        {"const { signIn, signUp, signOut, user, isLoading } = useBitcoinAuth();"}
       </div>
     </div>
   );
