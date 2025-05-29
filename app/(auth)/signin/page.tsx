@@ -9,6 +9,11 @@ import { extractIdentityFromBackup } from '@/lib/bap-utils';
 import { signInWithBackup, handleFailedLogin } from '@/lib/auth-flows';
 import OAuthProviders from '@/components/OAuthProviders';
 import { signIn } from 'next-auth/react';
+import PasswordInput from '@/components/auth/PasswordInput';
+import ErrorDisplay from '@/components/auth/ErrorDisplay';
+import LoadingButton from '@/components/auth/LoadingButton';
+import BackupImport from '@/components/auth/BackupImport';
+import WarningCard from '@/components/auth/WarningCard';
 
 
 function SignInPageContent() {
@@ -237,56 +242,29 @@ function SignInPageContent() {
             </p>
           </div>
 
-          {error && (
-            <div className="bg-red-900/20 border border-red-900 rounded-lg p-3 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
+          <ErrorDisplay error={error} />
 
           <form onSubmit={handleSetPassword} className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="Create a strong password"
-                required
-                minLength={8}
-                disabled={loading}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Minimum 8 characters. This encrypts your Bitcoin keys.
-              </p>
-            </div>
+            <PasswordInput
+              value={password}
+              onChange={setPassword}
+              placeholder="Create a strong password"
+              disabled={loading}
+              showHint={true}
+              autoComplete="new-password"
+            />
 
-            <button
-              type="submit"
-              disabled={loading || password.length < 8}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 rounded-lg font-medium transition-colors"
+            <LoadingButton
+              disabled={password.length < 8}
+              loading={loading}
             >
               Continue
-            </button>
+            </LoadingButton>
           </form>
 
-          <div className="bg-amber-900/20 border border-amber-900 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <title>Warning</title>
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <div className="text-sm">
-                <p className="font-semibold text-amber-500 mb-1">Important</p>
-                <p className="text-amber-400/80">
-                  This password cannot be recovered. If you forget it, you'll lose access to your Bitcoin identity.
-                </p>
-              </div>
-            </div>
-          </div>
+          <WarningCard 
+            message="This password cannot be recovered. If you forget it, you'll lose access to your Bitcoin identity."
+          />
         </div>
       </div>
     );
@@ -407,25 +385,10 @@ function SignInPageContent() {
         )}
 
         {!hasLocalBackup && (
-          <div className="border-t border-gray-800 pt-6">
-            <div className="text-center mb-4">
-              <p className="text-sm text-gray-400 mb-3">Or import your existing backup</p>
-              <label className="cursor-pointer inline-flex items-center space-x-2 text-blue-500 hover:text-blue-400">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <title>Import</title>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span className="text-sm font-medium">Import Backup File</span>
-                <input
-                  type="file"
-                  accept=".json,.txt"
-                  onChange={handleImportBackup}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-xs text-gray-500 mt-2">Supports both encrypted and decrypted backups</p>
-            </div>
-          </div>
+          <BackupImport 
+            onImport={handleImportBackup}
+            disabled={loading}
+          />
         )}
 
         <div className="text-center text-sm text-gray-400">

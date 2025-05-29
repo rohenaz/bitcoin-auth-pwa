@@ -2,6 +2,48 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚀 Bitcoin Auth Component Library
+
+A production-ready component library for Bitcoin-based authentication has been created in `/components/bitcoin-auth/`. This library provides reusable, composable components that abstract away the complexity of Bitcoin authentication, similar to how Stripe's components handle payments.
+
+### Component Library Features:
+1. **AuthFlowOrchestrator** - Complete authentication flow management (signin/signup/restore)
+2. **OAuthRestoreFlow** - OAuth backup restoration with password decryption
+3. **AuthLayout Components** - Page-level layouts (CenteredLayout, LoadingLayout, ErrorLayout, etc.)
+4. **FileImport** - Advanced file import with validation for encrypted/unencrypted backups
+5. **OAuthConflictModal** - Handles OAuth account conflicts with transfer/switch options
+6. **OAuthProviders** - OAuth provider selection with customizable icons
+7. **Modal** - Reusable modal component with animations
+8. **Complete Storybook Documentation** - All components have comprehensive stories
+
+### Using the Component Library:
+```tsx
+import { BitcoinAuthProvider, AuthFlowOrchestrator } from '@/components/bitcoin-auth';
+
+export default function App() {
+  return (
+    <BitcoinAuthProvider>
+      <AuthFlowOrchestrator
+        flowType="unified"
+        enableOAuth={true}
+        onSuccess={(user) => console.log('Authenticated:', user)}
+      />
+    </BitcoinAuthProvider>
+  );
+}
+```
+
+### Development:
+- **Storybook**: Run `bun storybook` to view all components
+- **Build**: Always run `bun run build` after changes to ensure TypeScript compilation
+- **Export**: All components are exported from `/components/bitcoin-auth/index.ts`
+
+### shadcn/ui Registry Integration (Planned):
+The library includes registry configuration for potential shadcn/ui style distribution:
+- `registry/registry.json` - Component registry configuration
+- `cli/bitcoin-auth-ui.ts` - CLI tool for adding components (like `npx shadcn-ui add`)
+- Ready for npm publishing as `bitcoin-auth-ui`
+
 ## ✅ Dashboard Fully Restored
 
 The dashboard has been completely restored with all missing functionality while maintaining multi-profile support and React Query integration. The dashboard now features:
@@ -246,3 +288,51 @@ When users attempt to link an OAuth account that's already associated with anoth
 - **Multi-Profile Security**: Profile updates require both Bitcoin signature (proving key ownership) AND backup verification (proving profile ownership)
 - **Request Body Handling**: API routes read body as text first, then create new Request for auth to avoid stream consumption issues
 - **Backup Updates**: When creating new profiles, always decrypt the returned backup to get the complete updated state with proper IDs encoding
+
+## Component Library Reference
+
+### Core Components (`/components/bitcoin-auth/`)
+
+#### Authentication Flow Components:
+- **AuthFlowOrchestrator** - Manages complete auth flows (unified/signin/signup/restore/import)
+- **LoginForm** - Basic Bitcoin wallet login form
+- **SignupFlow** - Multi-step signup with wallet generation
+- **EnhancedLoginForm** - Advanced login with multiple options
+- **OAuthRestoreFlow** - Complete OAuth backup restoration flow
+
+#### OAuth Components:
+- **OAuthProviders** - Provider selection with loading/linked states
+- **OAuthConflictModal** - Conflict resolution (transfer/switch accounts)
+- **OAuthRestoreForm** - Password entry for OAuth backup decryption
+
+#### Layout Components:
+- **AuthLayout** - Full-page auth layout with optional header/footer
+- **CenteredLayout** - Centered content with dark theme
+- **AuthCard** - Card container for auth forms
+- **LoadingLayout** - Full-screen loading state
+- **ErrorLayout** - Full-screen error display
+- **SuccessLayout** - Full-screen success state
+
+#### Supporting Components:
+- **Modal** - Reusable modal with animations
+- **FileImport** - Drag & drop file import with validation
+- **StepIndicator** - Multi-step progress indicator
+- **MnemonicDisplay** - Recovery phrase display with acknowledgment
+- **BackupDownload** - Download encrypted backups with tracking
+- **IdentityGeneration** - Generate new Bitcoin identities
+- **PasswordInput** - Secure password input with visibility toggle
+- **LoadingButton** - Button with loading states
+- **ErrorDisplay** - Consistent error message display
+- **WarningCard** - Warning notifications
+
+#### Core Infrastructure:
+- **BitcoinAuthProvider** - Main context provider
+- **useBitcoinAuth** - Primary authentication hook
+- **AuthManager** - Core authentication logic
+- **MockBitcoinAuthProvider** - Storybook-compatible provider
+
+### Storybook:
+All components have comprehensive Storybook stories with multiple variants and interactive demos. Run `bun storybook` to explore.
+
+### Type Safety:
+All components are fully typed with TypeScript interfaces exported from the main index file.

@@ -95,13 +95,8 @@ export default function OAuthPage() {
                 return prev;
               });
               
-              // Clean up linking data
-              sessionStorage.removeItem(STORAGE_KEYS.OAUTH_LINKING);
-              
-              // Don't try to sign out and back in - just stay in OAuth session for now
-              // The user can continue to link more providers or click continue
               console.log('✅ OAuth account linked successfully');
-              return;
+              // Continue to sign back in with Bitcoin credentials below
             } else if (response.status === 409) {
               // OAuth account already linked to another identity
               const data = await response.json();
@@ -110,6 +105,11 @@ export default function OAuthPage() {
                 provider: session.user.provider,
                 existingBapId: data.existingBapId
               });
+              return;
+            } else {
+              // Other error - don't continue with sign-in
+              console.error('Failed to store backup:', response.status);
+              setError('Failed to link account. Please try again.');
               return;
             }
 
@@ -158,11 +158,11 @@ export default function OAuthPage() {
                   sessionStorage.removeItem(STORAGE_KEYS.OAUTH_LINKING);
                   router.push('/dashboard');
                   return;
-                } else {
-                  console.error('❌ Failed to sign in with Bitcoin credentials:', result?.error);
-                  // Don't leave user in limbo - redirect to signin
-                  router.push('/signin');
                 }
+                
+                console.error('❌ Failed to sign in with Bitcoin credentials:', result?.error);
+                // Don't leave user in limbo - redirect to signin
+                router.push('/signin');
               }
             }
 
