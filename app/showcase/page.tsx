@@ -20,6 +20,7 @@ import {
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Copy, Code2, Sparkles, Shield, Zap, Globe } from 'lucide-react';
+import QRCode from 'qrcode';
 
 export default function ShowcasePage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -344,8 +345,10 @@ npx bitcoin-auth-ui add auth-flow`
                     <DeviceLinkQR 
                       onGenerateQR={async () => {
                         // Demo implementation - in real app, call your API
+                        const url = 'https://example.com/link/demo-token-12345';
+                        const qrDataUrl = await QRCode.toDataURL(url);
                         return {
-                          qrData: 'https://example.com/link/demo-token-12345',
+                          qrData: qrDataUrl,
                           token: 'demo-token-12345',
                           expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
                         };
@@ -361,8 +364,10 @@ npx bitcoin-auth-ui add auth-flow`
                       profileName="Demo Profile"
                       onGenerateExport={async () => {
                         // Demo implementation - in real app, call your API
+                        const url = 'https://example.com/export/demo-token';
+                        const qrDataUrl = await QRCode.toDataURL(url);
                         return {
-                          qrData: 'https://example.com/export/demo-token',
+                          qrData: qrDataUrl,
                           token: 'demo-export-token',
                           expiresAt: new Date(Date.now() + 10 * 60 * 1000)
                         };
