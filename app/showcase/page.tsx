@@ -19,6 +19,7 @@ import QRCode from 'qrcode';
 
 export default function ShowcasePage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [selectedFlow, setSelectedFlow] = useState<'unified' | 'signin' | 'signup' | 'oauth-restore'>('unified');
 
   const copyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -258,7 +259,7 @@ function ImportBackup() {
                     <ul className="space-y-2 text-gray-300">
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
-                        <span>SVG company icons (not emojis!)</span>
+                        <span>Handcash and Yours Wallet support</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
@@ -417,53 +418,148 @@ function ImportBackup() {
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              <div className="bg-black border border-gray-900 rounded-lg p-8">
-                <h3 className="text-xl font-bold mb-4">AuthFlowOrchestrator</h3>
-                <p className="text-gray-400 mb-6">
-                  Complete authentication with automatic flow detection, OAuth integration, and device linking.
-                </p>
-                <AuthFlowOrchestrator
-                  flowType="unified"
-                  enableOAuth={true}
-                  enableDeviceLink={true}
-                  enableFileImport={true}
-                  onSuccess={(user) => console.log('Demo success:', user)}
-                />
-              </div>
+            <div className="grid lg:grid-cols-2 gap-12 items-start mb-16">
               <div>
                 <h3 className="text-xl font-bold mb-4">Available Flows</h3>
+                <p className="text-gray-400 mb-6">Click on a flow to see it in action</p>
                 <div className="space-y-4">
-                  <div className="p-4 bg-black border border-gray-900 rounded-lg">
+                  <button
+                    onClick={() => setSelectedFlow('unified')}
+                    className={`w-full text-left p-4 rounded-lg border transition-all ${
+                      selectedFlow === 'unified' 
+                        ? 'bg-orange-500/10 border-orange-500/50' 
+                        : 'bg-black border-gray-900 hover:border-gray-800'
+                    }`}
+                  >
                     <h4 className="font-semibold text-orange-500 mb-2">Unified Flow</h4>
                     <p className="text-sm text-gray-400">
                       Smart detection of new vs returning users with seamless transitions
                     </p>
-                  </div>
-                  <div className="p-4 bg-black border border-gray-900 rounded-lg">
+                  </button>
+                  <button
+                    onClick={() => setSelectedFlow('signin')}
+                    className={`w-full text-left p-4 rounded-lg border transition-all ${
+                      selectedFlow === 'signin' 
+                        ? 'bg-blue-500/10 border-blue-500/50' 
+                        : 'bg-black border-gray-900 hover:border-gray-800'
+                    }`}
+                  >
                     <h4 className="font-semibold text-blue-500 mb-2">Sign In Flow</h4>
                     <p className="text-sm text-gray-400">
                       For returning users with local backup, OAuth restore, or import options
                     </p>
-                  </div>
-                  <div className="p-4 bg-black border border-gray-900 rounded-lg">
+                  </button>
+                  <button
+                    onClick={() => setSelectedFlow('signup')}
+                    className={`w-full text-left p-4 rounded-lg border transition-all ${
+                      selectedFlow === 'signup' 
+                        ? 'bg-green-500/10 border-green-500/50' 
+                        : 'bg-black border-gray-900 hover:border-gray-800'
+                    }`}
+                  >
                     <h4 className="font-semibold text-green-500 mb-2">Sign Up Flow</h4>
                     <p className="text-sm text-gray-400">
                       New user onboarding with identity generation and backup creation
                     </p>
-                  </div>
-                  <div className="p-4 bg-black border border-gray-900 rounded-lg">
+                  </button>
+                  <button
+                    onClick={() => setSelectedFlow('oauth-restore')}
+                    className={`w-full text-left p-4 rounded-lg border transition-all ${
+                      selectedFlow === 'oauth-restore' 
+                        ? 'bg-purple-500/10 border-purple-500/50' 
+                        : 'bg-black border-gray-900 hover:border-gray-800'
+                    }`}
+                  >
                     <h4 className="font-semibold text-purple-500 mb-2">OAuth Restore</h4>
                     <p className="text-sm text-gray-400">
                       Recover encrypted backups from cloud providers
                     </p>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="bg-black border border-gray-900 rounded-lg p-8">
+                <h3 className="text-xl font-bold mb-2">
+                  {selectedFlow === 'unified' && 'Unified Flow'}
+                  {selectedFlow === 'signin' && 'Sign In Flow'}
+                  {selectedFlow === 'signup' && 'Sign Up Flow'}
+                  {selectedFlow === 'oauth-restore' && 'OAuth Restore Flow'}
+                </h3>
+                <p className="text-gray-400 mb-6 text-sm">
+                  {selectedFlow === 'unified' && 'Automatically detects new vs returning users'}
+                  {selectedFlow === 'signin' && 'For users with existing Bitcoin identities'}
+                  {selectedFlow === 'signup' && 'Create a new Bitcoin identity from scratch'}
+                  {selectedFlow === 'oauth-restore' && 'Restore from cloud backup providers'}
+                </p>
+                <AuthFlowOrchestrator
+                  key={selectedFlow}
+                  flowType={selectedFlow}
+                  enableOAuth={true}
+                  enableDeviceLink={selectedFlow !== 'oauth-restore'}
+                  enableFileImport={selectedFlow !== 'oauth-restore'}
+                  onSuccess={(user) => console.log('Demo success:', user)}
+                />
+              </div>
+            </div>
+
+            {/* AuthFlowOrchestrator Code Section */}
+            <div className="border-t border-gray-900 pt-16">
+              <h3 className="text-2xl font-bold mb-4 text-center">How AuthFlowOrchestrator Works</h3>
+              <p className="text-gray-400 text-center mb-12 max-w-3xl mx-auto">
+                The AuthFlowOrchestrator is a smart component that manages the entire authentication experience. 
+                It automatically detects the user's state and guides them through the appropriate flow.
+              </p>
+              
+              <div className="grid lg:grid-cols-2 gap-12">
+                <div>
+                  <h4 className="text-lg font-semibold mb-4">Features</h4>
+                  <ul className="space-y-3 text-gray-300">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                      <span>Automatic flow detection based on local storage</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                      <span>Seamless transitions between different states</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                      <span>Built-in error handling and recovery</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                      <span>OAuth, device linking, and file import support</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5" />
+                      <span>Fully customizable with props and callbacks</span>
+                    </li>
+                  </ul>
+                  
+                  <h4 className="text-lg font-semibold mb-4 mt-8">Configuration Options</h4>
+                  <div className="bg-black border border-gray-900 rounded-lg p-4">
+                    <pre className="text-sm text-gray-300">
+                      <code>{`flowType: 'unified' | 'signin' | 'signup' | 'oauth-restore'
+enableOAuth?: boolean
+enableDeviceLink?: boolean
+enableFileImport?: boolean
+onSuccess: (user) => void
+onError?: (error) => void`}</code>
+                    </pre>
                   </div>
                 </div>
-
-                <div className="mt-8 bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto">
+                
+                <div className="bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto">
                   <pre className="text-sm text-gray-300">
                     <code>{codeExamples.authFlow}</code>
                   </pre>
+                  <button
+                    onClick={() => copyCode(codeExamples.authFlow, 'authFlow')}
+                    className="mt-4 text-sm text-orange-500 hover:text-orange-400 flex items-center gap-2"
+                  >
+                    {copiedCode === 'authFlow' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    Copy code
+                  </button>
                 </div>
               </div>
             </div>
@@ -474,7 +570,7 @@ function ImportBackup() {
         <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
           <div className="max-w-7xl mx-auto text-center">
             <p className="text-gray-400">
-              Built with ❤️ by the Bitcoin Auth team. MIT Licensed.
+              Built with ❤️ by the <a href="https://1satordinals.com" className="text-orange-500 hover:text-orange-400">1Sat</a> team. MIT Licensed.
             </p>
           </div>
         </footer>
