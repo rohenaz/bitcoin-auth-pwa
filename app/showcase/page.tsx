@@ -16,18 +16,12 @@ import {
   type Step
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Copy, Code2, Sparkles, Shield, Zap, Globe, Key, QrCode, Download, Workflow } from 'lucide-react';
+import { CheckCircle2, Code2, Sparkles, Shield, Zap, Globe, Key, QrCode, Download, Workflow } from 'lucide-react';
 import QRCode from 'qrcode';
+import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 
 export default function ShowcasePage() {
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [selectedFlow, setSelectedFlow] = useState<'unified' | 'signin' | 'signup' | 'oauth-restore'>('unified');
-
-  const copyCode = (code: string, id: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(id);
-    setTimeout(() => setCopiedCode(null), 2000);
-  };
 
   const codeExamples = {
     authButton: `import { BitcoinAuthProvider, AuthButton } from 'bitcoin-auth-ui';
@@ -200,27 +194,22 @@ function ImportBackup() {
                   <div className="bg-gray-950 border border-gray-900 rounded-lg p-6 mb-6">
                     <AuthButton>Sign In with Bitcoin</AuthButton>
                   </div>
-                  <button
-                    onClick={() => copyCode(codeExamples.authButton, 'authButton')}
-                    className="text-sm text-orange-500 hover:text-orange-400 flex items-center gap-2"
-                  >
-                    {copiedCode === 'authButton' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    Copy code
-                  </button>
                 </div>
-                <div className="bg-gray-950 border border-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre className="text-sm text-gray-300">
-                    <code>{codeExamples.authButton}</code>
-                  </pre>
-                </div>
+                <TerminalCodeBlock
+                  code={codeExamples.authButton}
+                  language="jsx"
+                  filename="App.jsx"
+                />
               </div>
 
               {/* Login Form Demo */}
               <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div className="order-2 lg:order-1 bg-gray-950 border border-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre className="text-sm text-gray-300">
-                    <code>{codeExamples.loginForm}</code>
-                  </pre>
+                <div className="order-2 lg:order-1">
+                  <TerminalCodeBlock
+                    code={codeExamples.loginForm}
+                    language="jsx"
+                    filename="SignInPage.jsx"
+                  />
                 </div>
                 <div className="order-1 lg:order-2">
                   <h3 className="text-2xl font-bold mb-4">Customizable Login Form</h3>
@@ -234,13 +223,6 @@ function ImportBackup() {
                       onError={() => console.log('Demo error')}
                     />
                   </div>
-                  <button
-                    onClick={() => copyCode(codeExamples.loginForm, 'loginForm')}
-                    className="text-sm text-orange-500 hover:text-orange-400 flex items-center gap-2"
-                  >
-                    {copiedCode === 'loginForm' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    Copy code
-                  </button>
                 </div>
               </div>
 
@@ -320,9 +302,8 @@ function ImportBackup() {
                   </div>
                 </div>
                 
-                <div className="bg-gray-950 border border-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre className="text-sm text-gray-300">
-                    <code>{`// HandCash OAuth Integration
+                <TerminalCodeBlock
+                  code={`// HandCash OAuth Integration
 <HandCashConnector
   config={{
     appId: process.env.HANDCASH_APP_ID,
@@ -344,9 +325,10 @@ function ImportBackup() {
     // Wallet operations via browser extension
   }}
   onError={console.error}
-/>`}</code>
-                  </pre>
-                </div>
+/>`}
+                  language="jsx"
+                  filename="WalletIntegration.jsx"
+                />
               </div>
             </div>
           </div>
@@ -411,10 +393,12 @@ function ImportBackup() {
               </div>
             </div>
 
-            <div className="mt-12 bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto">
-              <pre className="text-sm text-gray-300">
-                <code>{codeExamples.deviceLink}</code>
-              </pre>
+            <div className="mt-12">
+              <TerminalCodeBlock
+                code={codeExamples.deviceLink}
+                language="jsx"
+                filename="DeviceLinkPage.jsx"
+              />
             </div>
           </div>
         </section>
@@ -459,11 +443,11 @@ function ImportBackup() {
                 </div>
               </div>
 
-              <div className="bg-gray-950 border border-gray-900 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-sm text-gray-300">
-                  <code>{codeExamples.fileImport}</code>
-                </pre>
-              </div>
+              <TerminalCodeBlock
+                code={codeExamples.fileImport}
+                language="jsx"
+                filename="ImportBackup.jsx"
+              />
             </div>
           </div>
         </section>
@@ -601,30 +585,25 @@ function ImportBackup() {
                   </ul>
                   
                   <h4 className="text-lg font-semibold mb-4 mt-8">Configuration Options</h4>
-                  <div className="bg-black border border-gray-900 rounded-lg p-4">
-                    <pre className="text-sm text-gray-300">
-                      <code>{`flowType: 'unified' | 'signin' | 'signup' | 'oauth-restore'
-enableOAuth?: boolean
-enableDeviceLink?: boolean
-enableFileImport?: boolean
-onSuccess: (user) => void
-onError?: (error) => void`}</code>
-                    </pre>
-                  </div>
+                  <TerminalCodeBlock
+                    code={`interface AuthFlowOrchestratorProps {
+  flowType: 'unified' | 'signin' | 'signup' | 'oauth-restore';
+  enableOAuth?: boolean;
+  enableDeviceLink?: boolean;
+  enableFileImport?: boolean;
+  onSuccess: (user: AuthUser) => void;
+  onError?: (error: AuthError) => void;
+}`}
+                    language="typescript"
+                    filename="types.ts"
+                  />
                 </div>
                 
-                <div className="bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <pre className="text-sm text-gray-300">
-                    <code>{codeExamples.authFlow}</code>
-                  </pre>
-                  <button
-                    onClick={() => copyCode(codeExamples.authFlow, 'authFlow')}
-                    className="mt-4 text-sm text-orange-500 hover:text-orange-400 flex items-center gap-2"
-                  >
-                    {copiedCode === 'authFlow' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    Copy code
-                  </button>
-                </div>
+                <TerminalCodeBlock
+                  code={codeExamples.authFlow}
+                  language="jsx"
+                  filename="AuthPage.jsx"
+                />
               </div>
             </div>
           </div>
@@ -754,9 +733,9 @@ onError?: (error) => void`}</code>
                   bitcoin-auth-ui is built with Tailwind CSS. Override styles using arbitrary value selectors, @apply directive, or custom classes.
                 </p>
                 
-                <div className="bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto mb-6">
-                  <pre className="text-sm text-gray-300">
-                    <code>{`// Method 1: Use Tailwind arbitrary value selectors
+                <div className="mb-6">
+                  <TerminalCodeBlock
+                    code={`// Method 1: Use Tailwind arbitrary value selectors
 <div className="[&_button]:bg-gradient-to-r [&_button]:from-cyan-400 [&_button]:to-fuchsia-500 [&_button]:text-black [&_button]:font-bold [&_button]:uppercase [&_button]:tracking-widest">
   <LoginForm mode="signin" onSuccess={handleSuccess} />
 </div>
@@ -785,8 +764,10 @@ module.exports = {
       }
     }
   }
-}`}</code>
-                  </pre>
+}`}
+                    language="jsx"
+                    filename="CustomTheme.jsx"
+                  />
                 </div>
 
                 <div className="space-y-4">
