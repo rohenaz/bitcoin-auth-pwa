@@ -21,7 +21,6 @@ import {
   WarningCard,
   SignupFlow,
   OAuthRestoreFlow,
-  EnhancedLoginForm,
   BackupImport,
   MnemonicDisplay,
   IdentityGeneration,
@@ -526,7 +525,6 @@ export default function ShowcasePage() {
                         <HandCashConnector
                           config={{
                             appId: "demo-app-id",
-                            appSecret: "demo-app-secret",
                             redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/handcash` : '',
                             environment: "iae"
                           }}
@@ -568,11 +566,10 @@ export default function ShowcasePage() {
                           />
                         </div>
                       )}
-                      {selectedComponent.id === 'enhanced-login-form' && (
+                      {selectedComponent.id === 'login-form' && (
                         <div className="max-w-md mx-auto">
-                          <EnhancedLoginForm
+                          <LoginForm
                             mode="signin"
-                            showOAuth={true}
                             onSuccess={(user) => console.log('Login success:', user)}
                           />
                         </div>

@@ -167,21 +167,20 @@ export const components: ComponentExample[] = [
     ]
   },
   {
-    id: 'enhanced-login-form',
-    name: 'EnhancedLoginForm',
-    description: 'Advanced login form with multiple authentication options. Requires backend: /api/auth/[...nextauth], OAuth linking APIs',
+    id: 'login-form',
+    name: 'LoginForm',
+    description: 'Bitcoin-based login form with password recovery options. Requires backend: /api/auth/[...nextauth], backup APIs',
     category: 'core',
-    importStatement: "import { EnhancedLoginForm } from 'bitcoin-auth-ui';",
-    codeExample: `<EnhancedLoginForm
+    importStatement: "import { LoginForm } from 'bitcoin-auth-ui';",
+    codeExample: `<LoginForm
   mode="signin"
-  showOAuth={true}
   onSuccess={(user) => console.log('Success:', user)}
 />`,
     props: [
-      { name: 'mode', type: "'signin' | 'signup'", required: false, description: 'Form mode' },
-      { name: 'showOAuth', type: 'boolean', required: false, description: 'Show OAuth options' },
+      { name: 'mode', type: "'signin' | 'signup' | 'restore'", required: false, description: 'Authentication mode' },
       { name: 'onSuccess', type: '(user: AuthUser) => void', required: false, description: 'Success callback' },
-      { name: 'onError', type: '(error: AuthError) => void', required: false, description: 'Error callback' }
+      { name: 'onError', type: '(error: AuthError) => void', required: false, description: 'Error callback' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
     ]
   },
 

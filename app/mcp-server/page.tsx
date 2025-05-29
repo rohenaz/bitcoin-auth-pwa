@@ -65,7 +65,7 @@ export default function MCPServerPage() {
           <OAuthProviders onProviderClick={() => {}} />
           <div className="flex gap-4">
             <HandCashConnector 
-              config={{ appId: "demo", appSecret: "demo", environment: "iae" }}
+              config={{ appId: "demo", environment: "iae" }}
               className="flex-1"
             />
             <YoursWalletConnector className="flex-1" />
