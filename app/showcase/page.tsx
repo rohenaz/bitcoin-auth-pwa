@@ -566,12 +566,271 @@ onError?: (error) => void`}</code>
           </div>
         </section>
 
+        {/* Customization Showcase Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900 bg-black relative overflow-hidden">
+          {/* Animated background grid */}
+          <div className="absolute inset-0 opacity-20">
+            <div 
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `
+                  linear-gradient(cyan 1px, transparent 1px),
+                  linear-gradient(90deg, cyan 1px, transparent 1px)
+                `,
+                backgroundSize: '50px 50px',
+                animation: 'grid-move 20s linear infinite',
+              }}
+            />
+          </div>
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 px-4 py-2 rounded-full mb-4">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-medium text-cyan-400 uppercase tracking-wider">Fully Customizable</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500">
+                Make It Your Own
+              </h2>
+              <p className="text-xl text-gray-300">
+                Every component can be styled to match your brand. Here's a cyberpunk theme example.
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              {/* Cyberpunk themed component */}
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-lg blur-lg opacity-75 animate-pulse" />
+                <div className="relative bg-black rounded-lg p-8 border border-gray-800">
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
+                      SYSTEM ACCESS
+                    </h3>
+                    <p className="text-cyan-300/70 text-sm uppercase tracking-wider">Initialize Neural Link</p>
+                  </div>
+                  
+                  {/* Custom styled SignupFlow */}
+                  <div className="cyberpunk-theme">
+                    <style jsx global>{`
+                      .cyberpunk-theme {
+                        --primary: #00ffff;
+                        --secondary: #ff00ff;
+                        --accent: #ffff00;
+                      }
+                      
+                      .cyberpunk-theme button {
+                        position: relative;
+                        background: linear-gradient(45deg, #00ffff, #ff00ff);
+                        border: none;
+                        color: black;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        letter-spacing: 2px;
+                        padding: 12px 24px;
+                        overflow: hidden;
+                        transition: all 0.3s;
+                      }
+                      
+                      .cyberpunk-theme button::before {
+                        content: '';
+                        position: absolute;
+                        inset: 0;
+                        background: linear-gradient(45deg, transparent, white, transparent);
+                        transform: translateX(-100%);
+                        transition: transform 0.6s;
+                      }
+                      
+                      .cyberpunk-theme button:hover::before {
+                        transform: translateX(100%);
+                      }
+                      
+                      .cyberpunk-theme button:hover {
+                        transform: scale(1.05);
+                        box-shadow: 0 0 20px cyan, 0 0 40px cyan, 0 0 60px cyan;
+                      }
+                      
+                      .cyberpunk-theme input {
+                        background: rgba(0, 255, 255, 0.1);
+                        border: 2px solid cyan;
+                        color: cyan;
+                        padding: 12px;
+                        font-family: 'Courier New', monospace;
+                        transition: all 0.3s;
+                      }
+                      
+                      .cyberpunk-theme input:focus {
+                        outline: none;
+                        border-color: #ff00ff;
+                        box-shadow: 0 0 10px #ff00ff, inset 0 0 10px rgba(255, 0, 255, 0.2);
+                        background: rgba(255, 0, 255, 0.1);
+                      }
+                      
+                      .cyberpunk-theme input::placeholder {
+                        color: rgba(0, 255, 255, 0.5);
+                      }
+                      
+                      .cyberpunk-theme h1, .cyberpunk-theme h2, .cyberpunk-theme h3 {
+                        text-transform: uppercase;
+                        letter-spacing: 3px;
+                        text-shadow: 0 0 10px currentColor;
+                      }
+                      
+                      .cyberpunk-theme .error-message {
+                        color: #ff0080;
+                        text-shadow: 0 0 10px #ff0080;
+                      }
+                      
+                      .cyberpunk-theme .success-message {
+                        color: #00ff00;
+                        text-shadow: 0 0 10px #00ff00;
+                      }
+                      
+                      @keyframes grid-move {
+                        0% { transform: translate(0, 0); }
+                        100% { transform: translate(50px, 50px); }
+                      }
+                      
+                      @keyframes glitch {
+                        0%, 100% { 
+                          text-shadow: 
+                            0.05em 0 0 rgba(255, 0, 0, 0.75),
+                            -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
+                            0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+                        }
+                        14% {
+                          text-shadow: 
+                            0.05em 0 0 rgba(255, 0, 0, 0.75),
+                            -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
+                            0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+                        }
+                        15% {
+                          text-shadow: 
+                            -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+                            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+                        }
+                        49% {
+                          text-shadow: 
+                            -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+                            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+                        }
+                        50% {
+                          text-shadow: 
+                            0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+                            0.05em 0 0 rgba(0, 255, 0, 0.75),
+                            0 -0.05em 0 rgba(0, 0, 255, 0.75);
+                        }
+                        99% {
+                          text-shadow: 
+                            0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+                            0.05em 0 0 rgba(0, 255, 0, 0.75),
+                            0 -0.05em 0 rgba(0, 0, 255, 0.75);
+                        }
+                      }
+                      
+                      .cyberpunk-theme .glitch {
+                        animation: glitch 2s infinite;
+                      }
+                    `}</style>
+                    <LoginForm
+                      mode="signin"
+                      onSuccess={() => console.log('Access granted')}
+                      onError={() => console.log('Access denied')}
+                    />
+                  </div>
+                  
+                  <div className="mt-6 p-4 border border-cyan-500/30 rounded bg-cyan-500/5">
+                    <p className="text-xs text-cyan-400 font-mono">
+                      SYSTEM STATUS: <span className="text-green-400">ONLINE</span>
+                    </p>
+                    <p className="text-xs text-cyan-400 font-mono">
+                      SECURITY LEVEL: <span className="text-yellow-400">MAXIMUM</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Code example */}
+              <div>
+                <h3 className="text-xl font-bold mb-4">Customize with CSS</h3>
+                <p className="text-gray-400 mb-6">
+                  Components use CSS variables and classes that you can override. Use your own CSS framework or custom styles.
+                </p>
+                
+                <div className="bg-black border border-gray-900 rounded-lg p-4 overflow-x-auto mb-6">
+                  <pre className="text-sm text-gray-300">
+                    <code>{`// Wrap components in a custom class
+<div className="cyberpunk-theme">
+  <LoginForm
+    mode="signin"
+    onSuccess={handleSuccess}
+  />
+</div>
+
+// Add your custom CSS
+.cyberpunk-theme button {
+  background: linear-gradient(45deg, #00ffff, #ff00ff);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.cyberpunk-theme input {
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid cyan;
+  color: cyan;
+}`}</code>
+                  </pre>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-950 border border-gray-900 rounded-lg">
+                    <h4 className="font-semibold mb-2">Theme Ideas</h4>
+                    <ul className="space-y-2 text-sm text-gray-400">
+                      <li>• <span className="text-cyan-400">Cyberpunk</span> - Neon colors, glowing effects</li>
+                      <li>• <span className="text-green-400">Matrix</span> - Green terminals, cascading text</li>
+                      <li>• <span className="text-purple-400">Synthwave</span> - Retro 80s aesthetics</li>
+                      <li>• <span className="text-orange-400">Minimal</span> - Clean, modern design</li>
+                      <li>• <span className="text-blue-400">Corporate</span> - Professional look</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="p-4 bg-gray-950 border border-gray-900 rounded-lg">
+                    <h4 className="font-semibold mb-2">Customization Options</h4>
+                    <ul className="space-y-2 text-sm text-gray-400">
+                      <li>✓ Override any CSS class</li>
+                      <li>✓ Use CSS-in-JS libraries</li>
+                      <li>✓ Apply custom animations</li>
+                      <li>✓ Change layouts and spacing</li>
+                      <li>✓ Add your own components</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
           <div className="max-w-7xl mx-auto text-center">
             <p className="text-gray-400">
               Built with ❤️ by the <a href="https://1satordinals.com" className="text-orange-500 hover:text-orange-400">1Sat</a> team. MIT Licensed.
             </p>
+            <div className="flex justify-center gap-6 mt-6">
+              <a
+                href="https://github.com/b-open-io/bitcoin-auth-ui"
+                className="text-gray-400 hover:text-white"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://www.npmjs.com/package/bitcoin-auth-ui"
+                className="text-gray-400 hover:text-white"
+              >
+                npm
+              </a>
+            </div>
           </div>
         </footer>
       </div>
