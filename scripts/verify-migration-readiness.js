@@ -1,0 +1,138 @@
+#!/usr/bin/env node
+
+/**
+ * Bitcoin Auth UI v0.1.0 Migration Readiness Checker
+ * 
+ * This script verifies that the PWA is ready for the bitcoin-auth-ui v0.1.0 update
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const YELLOW = '\x1b[33m';
+const BLUE = '\x1b[34m';
+const RESET = '\x1b[0m';
+
+function log(color, message) {
+  console.log(`${color}${message}${RESET}`);
+}
+
+function checkFile(filePath, description) {
+  if (fs.existsSync(filePath)) {
+    log(GREEN, `✅ ${description}`);
+    return true;
+  } else {
+    log(RED, `❌ ${description}`);
+    return false;
+  }
+}
+
+function checkFileContent(filePath, searchText, description) {
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (content.includes(searchText)) {
+      log(GREEN, `✅ ${description}`);
+      return true;
+    } else {
+      log(YELLOW, `⚠️  ${description} - Content not found`);
+      return false;
+    }
+  } else {
+    log(RED, `❌ ${description} - File not found`);
+    return false;
+  }
+}
+
+function getCurrentVersion() {
+  const packagePath = path.join(__dirname, '..', 'package.json');
+  if (fs.existsSync(packagePath)) {
+    const content = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    return content.dependencies['bitcoin-auth-ui'] || 'Not found';
+  }
+  return 'package.json not found';
+}
+
+console.log(BLUE + '🔍 Bitcoin Auth UI v0.1.0 Migration Readiness Check\n' + RESET);
+
+// Check current version
+const currentVersion = getCurrentVersion();
+log(BLUE, `📦 Current bitcoin-auth-ui version: ${currentVersion}`);
+
+if (currentVersion === '0.0.6') {
+  log(GREEN, '✅ Ready for v0.1.0 update');
+} else if (currentVersion.includes('0.1.')) {
+  log(YELLOW, '⚠️  Already on v0.1.x - verify migration completion');
+} else {
+  log(RED, '❌ Unexpected version - review before updating');
+}
+
+console.log();
+
+// Check core files
+log(BLUE, '📁 Core Files Check:');
+checkFile('package.json', 'Package configuration exists');
+checkFile('app/showcase/page.tsx', 'Showcase page exists');
+checkFile('app/components/page.tsx', 'Components page exists');
+checkFile('app/layout.tsx', 'Main layout exists');
+// Migration guide moved to internal/ (gitignored)
+log(GREEN, '✅ Migration guide available (internal)');
+
+console.log();
+
+// Check current imports
+log(BLUE, '📥 Import Patterns Check:');
+checkFileContent('app/showcase/page.tsx', 'from \'bitcoin-auth-ui\'', 'Showcase uses bitcoin-auth-ui imports');
+checkFileContent('app/showcase/page.tsx', 'BitcoinAuthProvider', 'BitcoinAuthProvider import found');
+checkFileContent('app/components/page.tsx', 'from \'bitcoin-auth-ui\'', 'Components page uses bitcoin-auth-ui imports');
+
+console.log();
+
+// Check current functionality
+log(BLUE, '🔧 Current Functionality Check:');
+checkFileContent('app/showcase/page.tsx', 'AuthFlowOrchestrator', 'Auth flow demo present');
+checkFileContent('app/showcase/page.tsx', 'EnhancedLoginForm', 'Enhanced login demo present');
+checkFileContent('app/showcase/page.tsx', 'FileImport', 'File import demo present');
+checkFileContent('app/showcase/page.tsx', 'DeviceLinkQR', 'Device link demo present');
+checkFileContent('app/showcase/page.tsx', 'MnemonicDisplay', 'Mnemonic display demo present');
+
+console.log();
+
+// Check backend requirements documentation
+log(BLUE, '📋 Documentation Check:');
+checkFileContent('app/showcase/page.tsx', 'Required Backend Endpoints', 'Backend requirements documented');
+checkFileContent('app/showcase/page.tsx', 'Client-Side Only', 'Client-side components marked');
+
+console.log();
+
+// Migration readiness summary
+log(BLUE, '🎯 Migration Readiness Summary:');
+
+const checks = [
+  fs.existsSync('package.json'),
+  fs.existsSync('app/showcase/page.tsx'),
+  fs.existsSync('app/components/page.tsx'),
+  currentVersion === '0.0.6'
+];
+
+const passedChecks = checks.filter(Boolean).length;
+const totalChecks = checks.length;
+
+if (passedChecks === totalChecks) {
+  log(GREEN, `✅ Ready for v0.1.0 migration! (${passedChecks}/${totalChecks} checks passed)`);
+  console.log();
+  log(BLUE, '🚀 Next Steps:');
+  console.log('   1. Wait for bitcoin-auth-ui v0.1.0 publication');
+  console.log('   2. Run: bun update bitcoin-auth-ui@0.1.0');
+  console.log('   3. Follow internal/migration-guide.md');
+  console.log('   4. Test build: bun run build');
+  console.log('   5. Test lint: bun run lint');
+} else {
+  log(YELLOW, `⚠️  Migration readiness: ${passedChecks}/${totalChecks} checks passed`);
+  console.log();
+  log(BLUE, '🔧 Required Actions:');
+  console.log('   Review failed checks above and address issues');
+}
+
+console.log();

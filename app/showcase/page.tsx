@@ -1,117 +1,59 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   BitcoinAuthProvider, 
-  AuthButton,
-  LoginForm,
-  OAuthProviders,
   AuthFlowOrchestrator,
-  DeviceLinkQR,
-  MemberExport,
-  FileImport,
-  StepIndicator,
-  HandCashConnector,
-  YoursWalletConnector,
-  Modal,
-  LoadingButton,
-  PasswordInput,
-  ErrorDisplay,
-  WarningCard,
-  SignupFlow,
-  OAuthRestoreFlow,
   EnhancedLoginForm,
-  BackupImport,
+  FileImport,
+  DeviceLinkQR,
   MnemonicDisplay,
-  IdentityGeneration,
-  type Step
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
 import { 
-  Search, 
   Sparkles, 
-  Shield, 
   Zap, 
-  Globe, 
-  Code2, 
+  Shield, 
   Package,
-  Wallet,
-  Layout,
-  Layers,
-  Workflow,
-  ChevronRight,
-  ChevronDown,
-  Copy,
-  Check,
-  Filter,
-  Download
+  Code2
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
-import { components, componentCategories, type ComponentExample } from './components-data';
-
-// Icon mapping for categories
-const categoryIcons: Record<string, React.ElementType> = {
-  'Workflow': Workflow,
-  'Package': Package,
-  'Wallet': Wallet,
-  'Shield': Shield,
-  'Layers': Layers,
-  'Layout': Layout,
-  'Code2': Code2
-};
+import { getLatestBlockHeight } from '@/lib/block';
 
 export default function ShowcasePage() {
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['auth-flows']); // Start with first category expanded
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedComponent, setSelectedComponent] = useState<ComponentExample | null>(components[0] || null);
-  const [copiedCode, setCopiedCode] = useState<string>('');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
-  // Enhanced search with fuzzy matching
-  const filteredComponents = useMemo(() => {
-    if (searchQuery === '') return components;
-    
-    const query = searchQuery.toLowerCase();
-    return components.filter(component => {
-      // Check name, description, and category
-      const searchableText = [
-        component.name,
-        component.description,
-        component.category,
-        componentCategories.find(c => c.id === component.category)?.name || ''
-      ].join(' ').toLowerCase();
-      
-      // Simple fuzzy match - check if all query characters appear in order
-      let queryIndex = 0;
-      for (let i = 0; i < searchableText.length && queryIndex < query.length; i++) {
-        if (searchableText[i] === query[queryIndex]) {
-          queryIndex++;
-        }
+  // Real API data states
+  const [blockHeight, setBlockHeight] = useState<number | null>(null);
+  const [bapProfile, setBapProfile] = useState<Record<string, unknown> | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [bapAddress, setBapAddress] = useState('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
+  const [fileValidationResult, setFileValidationResult] = useState<{
+    fileName?: string;
+    fileSize?: number;
+    type?: string;
+    valid: boolean;
+    timestamp: string;
+    error?: string;
+  } | null>(null);
+  
+  // Real API functions
+  const lookupBapProfile = async (address: string) => {
+    setApiLoading(true);
+    try {
+      const response = await fetch(`/api/bap?address=${address}`);
+      if (response.ok) {
+        const data = await response.json();
+        setBapProfile(data);
+      } else {
+        setBapProfile({ error: 'Profile not found' });
       }
-      return queryIndex === query.length;
-    });
-  }, [searchQuery]);
-
-
-  const handleCopyCode = (code: string, id: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(id);
-    setTimeout(() => setCopiedCode(''), 2000);
+    } catch {
+      setBapProfile({ error: 'Lookup failed' });
+    } finally {
+      setApiLoading(false);
+    }
   };
-
-  // Demo states for interactive components
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const demoSteps: Step[] = [
-    { id: 'generate', label: 'Generate Identity', status: 'complete' },
-    { id: 'password', label: 'Set Password', status: 'active' },
-    { id: 'backup', label: 'Save Backup', status: 'pending' },
-    { id: 'link', label: 'Link Cloud', status: 'pending' }
-  ];
 
   return (
     <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
@@ -125,6 +67,9 @@ export default function ShowcasePage() {
                   Home
                 </Link>
                 <Link href="/showcase" className="text-white">
+                  Showcase
+                </Link>
+                <Link href="/components" className="text-gray-400 hover:text-white transition-colors">
                   Components
                 </Link>
                 <Link href="/mcp-server" className="text-gray-400 hover:text-white transition-colors">
@@ -134,19 +79,11 @@ export default function ShowcasePage() {
                   Dashboard
                 </Link>
               </nav>
-              
-              {/* Mobile menu button */}
-              <button
-                className="lg:hidden p-2"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-              >
-                <Filter className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </header>
         
-        {/* Hero Section - Keep existing */}
+        {/* Hero Section */}
         <section className="relative overflow-hidden border-b border-gray-800/50">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-transparent to-purple-600/20" />
           <div className="absolute inset-0">
@@ -166,528 +103,599 @@ export default function ShowcasePage() {
               </div>
               
               <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                Bitcoin Auth UI
+                Live Demos
               </h1>
               
               <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-                Beautiful, accessible React components for Bitcoin authentication. 
-                Built with TypeScript, TailwindCSS, and Framer Motion.
+                Real working examples of Bitcoin Auth components integrated with live APIs. 
+                Copy the code and use it in your projects.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/components"
+                  className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Browse All Components
+                </Link>
                 <a
                   href="https://github.com/bitcoin-auth/bitcoin-auth-ui"
-                  className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-8 py-3 bg-gray-900 border border-gray-700 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   View on GitHub
                 </a>
-                <code className="px-6 py-3 bg-gray-900 rounded-lg text-orange-500 font-mono">
-                  npm install bitcoin-auth-ui
-                </code>
               </div>
 
-              {/* Quick Access */}
+              {/* Quick Access to Demo Categories */}
               <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-                <button
-                  onClick={() => {
-                    const authButton = components.find(c => c.id === 'auth-button');
-                    if (authButton) setSelectedComponent(authButton);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-orange-500/50 rounded-lg transition-all group"
-                >
+                <a href="#api-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-orange-500/50 rounded-lg transition-all group">
                   <div className="text-orange-500 mb-2">
                     <Zap className="w-6 h-6 mx-auto" />
                   </div>
-                  <div className="text-sm font-medium">AuthButton</div>
-                  <div className="text-xs text-gray-500 mt-1">Drop-in auth</div>
-                </button>
-                <button
-                  onClick={() => {
-                    const flow = components.find(c => c.id === 'auth-flow-orchestrator');
-                    if (flow) setSelectedComponent(flow);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 rounded-lg transition-all group"
-                >
+                  <div className="text-sm font-medium">Live APIs</div>
+                  <div className="text-xs text-gray-500 mt-1">Real blockchain data</div>
+                </a>
+                <a href="#auth-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 rounded-lg transition-all group">
                   <div className="text-purple-500 mb-2">
-                    <Workflow className="w-6 h-6 mx-auto" />
+                    <Shield className="w-6 h-6 mx-auto" />
                   </div>
                   <div className="text-sm font-medium">Auth Flows</div>
-                  <div className="text-xs text-gray-500 mt-1">Complete flows</div>
-                </button>
-                <button
-                  onClick={() => {
-                    const oauth = components.find(c => c.id === 'oauth-providers');
-                    if (oauth) setSelectedComponent(oauth);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group"
-                >
+                  <div className="text-xs text-gray-500 mt-1">Complete examples</div>
+                </a>
+                <a href="#backup-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group">
                   <div className="text-blue-500 mb-2">
-                    <Globe className="w-6 h-6 mx-auto" />
+                    <Package className="w-6 h-6 mx-auto" />
                   </div>
-                  <div className="text-sm font-medium">OAuth</div>
-                  <div className="text-xs text-gray-500 mt-1">Cloud backup</div>
-                </button>
-                <button
-                  onClick={() => {
-                    const hook = components.find(c => c.id === 'use-bitcoin-auth');
-                    if (hook) setSelectedComponent(hook);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-green-500/50 rounded-lg transition-all group"
-                >
+                  <div className="text-sm font-medium">Backup & QR</div>
+                  <div className="text-xs text-gray-500 mt-1">File validation & QR codes</div>
+                </a>
+                <a href="#integration-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-green-500/50 rounded-lg transition-all group">
                   <div className="text-green-500 mb-2">
                     <Code2 className="w-6 h-6 mx-auto" />
                   </div>
-                  <div className="text-sm font-medium">Hooks</div>
-                  <div className="text-xs text-gray-500 mt-1">React hooks</div>
-                </button>
+                  <div className="text-sm font-medium">Integration</div>
+                  <div className="text-xs text-gray-500 mt-1">Copy-paste examples</div>
+                </a>
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* Component Browser */}
-        <div className="flex">
-          {/* Sidebar */}
-          <aside className={`
-            fixed lg:sticky lg:top-16 inset-y-0 lg:inset-y-auto left-0 z-40
-            transform ${showMobileMenu ? 'translate-x-0' : '-translate-x-full'}
-            lg:translate-x-0 transition-transform duration-300
-            w-80 bg-gray-950 border-r border-gray-800/50
-            h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-y-auto
-          `}>
-            <div className="p-6">
-              {/* Search */}
-              <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search components..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:border-orange-500 focus:outline-none"
+        {/* Live API Demos Section */}
+        <section id="api-demos" className="border-b border-gray-800/50 bg-gray-950/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4">🚀 Live API Demos</h2>
+              <p className="text-gray-400 text-lg">Real public APIs integrated with Bitcoin Auth components</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* BSV Block Height */}
+              <div className="bg-black border border-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  BSV Blockchain Height
+                </h3>
+                <p className="text-gray-400 mb-4">Live data from Bitcoin SV blockchain</p>
+                <button
+                  onClick={async () => {
+                    setApiLoading(true);
+                    const { height } = await getLatestBlockHeight();
+                    setBlockHeight(height);
+                    setApiLoading(false);
+                  }}
+                  disabled={apiLoading}
+                  className="w-full py-2 px-4 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+                >
+                  {apiLoading ? 'Fetching...' : 'Get Latest Block Height'}
+                </button>
+                {blockHeight && (
+                  <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700">
+                    <p className="text-green-400 font-mono text-lg">Block: {blockHeight.toLocaleString()}</p>
+                    <p className="text-gray-500 text-sm mt-1">Source: Block Headers Service</p>
+                  </div>
+                )}
+              </div>
+
+              {/* BAP Profile Lookup */}
+              <div className="bg-black border border-gray-800 rounded-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  BAP Profile Lookup
+                </h3>
+                <p className="text-gray-400 mb-4">Query Bitcoin addresses for BAP profiles</p>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={bapAddress}
+                    onChange={(e) => setBapAddress(e.target.value)}
+                    placeholder="Enter Bitcoin address..."
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded focus:border-blue-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => lookupBapProfile(bapAddress)}
+                    disabled={apiLoading || !bapAddress}
+                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  >
+                    {apiLoading ? 'Looking up...' : 'Lookup BAP Profile'}
+                  </button>
+                </div>
+                {bapProfile && (
+                  <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700">
+                    {'error' in bapProfile ? (
+                      <p className="text-yellow-400">⚠️ {bapProfile.error as string}</p>
+                    ) : (
+                      <>
+                        <p className="text-green-400 text-sm">✅ Profile found!</p>
+                        <pre className="text-gray-300 text-xs mt-2 overflow-x-auto">
+                          {JSON.stringify(bapProfile, null, 2)}
+                        </pre>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Authentication Flow Demos */}
+        <section id="auth-demos" className="border-b border-gray-800/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">🔐 Authentication Flow Demos</h2>
+              <p className="text-gray-400 text-lg">Complete authentication experiences using Bitcoin Auth UI components</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* AuthFlowOrchestrator Demo */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold mb-3">Unified Auth Flow</h3>
+                  <p className="text-gray-400 mb-4">Complete signup, signin, and recovery in one component</p>
+                  
+                  {/* Backend Requirements */}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                    <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Endpoints:</h4>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <p>• <code className="text-orange-400">/api/auth/[...nextauth]</code> - NextAuth handler with Bitcoin credentials</p>
+                      <p>• <code className="text-orange-400">/api/backup</code> - Store/retrieve encrypted backups</p>
+                      <p>• <code className="text-orange-400">/api/users/create-from-backup</code> - Create user from backup</p>
+                      <p>• <code className="text-orange-400">/api/auth/link-provider</code> - OAuth provider linking</p>
+                      <p>• <code className="text-orange-400">/api/device-link/generate</code> - Device linking tokens</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 border border-gray-800 rounded-lg p-8">
+                  <AuthFlowOrchestrator
+                    flowType="unified"
+                    enableOAuth={true}
+                    enableDeviceLink={true}
+                    onSuccess={(user) => console.log('Auth success:', user)}
+                  />
+                </div>
+                
+                <TerminalCodeBlock
+                  code={`import { AuthFlowOrchestrator } from 'bitcoin-auth-ui';
+
+<AuthFlowOrchestrator
+  flowType="unified"
+  enableOAuth={true}
+  enableDeviceLink={true}
+  onSuccess={(user) => {
+    // Handle successful authentication
+    console.log('User authenticated:', user);
+    router.push('/dashboard');
+  }}
+/>`}
+                  language="jsx"
+                  filename="UnifiedAuth.jsx"
                 />
               </div>
 
-              {/* Accordion Categories */}
-              <div className="space-y-1">
-                {componentCategories.map(category => {
-                  const Icon = categoryIcons[category.icon] || Package;
-                  const categoryComponents = filteredComponents.filter(c => c.category === category.id);
-                  const isExpanded = expandedCategories.includes(category.id);
+              {/* Enhanced Login Demo */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold mb-3">Enhanced Login</h3>
+                  <p className="text-gray-400 mb-4">Advanced login with OAuth and multiple options</p>
                   
-                  if (categoryComponents.length === 0 && searchQuery) return null;
-                  
-                  return (
-                    <div key={category.id}>
-                      <button
-                        onClick={() => {
-                          setExpandedCategories(prev =>
-                            isExpanded
-                              ? prev.filter(id => id !== category.id)
-                              : [...prev, category.id]
-                          );
-                        }}
-                        className="w-full text-left px-4 py-2 rounded-lg transition-colors hover:bg-gray-900 group"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Icon className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium">{category.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs bg-gray-800 px-2 py-1 rounded">
-                              {categoryComponents.length}
-                            </span>
-                            {isExpanded ? (
-                              <ChevronDown className="w-4 h-4 text-gray-400" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4 text-gray-400" />
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                      
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="ml-6 mt-1 space-y-1">
-                            {categoryComponents.map(component => (
-                              <button
-                                key={component.id}
-                                onClick={() => setSelectedComponent(component)}
-                                className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm ${
-                                  selectedComponent?.id === component.id
-                                    ? 'bg-orange-500/10 text-orange-500'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-900/50'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>{component.name}</span>
-                                  {selectedComponent?.id === component.id && (
-                                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
+                  {/* Backend Requirements */}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                    <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Endpoints:</h4>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <p>• <code className="text-orange-400">/api/auth/[...nextauth]</code> - NextAuth authentication</p>
+                      <p>• <code className="text-orange-400">/api/backup</code> - Retrieve encrypted backups</p>
+                      <p>• <code className="text-orange-400">/api/auth/callback/oauth</code> - OAuth callback handling</p>
+                      <p>• <code className="text-orange-400">/api/users/connected-accounts</code> - Check linked providers</p>
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 border border-gray-800 rounded-lg p-8">
+                  <EnhancedLoginForm
+                    mode="signin"
+                    showOAuth={true}
+                    onSuccess={(user) => console.log('Login success:', user)}
+                  />
+                </div>
+                
+                <TerminalCodeBlock
+                  code={`import { EnhancedLoginForm } from 'bitcoin-auth-ui';
+
+<EnhancedLoginForm
+  mode="signin"
+  showOAuth={true}
+  onSuccess={(user) => {
+    // Handle successful login
+    setUser(user);
+    toast.success('Welcome back!');
+  }}
+  onError={(error) => {
+    toast.error(error.message);
+  }}
+/>`}
+                  language="jsx"
+                  filename="EnhancedLogin.jsx"
+                />
               </div>
             </div>
-          </aside>
+          </div>
+        </section>
 
-          {/* Mobile overlay */}
-          {showMobileMenu && (
-            <div
-              className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-              onClick={() => setShowMobileMenu(false)}
-            />
-          )}
-
-          {/* Main Content */}
-          <main className="flex-1 min-h-[calc(100vh-4rem)] overflow-y-auto">
-            <div className="max-w-5xl mx-auto p-8">
-              {selectedComponent ? (
-                <motion.div
-                  key={selectedComponent.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {/* Component Header */}
-                  <div className="mb-8">
-                    <h2 className="text-3xl font-bold mb-2">{selectedComponent.name}</h2>
-                    <p className="text-gray-400 text-lg">{selectedComponent.description}</p>
+        {/* Backup & QR Code Demos */}
+        <section id="backup-demos" className="border-b border-gray-800/50 bg-gray-950/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">📱 Backup & QR Code Demos</h2>
+              <p className="text-gray-400 text-lg">File validation, device linking, and secure backup features</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* File Import Demo */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">File Validation</h3>
+                  <p className="text-gray-400 mb-4 text-sm">Real backup format detection</p>
+                  
+                  {/* Backend Requirements */}
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
+                    <h4 className="text-green-400 font-semibold mb-1">✅ Client-Side Only</h4>
+                    <p className="text-sm text-gray-300">No backend endpoints required - validation happens in browser</p>
                   </div>
-
-                  {/* Import Statement */}
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                        Installation
-                      </h3>
-                      <button
-                        onClick={() => handleCopyCode(selectedComponent.importStatement, 'import')}
-                        className="text-gray-400 hover:text-white transition-colors"
-                      >
-                        {copiedCode === 'import' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
-                      <code className="text-sm text-gray-300">{selectedComponent.importStatement}</code>
-                    </div>
-                  </div>
-
-                  {/* Live Demo */}
-                  <div className="mb-8">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                      Live Demo
-                    </h3>
-                    <div className="bg-gray-950 border border-gray-800 rounded-lg p-8">
-                      {/* Render component based on ID */}
-                      {selectedComponent.id === 'auth-button' && (
-                        <AuthButton>Sign In with Bitcoin</AuthButton>
-                      )}
-                      {selectedComponent.id === 'login-form' && (
-                        <LoginForm 
-                          mode="signin"
-                          onSuccess={() => console.log('Demo success')}
-                          onError={() => console.log('Demo error')}
-                        />
-                      )}
-                      {selectedComponent.id === 'oauth-providers' && (
-                        <OAuthProviders
-                          onProviderClick={(provider) => console.log('Selected:', provider)}
-                        />
-                      )}
-                      {selectedComponent.id === 'loading-button' && (
-                        <div className="space-y-4">
-                          <LoadingButton
-                            onClick={() => {
-                              setIsLoading(true);
-                              setTimeout(() => setIsLoading(false), 2000);
-                            }}
-                            loading={isLoading}
-                          >
-                            Click Me
-                          </LoadingButton>
-                        </div>
-                      )}
-                      {selectedComponent.id === 'password-input' && (
-                        <PasswordInput
-                          value={password}
-                          onChange={(value) => setPassword(value)}
-                          placeholder="Enter your password"
-                        />
-                      )}
-                      {selectedComponent.id === 'step-indicator' && (
-                        <StepIndicator steps={demoSteps} />
-                      )}
-                      {selectedComponent.id === 'modal' && (
+                </div>
+                
+                <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                  <FileImport
+                    onFileValidated={(file, result) => {
+                      setFileValidationResult({
+                        fileName: file.name,
+                        fileSize: file.size,
+                        type: `${result.fileType} (${result.format})`,
+                        valid: result.isValid,
+                        timestamp: new Date().toISOString()
+                      });
+                    }}
+                    onError={(error) => {
+                      setFileValidationResult({
+                        error: error,
+                        valid: false,
+                        timestamp: new Date().toISOString()
+                      });
+                    }}
+                  />
+                  {fileValidationResult && (
+                    <div className="mt-4 bg-gray-900/50 border border-gray-700 rounded-lg p-3">
+                      {fileValidationResult.valid ? (
                         <>
-                          <button
-                            onClick={() => setModalOpen(true)}
-                            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
-                          >
-                            Open Modal
-                          </button>
-                          <Modal
-                            isOpen={modalOpen}
-                            onClose={() => setModalOpen(false)}
-                            title="Example Modal"
-                          >
-                            <p>This is a modal dialog component.</p>
-                          </Modal>
+                          <p className="text-green-400 text-sm font-semibold">✅ File Validated!</p>
+                          <div className="mt-2 text-xs text-gray-300 space-y-1">
+                            <p><span className="text-gray-500">File:</span> {fileValidationResult.fileName || 'Unknown'}</p>
+                            <p><span className="text-gray-500">Type:</span> <span className="text-blue-400">{fileValidationResult.type || 'Unknown'}</span></p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-red-400 text-sm font-semibold">❌ Validation Failed</p>
+                          <p className="text-xs text-gray-300 mt-1">{fileValidationResult.error}</p>
                         </>
                       )}
-                      {selectedComponent.id === 'error-display' && (
-                        <ErrorDisplay error="This is an error message" />
-                      )}
-                      {selectedComponent.id === 'warning-card' && (
-                        <WarningCard
-                          title="Important Notice"
-                          message="Please backup your recovery phrase in a safe place."
-                        />
-                      )}
-                      {selectedComponent.id === 'file-import' && (
-                        <FileImport
-                          onFileValidated={(file) => console.log('File validated:', file.name)}
-                          onError={(error) => console.log('Error:', error)}
-                        />
-                      )}
-                      {selectedComponent.id === 'device-link-qr' && (
-                        <DeviceLinkQR 
-                          onGenerateQR={async () => {
-                            const url = 'https://example.com/link/demo-token';
-                            const qrDataUrl = await QRCode.toDataURL(url);
-                            return {
-                              qrData: qrDataUrl,
-                              token: 'demo-token',
-                              expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-                            };
-                          }}
-                          baseUrl="https://example.com"
-                        />
-                      )}
-                      {selectedComponent.id === 'member-export' && (
-                        <MemberExport 
-                          profileName="Demo Profile"
-                          onGenerateExport={async () => {
-                            const url = 'https://example.com/export/demo-token';
-                            const qrDataUrl = await QRCode.toDataURL(url);
-                            return {
-                              qrData: qrDataUrl,
-                              token: 'demo-export-token',
-                              expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-                            };
-                          }}
-                          baseUrl="https://example.com"
-                        />
-                      )}
-                      {selectedComponent.id === 'handcash-connector' && (
-                        <HandCashConnector
-                          config={{
-                            appId: "demo-app-id",
-                            appSecret: "demo-app-secret",
-                            redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/handcash` : '',
-                            environment: "iae"
-                          }}
-                          onSuccess={(result) => console.log('HandCash connected:', result)}
-                          onError={(error) => console.error('HandCash error:', error)}
-                        />
-                      )}
-                      {selectedComponent.id === 'yours-wallet-connector' && (
-                        <YoursWalletConnector
-                          onSuccess={(result) => console.log('Yours Wallet connected:', result)}
-                          onError={(error) => console.error('Yours Wallet error:', error)}
-                        />
-                      )}
-                      {selectedComponent.id === 'auth-flow-orchestrator' && (
-                        <div className="max-w-md mx-auto">
-                          <AuthFlowOrchestrator
-                            flowType="unified"
-                            enableOAuth={true}
-                            enableDeviceLink={true}
-                            onSuccess={(user) => console.log('Auth success:', user)}
-                          />
-                        </div>
-                      )}
-                      {selectedComponent.id === 'signup-flow' && (
-                        <div className="max-w-md mx-auto">
-                          <SignupFlow
-                            onSuccess={(user) => console.log('Signup success:', user)}
-                            onError={(error) => console.error('Signup error:', error)}
-                          />
-                        </div>
-                      )}
-                      {selectedComponent.id === 'oauth-restore-flow' && (
-                        <div className="max-w-md mx-auto">
-                          <OAuthRestoreFlow
-                            showProviderSelection={true}
-                            showPasswordEntry={true}
-                            onRestoreSuccess={(bapId) => console.log('Restore success:', bapId)}
-                            onRestoreError={(error) => console.error('Restore error:', error)}
-                          />
-                        </div>
-                      )}
-                      {selectedComponent.id === 'enhanced-login-form' && (
-                        <div className="max-w-md mx-auto">
-                          <EnhancedLoginForm
-                            mode="signin"
-                            showOAuth={true}
-                            onSuccess={(user) => console.log('Login success:', user)}
-                          />
-                        </div>
-                      )}
-                      {selectedComponent.id === 'oauth-restore-form' && (
-                        <div className="text-center py-8">
-                          <Shield className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                          <p className="text-gray-400">This component requires OAuth flow context.</p>
-                          <p className="text-sm text-gray-500 mt-2">See the code example for implementation.</p>
-                        </div>
-                      )}
-                      {selectedComponent.id === 'backup-import' && (
-                        <BackupImport
-                          onImport={(e) => console.log('File selected:', e.target.files?.[0]?.name)}
-                        />
-                      )}
-                      {selectedComponent.id === 'backup-download' && (
-                        <div className="text-center py-8">
-                          <Download className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                          <p className="text-gray-400">This component requires a generated backup.</p>
-                          <p className="text-sm text-gray-500 mt-2">See the code example for implementation.</p>
-                        </div>
-                      )}
-                      {selectedComponent.id === 'mnemonic-display' && (
-                        <MnemonicDisplay
-                          mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-                          onContinue={() => console.log('Continue clicked')}
-                          showCopyButton={true}
-                        />
-                      )}
-                      {selectedComponent.id === 'identity-generation' && (
-                        <IdentityGeneration
-                          onGenerate={() => console.log('Generate clicked')}
-                          onImport={(file) => console.log('Import file:', file.name)}
-                        />
-                      )}
-                      {selectedComponent.id === 'bitcoin-auth-provider' && (
-                        <div className="text-center py-8">
-                          <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                          <p className="text-gray-400">This is a context provider component.</p>
-                          <p className="text-sm text-gray-500 mt-2">Wrap your app with it as shown in the code example.</p>
-                        </div>
-                      )}
-                      {/* Hook examples show code only since they can't be demoed visually */}
-                      {selectedComponent.category === 'hooks' && (
-                        <div className="text-center py-8">
-                          <Code2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                          <p className="text-gray-400">Hooks are demonstrated through code examples only.</p>
-                          <p className="text-sm text-gray-500 mt-2">See the usage example below for implementation details.</p>
-                        </div>
-                      )}
-                      {/* Layout components need special handling */}
-                      {selectedComponent.category === 'layouts' && (
-                        <div className="text-center py-8">
-                          <Layout className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                          <p className="text-gray-400">Layout components wrap entire pages.</p>
-                          <p className="text-sm text-gray-500 mt-2">See the code example for proper usage.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Code Example */}
-                  <div className="mb-8">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                      Usage Example
-                    </h3>
-                    <TerminalCodeBlock
-                      code={selectedComponent.codeExample}
-                      language="jsx"
-                      filename="Example.jsx"
-                    />
-                  </div>
-
-                  {/* Props Documentation */}
-                  {selectedComponent.props && selectedComponent.props.length > 0 && (
-                    <div className="mb-8">
-                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                        Props
-                      </h3>
-                      <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-gray-800">
-                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Prop</th>
-                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Type</th>
-                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Required</th>
-                              <th className="text-left px-4 py-3 text-sm font-medium text-gray-400">Description</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedComponent.props.map((prop, index) => (
-                              <tr key={prop.name} className={index < selectedComponent.props!.length - 1 ? 'border-b border-gray-800/50' : ''}>
-                                <td className="px-4 py-3 text-sm font-mono text-orange-400">{prop.name}</td>
-                                <td className="px-4 py-3 text-sm font-mono text-blue-400">{prop.type}</td>
-                                <td className="px-4 py-3 text-sm">
-                                  {prop.required ? (
-                                    <span className="text-green-400">✓</span>
-                                  ) : (
-                                    <span className="text-gray-500">-</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-300">{prop.description}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
                     </div>
                   )}
-
-                  {/* Variations */}
-                  {selectedComponent.variations && selectedComponent.variations.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                        Variations
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {selectedComponent.variations.map(variation => (
-                          <div key={variation.name} className="bg-gray-950 border border-gray-800 rounded-lg p-6">
-                            <h4 className="font-medium mb-3">{variation.name}</h4>
-                            {/* Render variation based on component type */}
-                            {selectedComponent.id === 'auth-button' && (
-                              <AuthButton {...variation.props}>{variation.props.children as React.ReactNode}</AuthButton>
-                            )}
-                            {selectedComponent.id === 'loading-button' && (
-                              <LoadingButton {...variation.props}>{variation.props.children as React.ReactNode}</LoadingButton>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              ) : (
-                /* Default view when no component selected */
-                <div className="text-center py-20">
-                  <Package className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-gray-400 mb-2">Select a Component</h3>
-                  <p className="text-gray-500">Choose a component from the sidebar to view its documentation and demo</p>
                 </div>
-              )}
+                
+                <TerminalCodeBlock
+                  code={`import { FileImport } from 'bitcoin-auth-ui';
+
+<FileImport
+  onFileValidated={(file, result) => {
+    console.log('Valid backup type:', result.fileType);
+    // Process validated backup file
+    handleBackupImport(file, result);
+  }}
+  onError={(error) => {
+    toast.error(\`Invalid file: \${error}\`);
+  }}
+/>`}
+                  language="jsx"
+                  filename="FileValidation.jsx"
+                />
+              </div>
+
+              {/* Device Link QR Demo */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">Device Linking</h3>
+                  <p className="text-gray-400 mb-4 text-sm">QR codes with real blockchain data</p>
+                  
+                  {/* Backend Requirements */}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                    <h4 className="text-red-400 font-semibold mb-1">🔧 Required Backend Endpoints:</h4>
+                    <div className="text-xs text-gray-300 space-y-1">
+                      <p>• <code className="text-orange-400">/api/device-link/generate</code> - Create secure tokens</p>
+                      <p>• <code className="text-orange-400">/api/device-link/validate</code> - Validate tokens & return backup</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+                    <p className="text-blue-400 text-sm">🔗 Live Demo: Real BSV blockchain data!</p>
+                  </div>
+                  <DeviceLinkQR 
+                    onGenerateQR={async () => {
+                      setApiLoading(true);
+                      try {
+                        const { height } = await getLatestBlockHeight();
+                        const realBlockHeight = height || 895000;
+                        
+                        const url = `https://bitcoin-auth-demo.com/link/block-${realBlockHeight}-demo`;
+                        const qrDataUrl = await QRCode.toDataURL(url);
+                        
+                        setBlockHeight(realBlockHeight);
+                        
+                        return {
+                          qrData: qrDataUrl,
+                          token: `block-${realBlockHeight}-demo`,
+                          expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+                        };
+                      } finally {
+                        setApiLoading(false);
+                      }
+                    }}
+                    baseUrl="https://bitcoin-auth-demo.com"
+                  />
+                  {blockHeight && (
+                    <div className="mt-4 bg-gray-900/50 border border-gray-700 rounded-lg p-3">
+                      <p className="text-green-400 text-sm">✅ BSV Block: {blockHeight.toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <TerminalCodeBlock
+                  code={`import { DeviceLinkQR } from 'bitcoin-auth-ui';
+
+<DeviceLinkQR 
+  onGenerateQR={async () => {
+    // Generate secure device link token
+    const response = await fetch('/api/device-link/generate', {
+      method: 'POST',
+      headers: { 'X-Auth-Token': authToken }
+    });
+    return response.json();
+  }}
+  baseUrl={process.env.NEXT_PUBLIC_APP_URL}
+/>`}
+                  language="jsx"
+                  filename="DeviceLink.jsx"
+                />
+              </div>
+
+              {/* Mnemonic Display Demo */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">Recovery Phrase</h3>
+                  <p className="text-gray-400 mb-4 text-sm">Secure mnemonic display</p>
+                  
+                  {/* Backend Requirements */}
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-4">
+                    <h4 className="text-green-400 font-semibold mb-1">✅ Client-Side Only</h4>
+                    <p className="text-sm text-gray-300">No backend endpoints required - displays mnemonics in browser only</p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                  <MnemonicDisplay
+                    mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+                    onContinue={() => console.log('Continue clicked')}
+                    showCopyButton={true}
+                  />
+                </div>
+                
+                <TerminalCodeBlock
+                  code={`import { MnemonicDisplay } from 'bitcoin-auth-ui';
+
+<MnemonicDisplay
+  mnemonic={generatedMnemonic}
+  onContinue={() => {
+    // User acknowledged mnemonic
+    setStep('verify');
+  }}
+  showCopyButton={true}
+/>`}
+                  language="jsx"
+                  filename="MnemonicDisplay.jsx"
+                />
+              </div>
             </div>
-          </main>
-        </div>
+          </div>
+        </section>
+
+        {/* Integration Examples */}
+        <section id="integration-demos" className="border-b border-gray-800/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">⚡ Integration Examples</h2>
+              <p className="text-gray-400 text-lg">Real-world integration patterns you can copy and paste</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Full App Integration */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold mb-3">Complete App Setup</h3>
+                  <p className="text-gray-400 mb-4">How to wrap your entire app with Bitcoin Auth</p>
+                  
+                  {/* Backend Requirements */}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                    <h4 className="text-red-400 font-semibold mb-2">🔧 Required Backend Infrastructure:</h4>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <p>• <code className="text-orange-400">/api/auth/[...nextauth]</code> - NextAuth with Bitcoin credentials provider</p>
+                      <p>• <code className="text-orange-400">/api/backup</code> - Encrypted backup storage (GET/POST)</p>
+                      <p>• <code className="text-orange-400">/api/users/*</code> - User management endpoints</p>
+                      <p>• <code className="text-orange-400">/api/device-link/*</code> - Device linking system</p>
+                      <p>• <strong className="text-yellow-400">Redis/KV Store</strong> - For user data, backups, and OAuth mappings</p>
+                      <p>• <strong className="text-yellow-400">OAuth Apps</strong> - GitHub/Google/X developer credentials</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <TerminalCodeBlock
+                  code={`// app/layout.tsx
+import { BitcoinAuthProvider } from 'bitcoin-auth-ui';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <BitcoinAuthProvider 
+          config={{ 
+            apiUrl: '/api',
+            authEndpoint: '/api/auth/[...nextauth]',
+            backupEndpoint: '/api/backup'
+          }}
+        >
+          {children}
+        </BitcoinAuthProvider>
+      </body>
+    </html>
+  );
+}`}
+                  language="tsx"
+                  filename="layout.tsx"
+                />
+
+                <TerminalCodeBlock
+                  code={`// lib/api-client.ts
+import { getAuthToken } from 'bitcoin-auth';
+import { extractIdentityFromBackup } from '@/lib/bap-utils';
+
+export async function authenticatedFetch(
+  url: string, 
+  options: RequestInit,
+  backup: BapMasterBackup
+) {
+  const { privateKey } = extractIdentityFromBackup(backup);
+  
+  // Create auth token for this specific request
+  const authToken = getAuthToken({
+    privateKeyWif: privateKey,
+    requestPath: url,
+    body: options.body as string || ''
+  });
+  
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'X-Auth-Token': authToken,
+    },
+  });
+}`}
+                  language="typescript"
+                  filename="api-client.ts"
+                />
+              </div>
+
+              {/* API Integration */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold mb-3">API Integration</h3>
+                  <p className="text-gray-400 mb-4">Backend API patterns for Bitcoin authentication</p>
+                </div>
+                
+                <TerminalCodeBlock
+                  code={`// app/api/backup/route.ts
+import { NextRequest } from 'next/server';
+import { parseAuthToken, verifyAuthToken } from 'bitcoin-auth';
+
+export async function POST(request: NextRequest) {
+  const authToken = request.headers.get('X-Auth-Token');
+  
+  // Read body as text first to avoid stream consumption issues
+  const bodyText = await request.text();
+  
+  // Verify Bitcoin auth token with actual request data
+  const isValid = verifyAuthToken(authToken, {
+    requestPath: '/api/backup',
+    body: bodyText,
+    timestamp: new Date().toISOString()
+  }, 1000 * 60 * 10); // 10 minute time window
+  
+  if (!isValid) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  const { encryptedBackup } = JSON.parse(bodyText);
+  
+  // Store encrypted backup in Redis/database
+  await storeBackup(encryptedBackup);
+  
+  return Response.json({ success: true });
+}`}
+                  language="typescript"
+                  filename="backup-api.ts"
+                />
+
+                <TerminalCodeBlock
+                  code={`// lib/auth-middleware.ts
+import { parseAuthToken, verifyAuthToken, type AuthPayload } from 'bitcoin-auth';
+import { PublicKey } from '@bsv/sdk';
+
+const TIME_PAD = 1000 * 60 * 10; // 10 minutes
+
+export async function verifyBitcoinAuth(request: Request, requestPath: string) {
+  const authToken = request.headers.get('X-Auth-Token');
+  if (!authToken) throw new Error('Missing auth token');
+  
+  const body = await request.text();
+  const parsedToken = parseAuthToken(authToken);
+  
+  const payload: AuthPayload = {
+    requestPath,
+    body,
+    timestamp: new Date().toISOString()
+  };
+  
+  const isValid = verifyAuthToken(authToken, payload, TIME_PAD);
+  if (!isValid) throw new Error('Invalid auth token');
+  
+  return {
+    pubkey: parsedToken.pubkey,
+    address: PublicKey.fromString(parsedToken.pubkey).toAddress()
+  };
+}`}
+                  language="typescript"
+                  filename="auth-middleware.ts"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Footer */}
         <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">

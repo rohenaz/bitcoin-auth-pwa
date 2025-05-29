@@ -12,7 +12,9 @@
     "build-storybook": "storybook build",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:debug": "playwright test --debug"
+    "test:debug": "playwright test --debug",
+    "verify-migration": "node scripts/verify-migration-readiness.js",
+    "migrate-v0.1.0": "bun update bitcoin-auth-ui@0.1.0 && bun run build && bun run lint"
   },
   "dependencies": {
     "@bsv/sdk": "^1.5.2",
