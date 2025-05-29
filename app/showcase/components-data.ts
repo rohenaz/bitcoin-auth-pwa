@@ -99,12 +99,12 @@ export const components: ComponentExample[] = [
     importStatement: "import { SignupFlow } from 'bitcoin-auth-ui';",
     codeExample: `<SignupFlow
   onSuccess={(user) => console.log('Signup complete:', user)}
-  onCancel={() => console.log('Signup cancelled')}
+  onError={(error) => console.error('Error:', error)}
 />`,
     props: [
-      { name: 'onSuccess', type: '(user: AuthUser) => void', required: true, description: 'Callback on successful signup' },
-      { name: 'onCancel', type: '() => void', required: false, description: 'Callback when user cancels' },
-      { name: 'enableOAuth', type: 'boolean', required: false, description: 'Show OAuth options after signup' }
+      { name: 'onSuccess', type: '(user: AuthUser) => void', required: false, description: 'Callback on successful signup' },
+      { name: 'onError', type: '(error: AuthError) => void', required: false, description: 'Error callback' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
     ]
   },
   {
@@ -114,14 +114,17 @@ export const components: ComponentExample[] = [
     category: 'auth-flows',
     importStatement: "import { OAuthRestoreFlow } from 'bitcoin-auth-ui';",
     codeExample: `<OAuthRestoreFlow
-  provider="google"
-  onSuccess={(user) => console.log('Restored:', user)}
-  onCancel={() => console.log('Cancelled')}
+  showProviderSelection={true}
+  showPasswordEntry={true}
+  onRestoreSuccess={(bapId) => console.log('Restored:', bapId)}
+  onRestoreError={(error) => console.error('Error:', error)}
 />`,
     props: [
-      { name: 'provider', type: 'string', required: false, description: 'OAuth provider to restore from' },
-      { name: 'onSuccess', type: '(user: AuthUser) => void', required: true, description: 'Callback on successful restore' },
-      { name: 'onCancel', type: '() => void', required: false, description: 'Callback when cancelled' }
+      { name: 'showProviderSelection', type: 'boolean', required: false, description: 'Show provider selection step' },
+      { name: 'showPasswordEntry', type: 'boolean', required: false, description: 'Show password entry step' },
+      { name: 'onRestoreSuccess', type: '(bapId: string) => void', required: false, description: 'Callback on successful restore' },
+      { name: 'onRestoreError', type: '(error: string) => void', required: false, description: 'Error callback' },
+      { name: 'onFlowComplete', type: '() => void', required: false, description: 'Flow completion callback' }
     ]
   },
 
@@ -170,14 +173,15 @@ export const components: ComponentExample[] = [
     category: 'core',
     importStatement: "import { EnhancedLoginForm } from 'bitcoin-auth-ui';",
     codeExample: `<EnhancedLoginForm
+  mode="signin"
   showOAuth={true}
-  showFileImport={true}
   onSuccess={(user) => console.log('Success:', user)}
 />`,
     props: [
+      { name: 'mode', type: "'signin' | 'signup'", required: false, description: 'Form mode' },
       { name: 'showOAuth', type: 'boolean', required: false, description: 'Show OAuth options' },
-      { name: 'showFileImport', type: 'boolean', required: false, description: 'Show file import option' },
-      { name: 'onSuccess', type: '(user: AuthUser) => void', required: true, description: 'Success callback' }
+      { name: 'onSuccess', type: '(user: AuthUser) => void', required: false, description: 'Success callback' },
+      { name: 'onError', type: '(error: AuthError) => void', required: false, description: 'Error callback' }
     ]
   },
 
@@ -323,14 +327,17 @@ export const components: ComponentExample[] = [
     category: 'device-backup',
     importStatement: "import { BackupDownload } from 'bitcoin-auth-ui';",
     codeExample: `<BackupDownload
-  backup={encryptedBackupData}
-  onDownloadComplete={() => console.log('Downloaded')}
-  onSkip={() => console.log('Skipped')}
+  backup={generatedBackup} // BapMasterBackup object
+  password="userPassword" // Optional - will encrypt if provided
+  onDownloaded={() => console.log('Downloaded')}
+  requireDownload={true}
 />`,
     props: [
-      { name: 'backup', type: 'string', required: true, description: 'Encrypted backup data' },
-      { name: 'onDownloadComplete', type: '() => void', required: true, description: 'Download completion callback' },
-      { name: 'onSkip', type: '() => void', required: false, description: 'Skip callback' }
+      { name: 'backup', type: 'BapMasterBackup', required: true, description: 'Master backup object to download' },
+      { name: 'password', type: 'string', required: false, description: 'Password to encrypt the backup' },
+      { name: 'onDownloaded', type: '() => void', required: false, description: 'Download completion callback' },
+      { name: 'requireDownload', type: 'boolean', required: false, description: 'Whether download is required' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
     ]
   },
   {
@@ -341,11 +348,14 @@ export const components: ComponentExample[] = [
     importStatement: "import { MnemonicDisplay } from 'bitcoin-auth-ui';",
     codeExample: `<MnemonicDisplay
   mnemonic="word1 word2 word3..."
-  onAcknowledge={() => console.log('Acknowledged')}
+  onContinue={() => console.log('Continue')}
+  showCopyButton={true}
 />`,
     props: [
       { name: 'mnemonic', type: 'string', required: true, description: 'Recovery phrase words' },
-      { name: 'onAcknowledge', type: '() => void', required: true, description: 'Acknowledgment callback' }
+      { name: 'onContinue', type: '() => void', required: false, description: 'Continue button callback' },
+      { name: 'showCopyButton', type: 'boolean', required: false, description: 'Show copy to clipboard button' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
     ]
   },
   {
@@ -355,12 +365,17 @@ export const components: ComponentExample[] = [
     category: 'device-backup',
     importStatement: "import { IdentityGeneration } from 'bitcoin-auth-ui';",
     codeExample: `<IdentityGeneration
-  onIdentityGenerated={(identity) => {
-    console.log('New identity:', identity);
-  }}
+  onGenerate={() => handleGenerateIdentity()}
+  onImport={(file) => handleImportFile(file)}
+  loading={isGenerating}
+  error={generationError}
 />`,
     props: [
-      { name: 'onIdentityGenerated', type: '(identity: Identity) => void', required: true, description: 'Identity generation callback' }
+      { name: 'onGenerate', type: '() => void', required: true, description: 'Generate button click handler' },
+      { name: 'onImport', type: '(file: File) => void', required: true, description: 'Import file handler' },
+      { name: 'loading', type: 'boolean', required: false, description: 'Loading state' },
+      { name: 'error', type: 'string', required: false, description: 'Error message' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
     ]
   },
 
@@ -610,6 +625,92 @@ export const components: ComponentExample[] = [
   connect,
   disconnect
 } = useYoursWallet();`,
+    props: []
+  },
+  
+  // Additional components not previously included
+  {
+    id: 'bitcoin-auth-provider',
+    name: 'BitcoinAuthProvider',
+    description: 'Main context provider for Bitcoin authentication',
+    category: 'core',
+    importStatement: "import { BitcoinAuthProvider } from 'bitcoin-auth-ui';",
+    codeExample: `<BitcoinAuthProvider config={{ apiUrl: '/api' }}>
+  <App />
+</BitcoinAuthProvider>`,
+    props: [
+      { name: 'config', type: 'AuthConfig', required: false, description: 'Authentication configuration' },
+      { name: 'children', type: 'ReactNode', required: true, description: 'Child components' }
+    ]
+  },
+  {
+    id: 'oauth-restore-form',
+    name: 'OAuthRestoreForm',
+    description: 'Password form for decrypting OAuth backups',
+    category: 'oauth-wallets',
+    importStatement: "import { OAuthRestoreForm } from 'bitcoin-auth-ui';",
+    codeExample: `<OAuthRestoreForm
+  provider={googleProvider}
+  encryptedBackup={encryptedBackupString}
+  onSuccess={(decryptedBackup) => handleDecrypted(decryptedBackup)}
+  onError={(error) => console.error(error)}
+/>`,
+    props: [
+      { name: 'provider', type: 'OAuthProvider', required: true, description: 'OAuth provider object' },
+      { name: 'encryptedBackup', type: 'string', required: true, description: 'Encrypted backup string' },
+      { name: 'onSuccess', type: '(decryptedBackup: string) => void', required: true, description: 'Success handler with decrypted backup' },
+      { name: 'onError', type: '(error: Error) => void', required: false, description: 'Error handler' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
+    ]
+  },
+  {
+    id: 'backup-import',
+    name: 'BackupImport',
+    description: 'Simple backup file import component',
+    category: 'device-backup',
+    importStatement: "import { BackupImport } from 'bitcoin-auth-ui';",
+    codeExample: `<BackupImport
+  onImport={async (e) => {
+    const file = e.target.files?.[0];
+    if (file) await handleFileImport(file);
+  }}
+/>`,
+    props: [
+      { name: 'onImport', type: '(e: ChangeEvent<HTMLInputElement>) => void', required: true, description: 'File input change handler' },
+      { name: 'disabled', type: 'boolean', required: false, description: 'Disable the input' },
+      { name: 'className', type: 'string', required: false, description: 'Additional CSS classes' }
+    ]
+  },
+  {
+    id: 'qr-code-renderer',
+    name: 'QRCodeRenderer',
+    description: 'Utility component for rendering QR codes',
+    category: 'ui-primitives',
+    importStatement: "import { QRCodeRenderer } from 'bitcoin-auth-ui';",
+    codeExample: `<QRCodeRenderer
+  data="bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+  size={200}
+  level="M"
+/>`,
+    props: [
+      { name: 'data', type: 'string', required: true, description: 'Data to encode in QR code' },
+      { name: 'size', type: 'number', required: false, description: 'Size of QR code in pixels' },
+      { name: 'level', type: "'L' | 'M' | 'Q' | 'H'", required: false, description: 'Error correction level' }
+    ]
+  },
+  {
+    id: 'use-auth-messages',
+    name: 'useAuthMessages',
+    description: 'Hook for customizing authentication messages',
+    category: 'hooks',
+    importStatement: "import { useAuthMessages } from 'bitcoin-auth-ui';",
+    codeExample: `const messages = useAuthMessages({
+  signIn: {
+    title: 'Welcome Back!',
+    button: 'Access My Wallet',
+    passwordPlaceholder: 'Enter your secret phrase'
+  }
+});`,
     props: []
   }
 ];

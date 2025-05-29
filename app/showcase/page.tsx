@@ -19,6 +19,12 @@ import {
   PasswordInput,
   ErrorDisplay,
   WarningCard,
+  SignupFlow,
+  OAuthRestoreFlow,
+  EnhancedLoginForm,
+  BackupImport,
+  MnemonicDisplay,
+  IdentityGeneration,
   type Step
 } from 'bitcoin-auth-ui';
 import { motion } from 'framer-motion';
@@ -35,9 +41,11 @@ import {
   Layers,
   Workflow,
   ChevronRight,
+  ChevronDown,
   Copy,
   Check,
-  Filter
+  Filter,
+  Download
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
@@ -55,34 +63,37 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 export default function ShowcasePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(['auth-flows']); // Start with first category expanded
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComponent, setSelectedComponent] = useState<ComponentExample | null>(components[0] || null);
   const [copiedCode, setCopiedCode] = useState<string>('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  // Filter components based on category and search
+  // Enhanced search with fuzzy matching
   const filteredComponents = useMemo(() => {
+    if (searchQuery === '') return components;
+    
+    const query = searchQuery.toLowerCase();
     return components.filter(component => {
-      const matchesCategory = selectedCategory === 'all' || component.category === selectedCategory;
-      const matchesSearch = searchQuery === '' || 
-        component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        component.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [selectedCategory, searchQuery]);
-
-  // Group components by category
-  const groupedComponents = useMemo(() => {
-    const groups: Record<string, ComponentExample[]> = {};
-    filteredComponents.forEach(component => {
-      if (!groups[component.category]) {
-        groups[component.category] = [];
+      // Check name, description, and category
+      const searchableText = [
+        component.name,
+        component.description,
+        component.category,
+        componentCategories.find(c => c.id === component.category)?.name || ''
+      ].join(' ').toLowerCase();
+      
+      // Simple fuzzy match - check if all query characters appear in order
+      let queryIndex = 0;
+      for (let i = 0; i < searchableText.length && queryIndex < query.length; i++) {
+        if (searchableText[i] === query[queryIndex]) {
+          queryIndex++;
+        }
       }
-      groups[component.category]!.push(component);
+      return queryIndex === query.length;
     });
-    return groups;
-  }, [filteredComponents]);
+  }, [searchQuery]);
+
 
   const handleCopyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -257,81 +268,75 @@ export default function ShowcasePage() {
                 />
               </div>
 
-              {/* Categories */}
+              {/* Accordion Categories */}
               <div className="space-y-1">
-                <button
-                  onClick={() => setSelectedCategory('all')}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                    selectedCategory === 'all'
-                      ? 'bg-orange-500/10 text-orange-500'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>All Components</span>
-                    <span className="text-xs bg-gray-800 px-2 py-1 rounded">
-                      {components.length}
-                    </span>
-                  </div>
-                </button>
-
                 {componentCategories.map(category => {
                   const Icon = categoryIcons[category.icon] || Package;
-                  const count = components.filter(c => c.category === category.id).length;
+                  const categoryComponents = filteredComponents.filter(c => c.category === category.id);
+                  const isExpanded = expandedCategories.includes(category.id);
+                  
+                  if (categoryComponents.length === 0 && searchQuery) return null;
                   
                   return (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                        selectedCategory === category.id
-                          ? 'bg-orange-500/10 text-orange-500'
-                          : 'text-gray-400 hover:text-white hover:bg-gray-900'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Icon className="w-4 h-4" />
-                          <span>{category.name}</span>
+                    <div key={category.id}>
+                      <button
+                        onClick={() => {
+                          setExpandedCategories(prev =>
+                            isExpanded
+                              ? prev.filter(id => id !== category.id)
+                              : [...prev, category.id]
+                          );
+                        }}
+                        className="w-full text-left px-4 py-2 rounded-lg transition-colors hover:bg-gray-900 group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium">{category.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs bg-gray-800 px-2 py-1 rounded">
+                              {categoryComponents.length}
+                            </span>
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            )}
+                          </div>
                         </div>
-                        <span className="text-xs bg-gray-800 px-2 py-1 rounded">
-                          {count}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Component List */}
-              <div className="mt-8 space-y-6">
-                {Object.entries(groupedComponents).map(([categoryId, categoryComponents]) => {
-                  const category = componentCategories.find(c => c.id === categoryId);
-                  if (!category) return null;
-
-                  return (
-                    <div key={categoryId}>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                        {category.name}
-                      </h3>
-                      <div className="space-y-1">
-                        {categoryComponents.map(component => (
-                          <button
-                            key={component.id}
-                            onClick={() => setSelectedComponent(component)}
-                            className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                              selectedComponent?.id === component.id
-                                ? 'bg-gray-800 text-white'
-                                : 'text-gray-400 hover:text-white hover:bg-gray-900/50'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm">{component.name}</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+                      </button>
+                      
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="ml-6 mt-1 space-y-1">
+                            {categoryComponents.map(component => (
+                              <button
+                                key={component.id}
+                                onClick={() => setSelectedComponent(component)}
+                                className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm ${
+                                  selectedComponent?.id === component.id
+                                    ? 'bg-orange-500/10 text-orange-500'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-900/50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span>{component.name}</span>
+                                  {selectedComponent?.id === component.id && (
+                                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   );
                 })}
@@ -513,6 +518,72 @@ export default function ShowcasePage() {
                             enableDeviceLink={true}
                             onSuccess={(user) => console.log('Auth success:', user)}
                           />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'signup-flow' && (
+                        <div className="max-w-md mx-auto">
+                          <SignupFlow
+                            onSuccess={(user) => console.log('Signup success:', user)}
+                            onError={(error) => console.error('Signup error:', error)}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'oauth-restore-flow' && (
+                        <div className="max-w-md mx-auto">
+                          <OAuthRestoreFlow
+                            showProviderSelection={true}
+                            showPasswordEntry={true}
+                            onRestoreSuccess={(bapId) => console.log('Restore success:', bapId)}
+                            onRestoreError={(error) => console.error('Restore error:', error)}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'enhanced-login-form' && (
+                        <div className="max-w-md mx-auto">
+                          <EnhancedLoginForm
+                            mode="signin"
+                            showOAuth={true}
+                            onSuccess={(user) => console.log('Login success:', user)}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'oauth-restore-form' && (
+                        <div className="text-center py-8">
+                          <Shield className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                          <p className="text-gray-400">This component requires OAuth flow context.</p>
+                          <p className="text-sm text-gray-500 mt-2">See the code example for implementation.</p>
+                        </div>
+                      )}
+                      {selectedComponent.id === 'backup-import' && (
+                        <BackupImport
+                          onImport={(e) => console.log('File selected:', e.target.files?.[0]?.name)}
+                        />
+                      )}
+                      {selectedComponent.id === 'backup-download' && (
+                        <div className="text-center py-8">
+                          <Download className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                          <p className="text-gray-400">This component requires a generated backup.</p>
+                          <p className="text-sm text-gray-500 mt-2">See the code example for implementation.</p>
+                        </div>
+                      )}
+                      {selectedComponent.id === 'mnemonic-display' && (
+                        <MnemonicDisplay
+                          mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+                          onContinue={() => console.log('Continue clicked')}
+                          showCopyButton={true}
+                        />
+                      )}
+                      {selectedComponent.id === 'identity-generation' && (
+                        <IdentityGeneration
+                          onGenerate={() => console.log('Generate clicked')}
+                          onImport={(file) => console.log('Import file:', file.name)}
+                        />
+                      )}
+                      {selectedComponent.id === 'bitcoin-auth-provider' && (
+                        <div className="text-center py-8">
+                          <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                          <p className="text-gray-400">This is a context provider component.</p>
+                          <p className="text-sm text-gray-500 mt-2">Wrap your app with it as shown in the code example.</p>
                         </div>
                       )}
                       {/* Hook examples show code only since they can't be demoed visually */}
