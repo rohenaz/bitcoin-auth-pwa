@@ -40,10 +40,22 @@ export function ComponentPreviewModal({
   // Fetch prompt when modal opens
   useEffect(() => {
     if (isOpen && promptPath) {
+      console.log('Fetching prompt from:', promptPath);
       fetch(promptPath)
-        .then(res => res.text())
-        .then(setPrompt)
-        .catch(console.error);
+        .then(res => {
+          if (!res.ok) {
+            console.error('Failed to fetch prompt:', res.status, res.statusText);
+            return '';
+          }
+          return res.text();
+        })
+        .then(text => {
+          console.log('Prompt loaded, length:', text.length);
+          setPrompt(text);
+        })
+        .catch(err => {
+          console.error('Error fetching prompt:', err);
+        });
     }
   }, [isOpen, promptPath]);
 
@@ -132,8 +144,13 @@ export function ComponentPreviewModal({
                 {/* Copy Prompt */}
                 <button
                   onClick={handleCopyPrompt}
-                  className="inline-flex items-center gap-2 px-3 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm font-medium"
+                  className={`inline-flex items-center gap-2 px-3 h-8 rounded-lg transition-colors text-sm font-medium ${
+                    prompt 
+                      ? 'hover:bg-gray-100 dark:hover:bg-gray-800' 
+                      : 'opacity-50 cursor-not-allowed'
+                  }`}
                   disabled={!prompt}
+                  title={prompt ? 'Copy component prompt' : promptPath ? 'Loading prompt...' : 'No prompt available'}
                 >
                   {isCopied ? (
                     <>

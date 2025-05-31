@@ -173,6 +173,7 @@ const categories = [
         description: 'Send Bitcoin SV transactions',
         component: <SendBSVButton />,
         requiresFunding: true,
+        promptPath: '/components/registry/prompts/send-bsv-button.md',
       },
       {
         name: 'donate-button',
@@ -180,6 +181,7 @@ const categories = [
         description: 'Accept Bitcoin donations',
         component: <DonateButton />,
         requiresFunding: true,
+        promptPath: '/components/registry/prompts/donate-button.md',
       },
       {
         name: 'quick-donate-button',
@@ -193,6 +195,7 @@ const categories = [
         title: 'WalletOverview',
         description: 'Display wallet balance and info',
         component: <WalletOverview />,
+        promptPath: '/components/registry/prompts/wallet-overview.md',
       },
       {
         name: 'compact-wallet-overview',
@@ -231,6 +234,7 @@ const categories = [
         description: 'Create on-chain posts',
         component: <PostButton />,
         requiresFunding: true,
+        promptPath: '/components/registry/prompts/post-button.md',
       },
       {
         name: 'compact-post-button',
@@ -245,6 +249,7 @@ const categories = [
         description: 'Like on-chain content',
         component: <LikeButton txid="example" />,
         requiresFunding: true,
+        promptPath: '/components/registry/prompts/like-button.md',
       },
       {
         name: 'follow-button',
@@ -252,18 +257,21 @@ const categories = [
         description: 'Follow users on-chain',
         component: <FollowButton idKey="example" />,
         requiresFunding: true,
+        promptPath: '/components/registry/prompts/follow-button.md',
       },
       {
         name: 'social-feed',
         title: 'SocialFeed',
         description: 'Display social content feed',
         component: <SocialFeed />,
+        promptPath: '/components/registry/prompts/social-feed.md',
       },
       {
         name: 'post-card',
         title: 'PostCard',
         description: 'Display individual posts',
         component: <PostCard post={{ content: 'Hello', txId: '123', timestamp: Date.now(), app: 'demo' }} />,
+        promptPath: '/components/registry/prompts/post-card.md',
       },
       {
         name: 'message-display',
@@ -283,18 +291,21 @@ const categories = [
         title: 'ProfileCard',
         description: 'Display user profile',
         component: <ProfileCard profile={{ name: 'Satoshi', id: '1', address: '1A1zP1...', isPublished: true }} />,
+        promptPath: '/components/registry/prompts/profile-card.md',
       },
       {
         name: 'profile-editor',
         title: 'ProfileEditor',
         description: 'Edit profile information',
         component: <ProfileEditor profile={{ name: '', id: '', address: '', isPublished: false }} onSave={async () => {}} />,
+        promptPath: '/components/registry/prompts/profile-editor.md',
       },
       {
         name: 'profile-switcher',
         title: 'ProfileSwitcher',
         description: 'Switch between profiles',
         component: <ProfileSwitcher profiles={[]} activeProfileId="1" onSwitch={() => {}} />,
+        promptPath: '/components/registry/prompts/profile-switcher.md',
       },
       {
         name: 'profile-viewer',
@@ -334,6 +345,7 @@ const categories = [
         description: 'Create marketplace listings',
         component: <CreateListingButton />,
         requiresFunding: true,
+        promptPath: '/components/registry/prompts/create-listing-button.md',
       },
       {
         name: 'buy-listing-button',
@@ -380,6 +392,7 @@ const categories = [
         title: 'BackupDownload',
         description: 'Download encrypted backups',
         component: <BackupDownload backup={{ ids: '1', xprv: 'xprv...', mnemonic: 'abandon abandon...' }} onDownloaded={() => {}} />,
+        promptPath: '/components/registry/prompts/backup-download.md',
       },
       {
         name: 'backup-import',
@@ -392,12 +405,14 @@ const categories = [
         title: 'FileImport',
         description: 'Import files with drag & drop',
         component: <FileImport />,
+        promptPath: '/components/registry/prompts/file-import.md',
       },
       {
         name: 'mnemonic-display',
         title: 'MnemonicDisplay',
         description: 'Display recovery phrases',
         component: <MnemonicDisplay mnemonic="word1 word2 word3..." />,
+        promptPath: '/components/registry/prompts/mnemonic-display.md',
       },
       {
         name: 'device-link-qr',
@@ -408,6 +423,7 @@ const categories = [
           token: 'demo-123', 
           expiresAt: new Date(Date.now() + 600000) 
         })} />,
+        promptPath: '/components/registry/prompts/device-link-qr.md',
       },
       {
         name: 'qr-code-renderer',
@@ -443,18 +459,21 @@ const categories = [
         title: 'LoadingButton',
         description: 'Button with loading states',
         component: <LoadingButton loading={false}>Click Me</LoadingButton>,
+        promptPath: '/components/registry/prompts/loading-button.md',
       },
       {
         name: 'modal',
         title: 'Modal',
         description: 'Reusable modal dialog',
         component: <Modal isOpen={false} onClose={() => {}}>Modal Content</Modal>,
+        promptPath: '/components/registry/prompts/modal.md',
       },
       {
         name: 'password-input',
         title: 'PasswordInput',
         description: 'Secure password input',
         component: <PasswordInput value="" onChange={() => {}} />,
+        promptPath: '/components/registry/prompts/password-input.md',
       },
       {
         name: 'step-indicator',
