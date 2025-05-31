@@ -173,10 +173,58 @@ export default function RootLayout({
                 </div>
               </div>
 
-              {/* Step 4: First Component */}
+              {/* Step 4: CLI Tool (Optional) */}
               <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
                 <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2">
                   <span className="flex items-center justify-center w-8 h-8 bg-orange-600 text-white rounded-full text-sm font-bold">4</span>
+                  CLI Tool & Component Registry
+                </h3>
+                <div className="space-y-4">
+                  <p className="text-gray-300">Use the bigblocks CLI to add individual components or browse the registry:</p>
+                  
+                  <TerminalCodeBlock
+                    code={`# Add a specific component
+npx bigblocks add auth-button
+
+# Add multiple components
+npx bigblocks add login-form signup-flow oauth-providers
+
+# Browse all available components
+npx bigblocks list
+
+# Add with custom path
+npx bigblocks add modal --path ./components/ui`}
+                    language="bash"
+                    filename="Terminal"
+                  />
+
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                    <p className="text-blue-400 text-sm">
+                      💡 <strong>Component Registry:</strong> Visit <a href="/components" className="text-orange-400 hover:underline">/components</a> to browse all 60+ available components with live demos and usage examples.
+                    </p>
+                  </div>
+
+                  <TerminalCodeBlock
+                    code={`// Components are added to your project with full TypeScript support
+import { AuthButton } from './components/ui/auth-button'
+
+export default function LoginPage() {
+  return (
+    <AuthButton onSuccess={(user) => console.log(user)}>
+      Sign In with Bitcoin
+    </AuthButton>
+  )
+}`}
+                    language="tsx"
+                    filename="Example usage"
+                  />
+                </div>
+              </div>
+
+              {/* Step 5: First Component */}
+              <div className="bg-gray-950 border border-gray-800 rounded-lg p-6">
+                <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                  <span className="flex items-center justify-center w-8 h-8 bg-orange-600 text-white rounded-full text-sm font-bold">5</span>
                   Test Your Setup
                 </h3>
                 <div className="space-y-4">

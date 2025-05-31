@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚀 BigBlocks Integration v0.0.1
+## 🚀 BigBlocks Integration v0.0.3
 
-This project uses the `bigblocks` npm package (v0.0.1) for all Bitcoin authentication and UI components. The package provides a complete suite of production-ready components with advanced wallet capabilities.
+This project uses the `bigblocks` npm package (v0.0.3) for all Bitcoin authentication and UI components. The package provides a complete suite of production-ready components with advanced wallet capabilities.
 
 ### Current Integration Status:
 - **Core Authentication** ✅ - All auth flows working with v0.2.2 enhancements

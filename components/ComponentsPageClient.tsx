@@ -403,19 +403,27 @@ const categories = [
         name: 'device-link-qr',
         title: 'DeviceLinkQR',
         description: 'QR code for device linking',
-        component: <DeviceLinkQR onGenerateQR={async () => ({ qrData: '', token: '', expiresAt: new Date() })} />,
+        component: <DeviceLinkQR onGenerateQR={async () => ({ 
+          qrData: JSON.stringify({ token: 'demo-123', backup: 'encrypted-backup-data' }), 
+          token: 'demo-123', 
+          expiresAt: new Date(Date.now() + 600000) 
+        })} />,
       },
       {
         name: 'qr-code-renderer',
         title: 'QRCodeRenderer',
         description: 'Render QR codes',
-        component: <QRCodeRenderer data="bitcoin:1A1zP1..." />,
+        component: <QRCodeRenderer data="bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.001" size={120} />,
       },
       {
         name: 'member-export',
         title: 'MemberExport',
         description: 'Export member data',
-        component: <MemberExport profileName="Demo" onGenerateExport={async () => ({ qrData: '', token: '', expiresAt: new Date() })} />,
+        component: <MemberExport profileName="Demo" onGenerateExport={async () => ({ 
+          qrData: JSON.stringify({ exportId: 'export-456', profileData: 'demo-profile-data' }), 
+          token: 'export-456', 
+          expiresAt: new Date(Date.now() + 600000) 
+        })} />,
       },
       {
         name: 'cloud-backup-manager',
