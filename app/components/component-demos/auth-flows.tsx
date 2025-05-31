@@ -9,7 +9,7 @@ import {
   OAuthRestoreFlow,
   LoginForm,
   AuthButton
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const authFlowDemos: Array<[string, ComponentDemo]> = [

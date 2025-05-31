@@ -7,7 +7,7 @@ import {
   MarketTable,
   type MarketListing,
   type AssetType
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 import { Store } from 'lucide-react';
 
@@ -51,7 +51,7 @@ export function MarketSection({ isClient }: MarketSectionProps) {
   ];
 
   return (
-    <section id="market-demos" className="border-b border-gray-800/50 bg-gray-950/50">
+    <section className="border-b border-gray-800/50 bg-gray-950/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">🛒 Marketplace Components</h2>
@@ -166,7 +166,7 @@ export function MarketSection({ isClient }: MarketSectionProps) {
   BuyListingButton,
   useCreateListing,
   useBuyListing 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 // Create listing
 <CreateListingButton
@@ -200,7 +200,7 @@ export function MarketSection({ isClient }: MarketSectionProps) {
           />
 
           <TerminalCodeBlock
-            code={`import { useCreateListing } from 'bitcoin-auth-ui';
+            code={`import { useCreateListing } from 'bigblocks';
 
 function CustomCreateForm() {
   const createListing = useCreateListing();

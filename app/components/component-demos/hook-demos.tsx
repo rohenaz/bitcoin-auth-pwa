@@ -8,7 +8,7 @@ import {
   useHandCash,
   useYoursWallet,
   useAuthMessages
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const hookDemos: Array<[string, ComponentDemo]> = [

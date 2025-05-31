@@ -11,7 +11,7 @@ import {
   SocialFeed,
   MessageDisplay,
   type SocialPost
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 
@@ -103,7 +103,7 @@ export const socialDemos: Array<[string, ComponentDemo]> = [
               }
             },
             timestamp: Date.now(),
-            app: 'bitcoin-auth-ui-demo'
+            app: 'bigblocks-demo'
           };
         
         return (
@@ -182,7 +182,7 @@ export const socialDemos: Array<[string, ComponentDemo]> = [
             content: 'Hello! This is a demo message from the Bitcoin blockchain. 🚀',
             contentType: 'text/plain' as const,
             timestamp: Date.now() - 1800000,
-            app: 'bitcoin-auth-ui-demo',
+            app: 'bigblocks-demo',
             author: {
               idKey: 'demo-user-123',
               currentAddress: '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2',

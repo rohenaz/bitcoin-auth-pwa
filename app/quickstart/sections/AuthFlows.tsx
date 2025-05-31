@@ -10,7 +10,7 @@ import {
   IdentityGeneration,
   PasswordInput,
   StepIndicator
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 import { Fingerprint } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export function AuthFlowsSection({ isClient }: AuthFlowsSectionProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   return (
-    <section id="auth-demos" className="border-b border-gray-800/50">
+    <section className="border-b border-gray-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">🔐 Authentication Flow Demos</h2>
@@ -140,7 +140,7 @@ export function AuthFlowsSection({ isClient }: AuthFlowsSectionProps) {
         {/* Code Examples */}
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
           <TerminalCodeBlock
-            code={`import { AuthFlowOrchestrator } from 'bitcoin-auth-ui';
+            code={`import { AuthFlowOrchestrator } from 'bigblocks';
 
 <AuthFlowOrchestrator
   mode="unified" // unified | signin | signup | restore | import
@@ -165,7 +165,7 @@ export function AuthFlowsSection({ isClient }: AuthFlowsSectionProps) {
   SignupFlow, 
   LoginForm, 
   OAuthRestoreFlow 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 // Custom auth page with individual components
 function AuthPage() {

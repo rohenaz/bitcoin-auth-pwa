@@ -12,7 +12,7 @@ import {
   MnemonicMode,
   IdentityGeneration,
   type Step
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const coreDemos: Array<[string, ComponentDemo]> = [

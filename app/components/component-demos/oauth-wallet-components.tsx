@@ -9,7 +9,7 @@ import {
   YoursWalletConnector,
   OAuthConflictModal,
   OAuthRestoreForm
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const oauthWalletDemos: Array<[string, ComponentDemo]> = [

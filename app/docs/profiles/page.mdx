@@ -1,0 +1,150 @@
+# Profile Management
+
+Manage user profiles and identities with BAP protocol integration.
+
+Bitcoin Auth PWA supports **multi-profile identity management** using the BAP (Bitcoin Attestation Protocol). 
+Users can create and manage multiple identities from a single master backup.
+
+## Core Concepts
+
+### BAP (Bitcoin Attestation Protocol)
+BAP enables hierarchical deterministic identity management:
+
+- **Master Backup**: Contains multiple identity keys
+- **Derived Profiles**: Each with unique Bitcoin address
+- **Schema.org Integration**: Structured identity data
+- **On-chain Publishing**: Optional blockchain attestation
+
+### Multi-Profile Architecture
+Users can maintain separate identities for different contexts:
+
+- **Personal Profile**: For social interactions
+- **Professional Profile**: For business purposes
+- **Anonymous Profile**: For privacy-focused activities
+- **Organization Profile**: For company representation
+
+## Profile Components
+
+### ProfileCard
+Display user profile information with actions.
+
+```tsx title="ProfileCard.tsx"
+import { ProfileCard } from 'bigblocks';
+
+<ProfileCard
+  profile={{
+    '@type': 'Person',
+    id: 'user-id',
+    address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+    isPublished: true,
+    name: 'Satoshi Nakamoto',
+    alternateName: 'satoshi',
+    description: 'Creator of Bitcoin',
+    image: 'https://example.com/avatar.jpg'
+  }}
+  showActions={true}
+  onEdit={handleEdit}
+/>
+```
+
+### ProfileEditor
+Edit profile information with real-time validation.
+
+```tsx title="ProfileEditor.tsx"
+import { ProfileEditor } from 'bigblocks';
+
+<ProfileEditor
+  profile={currentProfile}
+  onSave={async (profile) => {
+    await updateProfile(profile);
+  }}
+  onCancel={() => setEditing(false)}
+/>
+```
+
+### ProfileSwitcher
+Switch between multiple user profiles.
+
+```tsx title="ProfileSwitcher.tsx"
+import { ProfileSwitcher } from 'bigblocks';
+
+<ProfileSwitcher
+  profiles={userProfiles}
+  activeProfileId={currentProfileId}
+  onSwitch={handleProfileSwitch}
+  onCreate={handleCreateProfile}
+/>
+```
+
+## Profile Data Structure
+Profiles follow Schema.org standards with Bitcoin-specific extensions:
+
+```typescript title="profile.types.ts"
+interface Profile {
+  '@type': 'Person' | 'Organization';
+  id: string;                    // BAP identity key
+  address: string;               // Bitcoin address
+  isPublished: boolean;          // Published to blockchain
+  name?: string;                 // Display name
+  alternateName?: string;        // Username/handle
+  description?: string;          // Bio/description
+  image?: string;                // Profile image URL
+  url?: string;                  // Website URL
+  email?: string;                // Contact email
+  telephone?: string;            // Phone number
+  location?: string;             // Geographic location
+}
+```
+
+## Profile Operations
+
+### Creating New Profiles
+
+```javascript title="create-profile.js"
+// From master backup, create new identity
+const newProfile = await bap.newId();
+const profileId = newProfile.getId();
+
+// Save profile data
+await fetch('/api/users/profiles/create', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Auth-Token': authToken,
+  },
+  body: JSON.stringify({
+    bapId: profileId,
+    profile: {
+      name: 'New Profile',
+      alternateName: 'newuser',
+      description: 'My new identity'
+    }
+  })
+});
+```
+
+### Switching Profiles
+
+```javascript title="switch-profile.js"
+// Navigate to specific profile dashboard
+router.push(`/dashboard/${profileId}`);
+
+// Update active session
+setActiveProfile(profileId);
+```
+
+## Integration with Authentication
+Profiles work seamlessly with the authentication system:
+
+- **Profile-specific authentication**: Each profile has its own Bitcoin address
+- **Multi-profile sessions**: Switch identities without re-authentication
+- **Granular permissions**: Different profiles can have different access levels
+- **Cross-profile messaging**: Secure communication between identities
+
+This multi-profile system provides the flexibility to manage complex digital identities while 
+maintaining the security and decentralization of Bitcoin-based authentication.
+
+export const metadata = {
+  title: 'Profile Management - Bitcoin Auth PWA',
+  description: 'Manage user profiles and identities with BAP protocol integration',
+};

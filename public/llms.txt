@@ -1,0 +1,213 @@
+# Bitcoin Auth PWA - LLM Instructions
+
+This file provides structured information about the Bitcoin Authentication Progressive Web App for AI assistants and LLMs.
+
+## Project Overview
+
+Bitcoin Auth PWA is a production-ready Bitcoin authentication system where users' Bitcoin keypairs ARE their identity. No traditional usernames or passwords - just pure cryptographic authentication.
+
+## Technology Stack
+
+- **Framework**: Next.js 15.3.2 with App Router
+- **Authentication**: NextAuth v5 with custom Bitcoin credentials provider
+- **UI Library**: bigblocks (formerly bitcoin-auth-ui)
+- **Styling**: TailwindCSS v4 with Radix Themes
+- **Bitcoin**: BSV SDK, BAP (Bitcoin Attestation Protocol)
+- **Storage**: Vercel KV (Redis)
+- **Runtime**: Bun (preferred) or Node.js
+
+## Key Features
+
+1. **Bitcoin-Based Authentication**
+   - Private keys as identity
+   - BSM (Bitcoin Signed Message) authentication
+   - No traditional passwords
+
+2. **Multi-Profile Support**
+   - Create multiple identities from single master backup
+   - Profile switching with ProfileSwitcher component
+   - Per-profile Bitcoin addresses
+
+3. **OAuth Backup Anchoring**
+   - OAuth providers store encrypted backups
+   - NOT for authentication, only storage
+   - Supports Google, GitHub, X (Twitter)
+
+4. **Device Linking**
+   - QR code-based device-to-device transfer
+   - Time-limited secure tokens
+   - No cloud dependency option
+
+5. **Progressive Web App**
+   - Installable on all devices
+   - Offline-capable
+   - Push notifications ready
+
+## Component Library (bigblocks)
+
+The app uses the bigblocks npm package which provides:
+
+### Authentication Components
+- AuthFlowOrchestrator - Complete auth flows
+- LoginForm - Bitcoin wallet login
+- SignupFlow - Multi-step signup
+- OAuthProviders - OAuth provider selection
+
+### Profile Management
+- ProfileCard - Display user profiles
+- ProfileEditor - Edit profile information
+- ProfileSwitcher - Switch between profiles
+- ProfileManager - Complete profile management
+
+### Wallet Components
+- SendBSVButton - Send Bitcoin SV
+- DonateButton - Accept donations
+- WalletOverview - Wallet balance display
+
+### Social Components
+- PostButton - Create social posts
+- LikeButton - Like content
+- FollowButton - Follow users
+- SocialFeed - Display social content
+
+### Theme System
+- BitcoinThemeProvider - 8 Bitcoin color themes
+- Support for light/dark modes
+- Customizable radius and scaling
+
+## API Routes
+
+### Authentication
+- `/api/auth/[...nextauth]` - NextAuth handler
+- `/api/auth/link-provider` - OAuth linking flow
+- `/api/auth/link-provider/callback` - OAuth callback
+
+### Backup Management
+- `/api/backup` - GET/POST encrypted backups
+- `/api/backup/status` - Check backup status
+
+### User Management
+- `/api/users` - User operations
+- `/api/users/profile` - Profile data
+- `/api/users/profiles/create` - Create new profiles
+- `/api/users/connected-accounts` - OAuth connections
+
+### Device Linking
+- `/api/device-link/generate` - Generate QR codes
+- `/api/device-link/validate` - Validate tokens
+
+## Development Commands
+
+```bash
+# Install dependencies
+bun install
+
+# Development server
+bun dev
+
+# Build for production
+bun run build
+
+# Run linter
+bun lint
+
+# Start production server
+bun start
+```
+
+## Environment Variables
+
+Required for production:
+- `AUTH_SECRET` - NextAuth secret
+- `AUTH_URL` - Application URL
+- `KV_*` - Vercel KV credentials (auto-provided)
+
+OAuth providers (optional):
+- `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`
+- `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`
+- `AUTH_TWITTER_ID` / `AUTH_TWITTER_SECRET`
+
+## Key Concepts for AI Assistants
+
+1. **Bitcoin as Identity**: Users don't have passwords. Their Bitcoin private key IS their identity.
+
+2. **BAP (Bitcoin Attestation Protocol)**: Hierarchical deterministic identity management system.
+
+3. **OAuth is Storage Only**: OAuth providers are used as "dumb storage" for encrypted backups, never for authentication.
+
+4. **Client-Side Encryption**: Private keys NEVER leave the browser unencrypted.
+
+5. **Multi-Profile Architecture**: One master backup can contain multiple independent identities.
+
+## Component Usage Examples
+
+### Basic Authentication
+```jsx
+import { BitcoinAuthProvider, LoginForm } from 'bigblocks';
+
+<BitcoinAuthProvider config={{ apiUrl: '/api' }}>
+  <LoginForm mode="signin" onSuccess={handleLogin} />
+</BitcoinAuthProvider>
+```
+
+### Profile Display
+```jsx
+import { ProfileCard } from 'bigblocks';
+
+<ProfileCard 
+  profile={userProfile}
+  showActions={true}
+  onEdit={handleEdit}
+/>
+```
+
+### Theme Integration
+```jsx
+import { BitcoinThemeProvider } from 'bigblocks';
+
+<BitcoinThemeProvider bitcoinTheme="orange" appearance="dark">
+  {/* Your app */}
+</BitcoinThemeProvider>
+```
+
+## Pages Available
+
+- `/` - Landing page
+- `/quickstart` - Progressive tutorial
+- `/themes` - Theme builder playground
+- `/components` - Component browser (89 components)
+- `/mcp-server` - MCP integration docs
+- `/dashboard` - User dashboard
+- `/settings` - Account settings
+- `/docs` - Documentation (NEW)
+
+## Integration Points
+
+1. **MCP (Model Context Protocol)**: BSV-MCP server for AI-powered Bitcoin development
+2. **VS Code Extension**: Available in marketplace
+3. **Storybook**: Component development and testing
+4. **Vercel**: Optimized for Vercel deployment
+
+## Security Considerations
+
+- Private keys encrypted with user password
+- Time-bound authentication tokens (10 minutes)
+- Redis key namespacing for multi-tenancy
+- No server-side key storage
+- Client-side only decryption
+
+## Recent Updates
+
+- Migrated from bitcoin-auth-ui to bigblocks package
+- Added comprehensive theme builder at /themes
+- Enhanced component browser with 89 components
+- Added llms.txt for AI assistant context
+- Implementing Fumadocs for documentation
+
+## Support Resources
+
+- GitHub: https://github.com/bitcoin-auth/bigblocks
+- npm: https://www.npmjs.com/package/bigblocks
+- VS Code: https://marketplace.visualstudio.com/items?itemName=Satchmo.bitcoin
+
+This PWA serves as a reference implementation for Bitcoin-based authentication and can be used as a template for building Bitcoin applications.

@@ -69,7 +69,7 @@ export const components: ComponentExample[] = [
     name: 'AuthFlowOrchestrator',
     description: 'Smart authentication flow manager that handles signup, signin, and recovery. Requires backend: /api/auth/[...nextauth], /api/backup, /api/users/link-backup',
     category: 'auth-flows',
-    importStatement: "import { AuthFlowOrchestrator } from 'bitcoin-auth-ui';",
+    importStatement: "import { AuthFlowOrchestrator } from 'bigblocks';",
     codeExample: `<AuthFlowOrchestrator
   flowType="unified"
   enableOAuth={true}
@@ -96,7 +96,7 @@ export const components: ComponentExample[] = [
     name: 'SignupFlow',
     description: 'Multi-step signup process with identity generation. Requires backend: /api/users/create-from-backup, /api/backup',
     category: 'auth-flows',
-    importStatement: "import { SignupFlow } from 'bitcoin-auth-ui';",
+    importStatement: "import { SignupFlow } from 'bigblocks';",
     codeExample: `<SignupFlow
   onSuccess={(user) => console.log('Signup complete:', user)}
   onError={(error) => console.error('Error:', error)}
@@ -112,7 +112,7 @@ export const components: ComponentExample[] = [
     name: 'OAuthRestoreFlow',
     description: 'Complete OAuth backup restoration with password decryption. Requires backend: /api/auth/callback/oauth, /api/backup',
     category: 'auth-flows',
-    importStatement: "import { OAuthRestoreFlow } from 'bitcoin-auth-ui';",
+    importStatement: "import { OAuthRestoreFlow } from 'bigblocks';",
     codeExample: `<OAuthRestoreFlow
   showProviderSelection={true}
   showPasswordEntry={true}
@@ -134,7 +134,7 @@ export const components: ComponentExample[] = [
     name: 'AuthButton',
     description: 'Drop-in authentication button that handles the complete flow. Requires backend: Full auth API integration',
     category: 'core',
-    importStatement: "import { AuthButton } from 'bitcoin-auth-ui';",
+    importStatement: "import { AuthButton } from 'bigblocks';",
     codeExample: `<AuthButton>
   Sign In with Bitcoin
 </AuthButton>`,
@@ -154,7 +154,7 @@ export const components: ComponentExample[] = [
     name: 'LoginForm',
     description: 'Basic login form with password input. Requires backend: /api/auth/[...nextauth]',
     category: 'core',
-    importStatement: "import { LoginForm } from 'bitcoin-auth-ui';",
+    importStatement: "import { LoginForm } from 'bigblocks';",
     codeExample: `<LoginForm
   mode="signin"
   onSuccess={(user) => console.log('Success:', user)}
@@ -171,7 +171,7 @@ export const components: ComponentExample[] = [
     name: 'LoginForm',
     description: 'Bitcoin-based login form with password recovery options. Requires backend: /api/auth/[...nextauth], backup APIs',
     category: 'core',
-    importStatement: "import { LoginForm } from 'bitcoin-auth-ui';",
+    importStatement: "import { LoginForm } from 'bigblocks';",
     codeExample: `<LoginForm
   mode="signin"
   onSuccess={(user) => console.log('Success:', user)}
@@ -190,7 +190,7 @@ export const components: ComponentExample[] = [
     name: 'OAuthProviders',
     description: 'OAuth provider selection with loading and linked states. Requires backend: /api/auth/link-provider, /api/users/connected-accounts',
     category: 'oauth-wallets',
-    importStatement: "import { OAuthProviders } from 'bitcoin-auth-ui';",
+    importStatement: "import { OAuthProviders } from 'bigblocks';",
     codeExample: `<OAuthProviders
   onProviderClick={(provider) => console.log('Selected:', provider)}
   connectedProviders={['google']}
@@ -207,7 +207,7 @@ export const components: ComponentExample[] = [
     name: 'HandCashConnector',
     description: 'HandCash wallet OAuth integration',
     category: 'oauth-wallets',
-    importStatement: "import { HandCashConnector } from 'bitcoin-auth-ui';",
+    importStatement: "import { HandCashConnector } from 'bigblocks';",
     codeExample: `<HandCashConnector
   config={{
     appId: "your-app-id",
@@ -228,7 +228,7 @@ export const components: ComponentExample[] = [
     name: 'YoursWalletConnector',
     description: 'Yours Wallet browser extension integration',
     category: 'oauth-wallets',
-    importStatement: "import { YoursWalletConnector } from 'bitcoin-auth-ui';",
+    importStatement: "import { YoursWalletConnector } from 'bigblocks';",
     codeExample: `<YoursWalletConnector
   onSuccess={(result) => console.log('Connected:', result)}
   onError={(error) => console.error('Error:', error)}
@@ -244,7 +244,7 @@ export const components: ComponentExample[] = [
     name: 'OAuthConflictModal',
     description: 'Modal for resolving OAuth account conflicts. Requires backend: /api/users/transfer-oauth',
     category: 'oauth-wallets',
-    importStatement: "import { OAuthConflictModal } from 'bitcoin-auth-ui';",
+    importStatement: "import { OAuthConflictModal } from 'bigblocks';",
     codeExample: `<OAuthConflictModal
   isOpen={true}
   provider="google"
@@ -269,7 +269,7 @@ export const components: ComponentExample[] = [
     name: 'DeviceLinkQR',
     description: 'QR code generator for device-to-device linking. Requires backend: /api/device-link/generate, /api/device-link/validate',
     category: 'device-backup',
-    importStatement: "import { DeviceLinkQR } from 'bitcoin-auth-ui';",
+    importStatement: "import { DeviceLinkQR } from 'bigblocks';",
     codeExample: `<DeviceLinkQR
   onGenerateQR={async () => {
     const res = await fetch('/api/device-link');
@@ -287,7 +287,7 @@ export const components: ComponentExample[] = [
     name: 'MemberExport',
     description: 'Export member profiles with QR codes. Requires backend: /api/member-export/generate, /api/member-export/validate, /api/member-export/download',
     category: 'device-backup',
-    importStatement: "import { MemberExport } from 'bitcoin-auth-ui';",
+    importStatement: "import { MemberExport } from 'bigblocks';",
     codeExample: `<MemberExport
   profileName="My Profile"
   onGenerateExport={async () => {
@@ -307,7 +307,7 @@ export const components: ComponentExample[] = [
     name: 'FileImport',
     description: 'Drag & drop file import with validation',
     category: 'device-backup',
-    importStatement: "import { FileImport } from 'bitcoin-auth-ui';",
+    importStatement: "import { FileImport } from 'bigblocks';",
     codeExample: `<FileImport
   onFileValidated={(file, result) => {
     console.log('Valid backup:', result.type);
@@ -324,7 +324,7 @@ export const components: ComponentExample[] = [
     name: 'BackupDownload',
     description: 'Download encrypted backup files. Requires: Generated BAP backup object from authentication flow',
     category: 'device-backup',
-    importStatement: "import { BackupDownload } from 'bitcoin-auth-ui';",
+    importStatement: "import { BackupDownload } from 'bigblocks';",
     codeExample: `<BackupDownload
   backup={generatedBackup} // BapMasterBackup object
   password="userPassword" // Optional - will encrypt if provided
@@ -344,7 +344,7 @@ export const components: ComponentExample[] = [
     name: 'MnemonicDisplay',
     description: 'Display recovery phrase with acknowledgment',
     category: 'device-backup',
-    importStatement: "import { MnemonicDisplay } from 'bitcoin-auth-ui';",
+    importStatement: "import { MnemonicDisplay } from 'bigblocks';",
     codeExample: `<MnemonicDisplay
   mnemonic="word1 word2 word3..."
   onContinue={() => console.log('Continue')}
@@ -362,7 +362,7 @@ export const components: ComponentExample[] = [
     name: 'IdentityGeneration',
     description: 'Generate new Bitcoin identities',
     category: 'device-backup',
-    importStatement: "import { IdentityGeneration } from 'bitcoin-auth-ui';",
+    importStatement: "import { IdentityGeneration } from 'bigblocks';",
     codeExample: `<IdentityGeneration
   onGenerate={() => handleGenerateIdentity()}
   onImport={(file) => handleImportFile(file)}
@@ -384,7 +384,7 @@ export const components: ComponentExample[] = [
     name: 'LoadingButton',
     description: 'Button with loading states',
     category: 'ui-primitives',
-    importStatement: "import { LoadingButton } from 'bitcoin-auth-ui';",
+    importStatement: "import { LoadingButton } from 'bigblocks';",
     codeExample: `<LoadingButton
   loading={isLoading}
   onClick={handleClick}
@@ -408,7 +408,7 @@ export const components: ComponentExample[] = [
     name: 'PasswordInput',
     description: 'Password input with visibility toggle',
     category: 'ui-primitives',
-    importStatement: "import { PasswordInput } from 'bitcoin-auth-ui';",
+    importStatement: "import { PasswordInput } from 'bigblocks';",
     codeExample: `<PasswordInput
   value={password}
   onChange={(e) => setPassword(e.target.value)}
@@ -426,7 +426,7 @@ export const components: ComponentExample[] = [
     name: 'StepIndicator',
     description: 'Multi-step progress indicator',
     category: 'ui-primitives',
-    importStatement: "import { StepIndicator } from 'bitcoin-auth-ui';",
+    importStatement: "import { StepIndicator } from 'bigblocks';",
     codeExample: `<StepIndicator
   steps={[
     { id: '1', label: 'Generate', status: 'complete' },
@@ -443,7 +443,7 @@ export const components: ComponentExample[] = [
     name: 'Modal',
     description: 'Reusable modal dialog',
     category: 'ui-primitives',
-    importStatement: "import { Modal } from 'bitcoin-auth-ui';",
+    importStatement: "import { Modal } from 'bigblocks';",
     codeExample: `<Modal
   isOpen={isOpen}
   onClose={() => setOpen(false)}
@@ -463,7 +463,7 @@ export const components: ComponentExample[] = [
     name: 'ErrorDisplay',
     description: 'Consistent error message display',
     category: 'ui-primitives',
-    importStatement: "import { ErrorDisplay } from 'bitcoin-auth-ui';",
+    importStatement: "import { ErrorDisplay } from 'bigblocks';",
     codeExample: `<ErrorDisplay
   error="Invalid password"
   onRetry={() => console.log('Retry')}
@@ -478,7 +478,7 @@ export const components: ComponentExample[] = [
     name: 'WarningCard',
     description: 'Warning notification card',
     category: 'ui-primitives',
-    importStatement: "import { WarningCard } from 'bitcoin-auth-ui';",
+    importStatement: "import { WarningCard } from 'bigblocks';",
     codeExample: `<WarningCard
   title="Important"
   message="Please backup your recovery phrase"
@@ -495,7 +495,7 @@ export const components: ComponentExample[] = [
     name: 'AuthLayout',
     description: 'Full-page authentication layout',
     category: 'layouts',
-    importStatement: "import { AuthLayout } from 'bitcoin-auth-ui';",
+    importStatement: "import { AuthLayout } from 'bigblocks';",
     codeExample: `<AuthLayout
   header={<Logo />}
   footer={<Links />}
@@ -513,7 +513,7 @@ export const components: ComponentExample[] = [
     name: 'CenteredLayout',
     description: 'Centered content layout with dark theme',
     category: 'layouts',
-    importStatement: "import { CenteredLayout } from 'bitcoin-auth-ui';",
+    importStatement: "import { CenteredLayout } from 'bigblocks';",
     codeExample: `<CenteredLayout>
   <AuthCard>
     <h1>Welcome</h1>
@@ -529,7 +529,7 @@ export const components: ComponentExample[] = [
     name: 'LoadingLayout',
     description: 'Full-screen loading state',
     category: 'layouts',
-    importStatement: "import { LoadingLayout } from 'bitcoin-auth-ui';",
+    importStatement: "import { LoadingLayout } from 'bigblocks';",
     codeExample: `<LoadingLayout
   message="Authenticating..."
 />`,
@@ -542,7 +542,7 @@ export const components: ComponentExample[] = [
     name: 'ErrorLayout',
     description: 'Full-screen error display',
     category: 'layouts',
-    importStatement: "import { ErrorLayout } from 'bitcoin-auth-ui';",
+    importStatement: "import { ErrorLayout } from 'bigblocks';",
     codeExample: `<ErrorLayout
   error="Something went wrong"
   onRetry={() => window.location.reload()}
@@ -557,7 +557,7 @@ export const components: ComponentExample[] = [
     name: 'SuccessLayout',
     description: 'Full-screen success state',
     category: 'layouts',
-    importStatement: "import { SuccessLayout } from 'bitcoin-auth-ui';",
+    importStatement: "import { SuccessLayout } from 'bigblocks';",
     codeExample: `<SuccessLayout
   message="Account created successfully!"
   onContinue={() => router.push('/dashboard')}
@@ -574,7 +574,7 @@ export const components: ComponentExample[] = [
     name: 'useBitcoinAuth',
     description: 'Primary authentication hook',
     category: 'hooks',
-    importStatement: "import { useBitcoinAuth } from 'bitcoin-auth-ui';",
+    importStatement: "import { useBitcoinAuth } from 'bigblocks';",
     codeExample: `const {
   user,
   isAuthenticated,
@@ -599,7 +599,7 @@ export const components: ComponentExample[] = [
     name: 'useHandCash',
     description: 'HandCash wallet integration hook',
     category: 'hooks',
-    importStatement: "import { useHandCash } from 'bitcoin-auth-ui';",
+    importStatement: "import { useHandCash } from 'bigblocks';",
     codeExample: `const {
   isConnected,
   profile,
@@ -616,7 +616,7 @@ export const components: ComponentExample[] = [
     name: 'useYoursWallet',
     description: 'Yours Wallet integration hook',
     category: 'hooks',
-    importStatement: "import { useYoursWallet } from 'bitcoin-auth-ui';",
+    importStatement: "import { useYoursWallet } from 'bigblocks';",
     codeExample: `const {
   isInstalled,
   isConnected,
@@ -633,7 +633,7 @@ export const components: ComponentExample[] = [
     name: 'BitcoinAuthProvider',
     description: 'Main context provider for Bitcoin authentication. Requires: Backend API configuration and base URL setup',
     category: 'core',
-    importStatement: "import { BitcoinAuthProvider } from 'bitcoin-auth-ui';",
+    importStatement: "import { BitcoinAuthProvider } from 'bigblocks';",
     codeExample: `<BitcoinAuthProvider config={{ apiUrl: '/api' }}>
   <App />
 </BitcoinAuthProvider>`,
@@ -647,7 +647,7 @@ export const components: ComponentExample[] = [
     name: 'OAuthRestoreForm',
     description: 'Password form for decrypting OAuth backups. Requires: OAuth provider context and encrypted backup data',
     category: 'oauth-wallets',
-    importStatement: "import { OAuthRestoreForm } from 'bitcoin-auth-ui';",
+    importStatement: "import { OAuthRestoreForm } from 'bigblocks';",
     codeExample: `<OAuthRestoreForm
   provider={googleProvider}
   encryptedBackup={encryptedBackupString}
@@ -667,7 +667,7 @@ export const components: ComponentExample[] = [
     name: 'BackupImport',
     description: 'Simple backup file import component',
     category: 'device-backup',
-    importStatement: "import { BackupImport } from 'bitcoin-auth-ui';",
+    importStatement: "import { BackupImport } from 'bigblocks';",
     codeExample: `<BackupImport
   onImport={async (e) => {
     const file = e.target.files?.[0];
@@ -685,7 +685,7 @@ export const components: ComponentExample[] = [
     name: 'QRCodeRenderer',
     description: 'Utility component for rendering QR codes',
     category: 'ui-primitives',
-    importStatement: "import { QRCodeRenderer } from 'bitcoin-auth-ui';",
+    importStatement: "import { QRCodeRenderer } from 'bigblocks';",
     codeExample: `<QRCodeRenderer
   data="bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
   size={200}
@@ -702,7 +702,7 @@ export const components: ComponentExample[] = [
     name: 'useAuthMessages',
     description: 'Hook for customizing authentication messages',
     category: 'hooks',
-    importStatement: "import { useAuthMessages } from 'bitcoin-auth-ui';",
+    importStatement: "import { useAuthMessages } from 'bigblocks';",
     codeExample: `const messages = useAuthMessages({
   signIn: {
     title: 'Welcome Back!',

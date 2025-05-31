@@ -83,7 +83,7 @@ import {
   useAuthMessages,
   // Types
   type Step
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 // Droplit components (local)
 import { TapButton, DataPushButton } from '../../droplit/components';
 import { motion } from 'framer-motion';
@@ -261,8 +261,11 @@ export default function ShowcasePage() {
                 <Link href="/" className="text-gray-400 hover:text-white transition-colors">
                   Home
                 </Link>
-                <Link href="/showcase" className="text-gray-400 hover:text-white transition-colors">
-                  Showcase
+                <Link href="/quickstart" className="text-gray-400 hover:text-white transition-colors">
+                  Quick Start
+                </Link>
+                <Link href="/themes" className="text-gray-400 hover:text-white transition-colors">
+                  Themes
                 </Link>
                 <Link href="/components" className="text-white">
                   Components
@@ -317,44 +320,14 @@ export default function ShowcasePage() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href="https://github.com/bitcoin-auth/bitcoin-auth-ui"
+                  href="https://github.com/bitcoin-auth/bigblocks"
                   className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   View on GitHub
                 </a>
                 <code className="px-6 py-3 bg-gray-900 rounded-lg text-orange-500 font-mono">
-                  npm install bitcoin-auth-ui
+                  npm install bigblocks
                 </code>
-                
-                {/* Troubleshooting Note */}
-                <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                  <div className="flex items-start space-x-3">
-                    <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <div>
-                      <h4 className="font-medium text-amber-400 mb-2">Next.js Configuration Required</h4>
-                      <p className="text-sm text-amber-400/80 leading-relaxed mb-3">
-                        If you encounter "Cannot find module" errors with bitcoin-auth dependencies, add this to your <code className="text-amber-300 bg-amber-500/20 px-1 rounded">next.config.ts</code>:
-                      </p>
-                      <pre className="text-xs bg-black/40 text-amber-300 p-3 rounded border border-amber-500/30 overflow-x-auto">
-{`const nextConfig = {
-  serverExternalPackages: ['bsv-bap', '@bsv/sdk'],
-  transpilePackages: ['bitcoin-auth', 'bitcoin-backup', 'bitcoin-image'],
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false, net: false, tls: false,
-      };
-    }
-    return config;
-  },
-};`}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Quick Access */}
@@ -1184,7 +1157,7 @@ export default function ShowcasePage() {
                             content: 'Hello! This is a Bitcoin message.',
                             contentType: 'text/plain' as const,
                             timestamp: Date.now() - 1800000,
-                            app: 'bitcoin-auth-ui-demo',
+                            app: 'bigblocks-demo',
                             author: {
                               idKey: 'demo-user-123',
                               currentAddress: '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2',
@@ -1385,6 +1358,54 @@ export default function ShowcasePage() {
           </main>
         </div>
 
+        {/* FAQ/Troubleshooting Section */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8 border-t border-gray-800/50 bg-gray-950/50">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-8 text-center">FAQ & Troubleshooting</h2>
+            
+            {/* Next.js Configuration */}
+            <div className="mb-8 p-6 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-400 mb-2">Next.js Configuration Required</h3>
+                  <p className="text-sm text-gray-400 mb-3">
+                    If you encounter "Cannot find module" errors with bitcoin-auth dependencies, add this to your <code className="text-amber-300 bg-amber-500/20 px-1 rounded">next.config.ts</code>:
+                  </p>
+                  <pre className="text-xs bg-black/60 text-amber-300 p-4 rounded-lg border border-amber-500/30 overflow-x-auto">
+{`const nextConfig = {
+  serverExternalPackages: ['bsv-bap', '@bsv/sdk'],
+  transpilePackages: ['bitcoin-auth', 'bitcoin-backup', 'bitcoin-image'],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false, net: false, tls: false,
+      };
+    }
+    return config;
+  },
+};`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional FAQ items can be added here */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-500">
+                Need more help? Check out the{' '}
+                <a href="https://github.com/bitcoin-auth/bigblocks/issues" className="text-orange-500 hover:text-orange-400">
+                  GitHub Issues
+                </a>
+                {' '}or join our community.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
           <div className="max-w-7xl mx-auto text-center">
@@ -1393,13 +1414,13 @@ export default function ShowcasePage() {
             </p>
             <div className="flex justify-center gap-6 mt-6">
               <a
-                href="https://github.com/b-open-io/bitcoin-auth-ui"
+                href="https://github.com/b-open-io/bigblocks"
                 className="text-gray-400 hover:text-white"
               >
                 GitHub
               </a>
               <a
-                href="https://www.npmjs.com/package/bitcoin-auth-ui"
+                href="https://www.npmjs.com/package/bigblocks"
                 className="text-gray-400 hover:text-white"
               >
                 npm

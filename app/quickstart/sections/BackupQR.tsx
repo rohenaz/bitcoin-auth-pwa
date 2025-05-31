@@ -7,7 +7,7 @@ import {
   DeviceLinkQR,
   QRCodeRenderer,
   MnemonicDisplay
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 import { QrCode } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export function BackupQRSection({ isClient }: BackupQRSectionProps) {
   ];
 
   return (
-    <section id="backup-demos" className="border-b border-gray-800/50 bg-gray-950/30">
+    <section className="border-b border-gray-800/50 bg-gray-950/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">📱 Backup & QR Components</h2>
@@ -179,7 +179,7 @@ export function BackupQRSection({ isClient }: BackupQRSectionProps) {
   BackupDownload,
   FileImport,
   MnemonicDisplay 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function BackupManager() {
   const [backup, setBackup] = useState(null);
@@ -231,7 +231,7 @@ function BackupManager() {
             code={`import { 
   DeviceLinkQR,
   QRCodeRenderer 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function DeviceLinking() {
   const [linkToken, setLinkToken] = useState(null);

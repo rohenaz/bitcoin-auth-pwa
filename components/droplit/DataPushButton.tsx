@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button, Flex, Text, Card, Select, TextArea, Badge, Code } from '@radix-ui/themes';
 import { CheckIcon } from '@radix-ui/react-icons';
-import { useBitcoinAuth } from 'bitcoin-auth-ui';
+import { useBitcoinAuth } from 'bigblocks';
 import { Sparkles } from 'lucide-react';
 
 interface DataTemplate {

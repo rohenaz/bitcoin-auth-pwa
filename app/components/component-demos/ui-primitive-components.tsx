@@ -11,7 +11,7 @@ import {
   WarningCard,
   Modal,
   StepIndicator
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const uiPrimitiveDemos: Array<[string, ComponentDemo]> = [

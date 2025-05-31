@@ -12,7 +12,7 @@ import {
   OAuthProviders,
   HandCashConnector,
   YoursWalletConnector
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 type LayoutVariant = {
   id: string;
@@ -105,7 +105,7 @@ export default function MCPServerPage() {
 
   const selectedVariant = [...layoutVariants, ...generatedLayouts].find(v => v.id === selectedLayout);
 
-  const installCommand = `bunx bsv-mcp add bitcoin-auth-ui`;
+  const installCommand = `bunx bsv-mcp add bigblocks`;
   
   const usageExample = `// Ask your AI assistant to generate a Bitcoin app layout
 // "Create a Bitcoin wallet dashboard with authentication"
@@ -118,7 +118,7 @@ const layout = await generateBitcoinLayout({
   theme: 'dark'
 });
 
-// The AI will generate a complete component using bitcoin-auth-ui`;
+// The AI will generate a complete component using bigblocks`;
 
   const configExample = `// .mcp/config.json
 {
@@ -143,8 +143,11 @@ const layout = await generateBitcoinLayout({
                 <Link href="/" className="text-gray-400 hover:text-white transition-colors">
                   Home
                 </Link>
-                <Link href="/showcase" className="text-gray-400 hover:text-white transition-colors">
-                  Showcase
+                <Link href="/quickstart" className="text-gray-400 hover:text-white transition-colors">
+                  Quick Start
+                </Link>
+                <Link href="/themes" className="text-gray-400 hover:text-white transition-colors">
+                  Themes
                 </Link>
                 <Link href="/components" className="text-gray-400 hover:text-white transition-colors">
                   Components
@@ -310,7 +313,7 @@ const layout = await generateBitcoinLayout({
                       selectedVariant.id === 'wallet' ? 'LoginForm' :
                       selectedVariant.id === 'exchange' ? 'OAuthProviders, HandCashConnector, YoursWalletConnector' :
                       'AuthFlowOrchestrator'
-                    } } from 'bitcoin-auth-ui';
+                    } } from 'bigblocks';
 
 export default function ${selectedVariant.name.replace(/\s+/g, '')}() {
   return (
@@ -382,7 +385,7 @@ export default function ${selectedVariant.name.replace(/\s+/g, '')}() {
                   Add BSV-MCP to your AI development environment
                 </p>
                 <TerminalCodeBlock
-                  code="bunx bsv-mcp add bitcoin-auth-ui"
+                  code="bunx bsv-mcp add bigblocks"
                   language="bash"
                   filename="terminal"
                 />

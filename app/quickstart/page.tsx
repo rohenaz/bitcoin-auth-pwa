@@ -65,7 +65,7 @@ import {
   // v0.2.2 New components
   DonateButton,
   QuickDonateButton
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
@@ -98,7 +98,20 @@ import { LayoutComponentsSection } from './sections/LayoutComponents';
 import { IdentitySection } from './sections/Identity';
 import { SecuritySection } from './sections/Security';
 
-export default function ShowcasePage() {
+export default function QuickStartPage() {
+  // Scroll to top on mount to fix navigation issue
+  useEffect(() => {
+    // Remove any hash from URL
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+    // Force scroll to top
+    window.scrollTo(0, 0);
+    // Double-check after a brief delay to handle any async rendering
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100);
+  }, []);
   // Real API data states
   const [blockHeight, setBlockHeight] = useState<number | null>(null);
   const [bapProfile, setBapProfile] = useState<Record<string, unknown> | null>(null);
@@ -196,8 +209,11 @@ export default function ShowcasePage() {
                   <Link href="/" className="text-gray-400 hover:text-white transition-colors">
                     Home
                   </Link>
-                  <Link href="/showcase" className="text-white">
-                    Showcase
+                  <Link href="/quickstart" className="text-white">
+                    Quick Start
+                  </Link>
+                  <Link href="/themes" className="text-gray-400 hover:text-white transition-colors">
+                    Themes
                   </Link>
                   <Link href="/components" className="text-gray-400 hover:text-white transition-colors">
                     Components
@@ -229,19 +245,19 @@ export default function ShowcasePage() {
               >
                 <div className="inline-flex items-center gap-2 bg-orange-500/10 text-orange-500 px-4 py-2 rounded-full mb-6">
                   <Sparkles className="w-4 h-4" />
-                  <span className="text-sm font-medium">Production-Ready Components</span>
+                  <span className="text-sm font-medium">Step-by-Step Guide</span>
                 </div>
                 
                 <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                  Live Demos
+                  Bitcoin Development Tutorial
                 </h1>
                 
-                <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-                  Real working examples of Bitcoin Auth components integrated with live APIs. 
-                  Copy the code and use it in your projects.
+                <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
+                  Learn Bitcoin development from the ground up. This progressive guide will take you from 
+                  basic concepts to advanced features, with real working examples along the way.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
                   <Link
                     href="/components"
                     className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
@@ -249,136 +265,129 @@ export default function ShowcasePage() {
                     Browse All Components
                   </Link>
                   <a
-                    href="https://github.com/bitcoin-auth/bitcoin-auth-ui"
+                    href="https://github.com/bitcoin-auth/bigblocks"
                     className="px-8 py-3 bg-gray-900 border border-gray-700 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     View on GitHub
                   </a>
                 </div>
 
-                {/* Quick Access to Demo Categories */}
-                <div className="mt-16 max-w-5xl mx-auto">
-                  {/* Priority Banners */}
-                  <div className="mb-6 space-y-3">
-                    <a href="#quick-start" className="block p-4 bg-gradient-to-r from-orange-600/20 to-purple-600/20 border border-orange-500/50 hover:border-orange-400 rounded-lg transition-all group">
-                      <div className="text-center">
-                        <div className="text-orange-400 mb-1">
-                          <Sparkles className="w-6 h-6 mx-auto" />
+                {/* Tutorial Journey Overview */}
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-8">
+                    <h3 className="text-xl font-semibold mb-4">Your Learning Journey</h3>
+                    <div className="text-left space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold">1</span>
                         </div>
-                        <div className="text-lg font-bold">🚀 Start Here: Quick Setup Guide</div>
-                        <div className="text-xs text-gray-400 mt-1">Avoid common pitfalls • Get running in 5 minutes</div>
-                      </div>
-                    </a>
-                    
-                    <a href="#theme-showcase" className="block p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50 hover:border-purple-400 rounded-lg transition-all group">
-                      <div className="text-center">
-                        <div className="text-purple-400 mb-1">
-                          <Palette className="w-6 h-6 mx-auto" />
+                        <div>
+                          <p className="font-medium">Foundation</p>
+                          <p className="text-sm text-gray-400">Set up your environment and learn the basic UI components</p>
                         </div>
-                        <div className="text-lg font-bold">🎨 Live Theme Demo: See Colors Change</div>
-                        <div className="text-xs text-gray-400 mt-1">8 Bitcoin themes • Watch all components update live</div>
                       </div>
-                    </a>
-                  </div>
-                  
-                  {/* First Row - Primary Categories */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-3">
-                    <a href="#api-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-orange-500/50 rounded-lg transition-all group">
-                      <div className="text-orange-500 mb-2">
-                        <Zap className="w-6 h-6 mx-auto" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold">2</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Authentication</p>
+                          <p className="text-sm text-gray-400">Implement Bitcoin-based authentication and user management</p>
+                        </div>
                       </div>
-                      <div className="text-sm font-medium">Live APIs</div>
-                      <div className="text-xs text-gray-500 mt-1">Real blockchain data</div>
-                    </a>
-                    <a href="#auth-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 rounded-lg transition-all group">
-                      <div className="text-purple-500 mb-2">
-                        <Shield className="w-6 h-6 mx-auto" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold">3</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Integration</p>
+                          <p className="text-sm text-gray-400">Connect to the Bitcoin blockchain and handle real data</p>
+                        </div>
                       </div>
-                      <div className="text-sm font-medium">Auth Flows</div>
-                      <div className="text-xs text-gray-500 mt-1">Complete examples</div>
-                    </a>
-                    <a href="#market-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-green-500/50 rounded-lg transition-all group">
-                      <div className="text-green-500 mb-2">
-                        <Package className="w-6 h-6 mx-auto" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold">4</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Advanced Features</p>
+                          <p className="text-sm text-gray-400">Add wallets, social features, and marketplace functionality</p>
+                        </div>
                       </div>
-                      <div className="text-sm font-medium">Marketplace</div>
-                      <div className="text-xs text-gray-500 mt-1">Trading components</div>
-                    </a>
-                    <a href="#bsocial-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-pink-500/50 rounded-lg transition-all group">
-                      <div className="text-pink-500 mb-2">
-                        <Package className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">Social</div>
-                      <div className="text-xs text-gray-500 mt-1">bSocial components</div>
-                    </a>
-                    <a href="#wallet-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-yellow-500/50 rounded-lg transition-all group">
-                      <div className="text-yellow-500 mb-2">
-                        <Package className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">Wallet</div>
-                      <div className="text-xs text-gray-500 mt-1">BSV transactions</div>
-                    </a>
-                  </div>
-                  
-                  {/* Second Row - Secondary Categories */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-3">
-                    <a href="#oauth-connectors-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-cyan-500/50 rounded-lg transition-all group">
-                      <div className="text-cyan-500 mb-2">
-                        <Package className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">OAuth</div>
-                      <div className="text-xs text-gray-500 mt-1">Wallet connectors</div>
-                    </a>
-                    <a href="#backup-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group">
-                      <div className="text-blue-500 mb-2">
-                        <Package className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">Backup & QR</div>
-                      <div className="text-xs text-gray-500 mt-1">Device linking & QR</div>
-                    </a>
-                    <a href="#ui-primitives-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-lg transition-all group">
-                      <div className="text-indigo-500 mb-2">
-                        <Palette className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">UI Primitives</div>
-                      <div className="text-xs text-gray-500 mt-1">Building blocks</div>
-                    </a>
-                    <a href="#layout-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-teal-500/50 rounded-lg transition-all group">
-                      <div className="text-teal-500 mb-2">
-                        <Layout className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">Layouts</div>
-                      <div className="text-xs text-gray-500 mt-1">Page layouts</div>
-                    </a>
-                  </div>
-                  
-                  {/* Third Row - Advanced Categories */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <a href="#identity-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-indigo-500/50 rounded-lg transition-all group">
-                      <div className="text-indigo-500 mb-2">
-                        <Fingerprint className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">Identity & BAP</div>
-                      <div className="text-xs text-gray-500 mt-1">Bitcoin identity</div>
-                    </a>
-                    <a href="#security-demos" className="p-4 bg-gray-900/50 border border-gray-800 hover:border-red-500/50 rounded-lg transition-all group">
-                      <div className="text-red-500 mb-2">
-                        <Lock className="w-6 h-6 mx-auto" />
-                      </div>
-                      <div className="text-sm font-medium">Security</div>
-                      <div className="text-xs text-gray-500 mt-1">Cryptographic tools</div>
-                    </a>
+                    </div>
+                    <div className="mt-6 pt-6 border-t border-gray-800">
+                      <p className="text-sm text-gray-400">
+                        <strong className="text-gray-300">Tip:</strong> Follow this guide from top to bottom for the best learning experience. 
+                        Each section builds on the previous ones.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </div>
           </section>
 
+          {/* Part 1: Foundation */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-600/5 to-transparent" />
+            <div className="relative py-16">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">Part 1: Foundation</h2>
+                <p className="text-lg text-gray-400">
+                  Let's start with the basics. First, we'll set up your development environment 
+                  and explore the fundamental building blocks.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Start Guide */}
           <QuickStartSection isClient={isClient} />
 
+          {/* UI Primitives */}
+          <UIPrimitivesSection isClient={isClient} />
+
+          {/* Layout Components */}
+          <LayoutComponentsSection isClient={isClient} />
+
           {/* Theme Showcase */}
           <ThemeShowcaseSection isClient={isClient} />
+
+          {/* Part 2: Authentication */}
+          <div className="relative mt-24">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-600/5 to-transparent" />
+            <div className="relative py-16">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">Part 2: Authentication</h2>
+                <p className="text-lg text-gray-400">
+                  Now that you understand the basics, let's implement Bitcoin-based authentication. 
+                  This is the core of any Bitcoin application.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Authentication Flow Demos */}
+          <AuthFlowsSection isClient={isClient} />
+
+          {/* OAuth & Wallet Connectors */}
+          <OAuthConnectorsSection isClient={isClient} />
+
+          {/* Backup & QR Components */}
+          <BackupQRSection isClient={isClient} />
+
+          {/* Part 3: Blockchain Integration */}
+          <div className="relative mt-24">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/5 to-transparent" />
+            <div className="relative py-16">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">Part 3: Blockchain Integration</h2>
+                <p className="text-lg text-gray-400">
+                  Time to connect to the real Bitcoin blockchain. Learn how to fetch live data, 
+                  manage identities, and implement security features.
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Live API Demos Section */}
           <LiveAPIsSection 
@@ -392,35 +401,66 @@ export default function ShowcasePage() {
             setBapAddress={setBapAddress}
           />
 
-          {/* Authentication Flow Demos */}
-          <AuthFlowsSection isClient={isClient} />
-
-          {/* Market Components Demo */}
-          <MarketSection isClient={isClient} />
-
-          {/* Social Components Demo */}
-          <SocialSection isClient={isClient} />
-
-          {/* Wallet Components Demo */}
-          <WalletSection isClient={isClient} />
-
-          {/* OAuth & Wallet Connectors */}
-          <OAuthConnectorsSection isClient={isClient} />
-
-          {/* Backup & QR Components */}
-          <BackupQRSection isClient={isClient} />
-
-          {/* UI Primitives */}
-          <UIPrimitivesSection isClient={isClient} />
-
-          {/* Layout Components */}
-          <LayoutComponentsSection isClient={isClient} />
-
           {/* Identity & BAP Components */}
           <IdentitySection isClient={isClient} />
 
           {/* Security Components */}
           <SecuritySection isClient={isClient} />
+
+          {/* Part 4: Advanced Features */}
+          <div className="relative mt-24">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-600/5 to-transparent" />
+            <div className="relative py-16">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">Part 4: Advanced Features</h2>
+                <p className="text-lg text-gray-400">
+                  You've mastered the fundamentals. Now let's add powerful features like wallets, 
+                  social interactions, and marketplace functionality.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Wallet Components Demo */}
+          <WalletSection isClient={isClient} />
+
+          {/* Social Components Demo */}
+          <SocialSection isClient={isClient} />
+
+          {/* Market Components Demo */}
+          <MarketSection isClient={isClient} />
+
+          {/* Completion Section */}
+          <div className="relative mt-24 mb-16">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/50 rounded-xl p-8 text-center">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl font-bold mb-4">Congratulations! 🎉</h2>
+                <p className="text-lg text-gray-300 mb-6">
+                  You've completed the Bitcoin development tutorial. You now have all the tools 
+                  and knowledge to build powerful Bitcoin applications.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Link
+                    href="/components"
+                    className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Explore All Components
+                  </Link>
+                  <Link
+                    href="/mcp-server"
+                    className="px-8 py-3 bg-gray-900 border border-gray-700 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    Try AI-Powered Development
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
           {/* Footer */}
           <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
             <div className="max-w-7xl mx-auto text-center">
@@ -429,13 +469,13 @@ export default function ShowcasePage() {
               </p>
               <div className="flex justify-center gap-6 mt-6">
                 <a
-                  href="https://github.com/b-open-io/bitcoin-auth-ui"
+                  href="https://github.com/b-open-io/bigblocks"
                   className="text-gray-400 hover:text-white"
                 >
                   GitHub
                 </a>
                 <a
-                  href="https://www.npmjs.com/package/bitcoin-auth-ui"
+                  href="https://www.npmjs.com/package/bigblocks"
                   className="text-gray-400 hover:text-white"
                 >
                   npm

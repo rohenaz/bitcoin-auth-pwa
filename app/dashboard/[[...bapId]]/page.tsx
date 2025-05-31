@@ -353,8 +353,11 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 <Link href="/settings" className="text-gray-400 hover:text-white transition-colors">
                   Settings
                 </Link>
-                <Link href="/showcase" className="text-gray-400 hover:text-white transition-colors">
-                  Components
+                <Link href="/quickstart" className="text-gray-400 hover:text-white transition-colors">
+                  Quick Start
+                </Link>
+                <Link href="/themes" className="text-gray-400 hover:text-white transition-colors">
+                  Themes
                 </Link>
                 <Link href="/mcp-server" className="text-gray-400 hover:text-white transition-colors">
                   MCP Server

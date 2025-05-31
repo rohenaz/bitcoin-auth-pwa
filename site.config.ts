@@ -7,8 +7,8 @@ export const siteConfig = {
   // Basic site information
   name: 'BigBlocks.dev',
   shortName: 'BigBlocks',
-  description: 'Professional Bitcoin development platform with authentication components, tools, and production-ready libraries',
-  tagline: 'Powerful Bitcoin Components for Real Men',
+  description: 'Professional Bitcoin UX Blocks for rapid development',
+  tagline: 'Functional Bitcoin Components',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://bigblocks.dev',
   
   // Branding

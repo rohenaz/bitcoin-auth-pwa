@@ -11,7 +11,7 @@ import {
   CompactWalletOverview,
   QuickSendButton,
   QuickDonateButton
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const walletDemos: Array<[string, ComponentDemo]> = [

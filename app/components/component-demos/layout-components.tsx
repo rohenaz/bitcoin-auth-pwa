@@ -10,7 +10,7 @@ import {
   ErrorLayout,
   SuccessLayout,
   LoginForm
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const layoutDemos: Array<[string, ComponentDemo]> = [

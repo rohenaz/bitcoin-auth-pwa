@@ -17,12 +17,12 @@ export function QuickStartSection({ isClient }: QuickStartSectionProps) {
   };
 
   return (
-    <section id="quick-start" className="border-b border-gray-800/50 bg-gradient-to-b from-orange-900/10 to-gray-950">
+    <section className="border-b border-gray-800/50 bg-gradient-to-b from-orange-900/10 to-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">🚀 Quick Start Guide</h2>
           <p className="text-gray-400 text-lg max-w-3xl mx-auto">
-            Get bitcoin-auth-ui running in your project with zero configuration issues. 
+            Get bigblocks running in your project with zero configuration issues. 
             Follow this guide to avoid common pitfalls and get started quickly.
           </p>
         </div>
@@ -60,13 +60,13 @@ export function QuickStartSection({ isClient }: QuickStartSectionProps) {
                 </h3>
                 <div className="space-y-4">
                   <TerminalCodeBlock
-                    code="npm install bitcoin-auth-ui @radix-ui/themes"
+                    code="npm install bigblocks @radix-ui/themes"
                     language="bash"
                     filename="Terminal"
                   />
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
                     <p className="text-blue-400 text-sm">
-                      💡 <strong>Important:</strong> bitcoin-auth-ui requires @radix-ui/themes for styling. 
+                      💡 <strong>Important:</strong> bigblocks requires @radix-ui/themes for styling. 
                       Both packages must be installed together.
                     </p>
                   </div>
@@ -122,7 +122,7 @@ export function QuickStartSection({ isClient }: QuickStartSectionProps) {
                     code={`// components/providers.tsx - EXACT TEMPLATE
 'use client'
 
-import { BitcoinThemeProvider } from 'bitcoin-auth-ui'
+import { BitcoinThemeProvider } from 'bigblocks'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -184,7 +184,7 @@ export default function RootLayout({
                   
                   <TerminalCodeBlock
                     code={`// app/page.tsx
-import { AuthFlowOrchestrator } from 'bitcoin-auth-ui'
+import { AuthFlowOrchestrator } from 'bigblocks'
 
 export default function Home() {
   return (
@@ -217,7 +217,7 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
                     <p className="text-blue-400 text-sm">
-                      💡 bitcoin-auth-ui works with both React 18 and 19. For React 19, you may need to isolate 
+                      💡 bigblocks works with both React 18 and 19. For React 19, you may need to isolate 
                       the BitcoinThemeProvider to specific pages if you encounter compatibility issues.
                     </p>
                   </div>
@@ -233,7 +233,7 @@ export default function Home() {
 
                   <TerminalCodeBlock
                     code={`// App.tsx
-import { BitcoinThemeProvider } from 'bitcoin-auth-ui'
+import { BitcoinThemeProvider } from 'bigblocks'
 import './index.css'
 
 function App() {
@@ -290,7 +290,7 @@ export default App`}
                   <div className="border-l-4 border-red-500 pl-4">
                     <h4 className="text-red-400 font-semibold mb-2">Error: "Module not found" for components</h4>
                     <p className="text-gray-300 text-sm mb-2"><strong>Cause:</strong> Missing dependencies or wrong import paths</p>
-                    <p className="text-green-300 text-sm"><strong>Solution:</strong> Ensure both bitcoin-auth-ui and @radix-ui/themes are installed</p>
+                    <p className="text-green-300 text-sm"><strong>Solution:</strong> Ensure both bigblocks and @radix-ui/themes are installed</p>
                   </div>
                 </div>
               </div>
@@ -366,7 +366,7 @@ export default App`}
                 'suppressHydrationWarning in <html> tag',
                 'Test with AuthFlowOrchestrator component',
                 'No CSS imports in component files',
-                'Both bitcoin-auth-ui and @radix-ui/themes installed',
+                'Both bigblocks and @radix-ui/themes installed',
                 'Provider hierarchy matches template'
               ].map((item, index) => (
                 <label key={index} className="flex items-center gap-3 cursor-pointer">

@@ -10,7 +10,7 @@ import {
   QuickListButton,
   QuickBuyButton,
   CompactMarketTable
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import type { ComponentDemo } from './index';
 
 export const marketDemos: Array<[string, ComponentDemo]> = [

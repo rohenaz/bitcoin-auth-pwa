@@ -7,7 +7,7 @@ import {
   BapKeyRotationManager,
   BapFileSigner,
   BapEncryptionSuite
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { Utils } from '@bsv/sdk';
 import type { ComponentDemo } from './index';
 

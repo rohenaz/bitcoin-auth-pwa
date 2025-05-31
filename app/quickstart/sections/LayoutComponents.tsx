@@ -7,7 +7,7 @@ import {
   LoadingLayout,
   ErrorLayout,
   SuccessLayout
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 import { Layout } from 'lucide-react';
 
@@ -63,7 +63,7 @@ export function LayoutComponentsSection({ isClient }: LayoutComponentsSectionPro
   };
 
   return (
-    <section id="layout-demos" className="border-b border-gray-800/50">
+    <section className="border-b border-gray-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">📐 Layout Components</h2>
@@ -147,7 +147,7 @@ export function LayoutComponentsSection({ isClient }: LayoutComponentsSectionPro
             code={`import { 
   AuthLayout,
   LoginForm 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function SignInPage() {
   return (
@@ -178,7 +178,7 @@ function SignInPage() {
   LoadingLayout,
   ErrorLayout,
   SuccessLayout 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function TransactionFlow() {
   const { status, error, txid } = useTransaction();

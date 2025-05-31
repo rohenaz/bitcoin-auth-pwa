@@ -1,0 +1,128 @@
+# Authentication
+
+Bitcoin-based authentication system with bigblocks components.
+
+The Bitcoin Auth PWA uses a revolutionary approach where **Bitcoin keypairs ARE the identity**. 
+No traditional passwords needed - just pure cryptographic authentication.
+
+## Core Concepts
+
+### Bitcoin as Identity
+Instead of usernames and passwords, users authenticate using their Bitcoin private keys. This provides:
+
+- **True decentralization**: No central authority controls your identity
+- **Cryptographic security**: Based on proven Bitcoin cryptography
+- **Cross-platform compatibility**: Works anywhere Bitcoin signatures are supported
+- **No account recovery**: You own your keys, you own your identity
+
+### BSM (Bitcoin Signed Message) Authentication
+Every API request is authenticated using Bitcoin Signed Messages:
+
+```javascript title="auth-token.js"
+// Generate authentication token
+const token = bitcoinAuth.sign({
+  message: 'Authenticate with my Bitcoin identity',
+  timestamp: Date.now(),
+  address: userAddress
+});
+```
+
+## Authentication Components
+
+### AuthButton
+Simple authentication trigger button.
+
+```tsx title="AuthButton.tsx"
+import { AuthButton } from 'bigblocks';
+
+<AuthButton>Sign In with Bitcoin</AuthButton>
+```
+
+### LoginForm
+Complete login form with multiple modes.
+
+```tsx title="LoginForm.tsx"
+import { LoginForm } from 'bigblocks';
+
+<LoginForm 
+  mode="signin"
+  onSuccess={(user) => console.log('Login success:', user)}
+  onError={(error) => console.log('Login error:', error)}
+/>
+```
+
+### SignupFlow
+Multi-step signup process with identity generation.
+
+```tsx title="SignupFlow.tsx"
+import { SignupFlow } from 'bigblocks';
+
+<SignupFlow
+  onSuccess={(user) => console.log('Signup success:', user)}
+  onError={(error) => console.log('Signup error:', error)}
+/>
+```
+
+### OAuthProviders
+OAuth provider selection for backup anchoring.
+
+```tsx title="OAuthProviders.tsx"
+import { OAuthProviders } from 'bigblocks';
+
+<OAuthProviders
+  onProviderClick={(provider) => console.log('Selected:', provider)}
+/>
+```
+
+## Setup Guide
+
+### 1. Install bigblocks
+
+```bash
+npm install bigblocks
+```
+
+### 2. Wrap your app with providers
+
+```tsx title="app.tsx"
+import { BitcoinAuthProvider, BitcoinThemeProvider } from 'bigblocks';
+
+export default function App({ children }) {
+  return (
+    <BitcoinThemeProvider bitcoinTheme="orange" appearance="dark">
+      <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
+        {children}
+      </BitcoinAuthProvider>
+    </BitcoinThemeProvider>
+  );
+}
+```
+
+### 3. Set up API routes
+The authentication system requires several API endpoints:
+
+- `/api/auth/[...nextauth]` - NextAuth handler
+- `/api/backup` - Encrypted backup storage
+- `/api/users/profile` - User profile management
+
+### 4. Configure environment variables
+
+```bash title=".env.local"
+AUTH_SECRET=your-generated-secret
+AUTH_URL=http://localhost:3000
+KV_URL=your-redis-url
+```
+
+## Security Features
+
+- **Client-side encryption**: Keys never stored unencrypted on servers
+- **Time-bound tokens**: Authentication tokens expire after 10 minutes
+- **Signature verification**: Every request verified cryptographically
+- **No password reset**: True self-sovereignty - you control your keys
+
+This authentication system provides the security of Bitcoin with the convenience of modern web applications.
+
+export const metadata = {
+  title: 'Authentication - Bitcoin Auth PWA',
+  description: 'Bitcoin-based authentication system with bigblocks components',
+};

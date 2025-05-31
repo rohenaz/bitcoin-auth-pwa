@@ -5,7 +5,7 @@ import {
   ShamirSecretSharing,
   KeyManager,
   Type42KeyDerivation
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 import { Shield } from 'lucide-react';
 
@@ -27,7 +27,7 @@ export function SecuritySection({ isClient }: SecuritySectionProps) {
   ];
 
   return (
-    <section id="security-demos" className="border-b border-gray-800/50 bg-gradient-to-b from-red-900/20 to-gray-950">
+    <section className="border-b border-gray-800/50 bg-gradient-to-b from-red-900/20 to-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">🔒 Security Components</h2>
@@ -141,7 +141,7 @@ export function SecuritySection({ isClient }: SecuritySectionProps) {
             code={`import { 
   ShamirSecretSharing,
   KeyManager 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function SecureKeyBackup() {
   const [shares, setShares] = useState([]);
@@ -183,7 +183,7 @@ function SecureKeyBackup() {
           />
 
           <TerminalCodeBlock
-            code={`import { Type42KeyDerivation } from 'bitcoin-auth-ui';
+            code={`import { Type42KeyDerivation } from 'bigblocks';
 
 function PaymailKeyDerivation() {
   const derivePaymentKey = async (invoice) => {

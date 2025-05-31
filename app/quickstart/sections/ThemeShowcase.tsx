@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import {
   AuthFlowOrchestrator,
   LoginForm,
-  // TODO: Re-enable PostButton when bitcoin-auth-ui v0.2.3 exports are fixed
+  // TODO: Re-enable PostButton when bigblocks v0.2.3 exports are fixed
   // PostButton,
   SendBSVButton,
   LoadingButton,
   StepIndicator,
   ErrorDisplay,
   WarningCard
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
 import { Palette, Sparkles, Eye } from 'lucide-react';
 
@@ -41,13 +41,13 @@ export function ThemeShowcaseSection({ isClient }: ThemeShowcaseSectionProps) {
   ];
 
   return (
-    <section id="theme-showcase" className="border-b border-gray-800/50 bg-gradient-to-b from-purple-900/10 to-gray-950">
+    <section className="border-b border-gray-800/50 bg-gradient-to-b from-purple-900/10 to-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">🎨 Live Theme Showcase</h2>
           <p className="text-gray-400 text-lg max-w-3xl mx-auto">
             Change the theme below and watch ALL components instantly update their colors. 
-            This demonstrates the power of bitcoin-auth-ui's unified theming system.
+            This demonstrates the power of bigblocks's unified theming system.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 bg-purple-500/10 text-purple-400 px-4 py-2 rounded-full">
             <Sparkles className="w-4 h-4" />
@@ -197,7 +197,7 @@ export function ThemeShowcaseSection({ isClient }: ThemeShowcaseSectionProps) {
                   {isClient ? (
                     <>
                       <div className="space-y-3">
-                        {/* TODO: Re-enable PostButton when bitcoin-auth-ui v0.2.3 exports are fixed
+                        {/* TODO: Re-enable PostButton when bigblocks v0.2.3 exports are fixed
                         <PostButton
                           onPost={(post) => console.log('Demo post:', post)}
                         >
@@ -307,7 +307,7 @@ export function ThemeShowcaseSection({ isClient }: ThemeShowcaseSectionProps) {
                 <TerminalCodeBlock
                   code={`// components/providers.tsx
 'use client'
-import { BitcoinThemeProvider } from 'bitcoin-auth-ui'
+import { BitcoinThemeProvider } from 'bigblocks'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -366,7 +366,7 @@ export default function RootLayout({
                   code={`// For dynamic theme switching, use state management
 'use client'
 import { useState } from 'react'
-import { BitcoinThemeProvider } from 'bitcoin-auth-ui'
+import { BitcoinThemeProvider } from 'bigblocks'
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('${selectedTheme}')

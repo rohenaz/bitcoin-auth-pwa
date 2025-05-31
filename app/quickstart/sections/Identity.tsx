@@ -25,7 +25,7 @@ export function IdentitySection({ isClient }: IdentitySectionProps) {
   };
 
   return (
-    <section id="identity-demos" className="border-b border-gray-800/50 bg-gradient-to-b from-indigo-900/20 to-gray-950">
+    <section className="border-b border-gray-800/50 bg-gradient-to-b from-indigo-900/20 to-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">🆔 Identity Components</h2>
@@ -169,7 +169,7 @@ export function IdentitySection({ isClient }: IdentitySectionProps) {
             code={`import { 
   BapKeyRotationManager,
   useBapKeyRotation 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function IdentityManager() {
   const { rotateKey, isRotating } = useBapKeyRotation();
@@ -209,7 +209,7 @@ function IdentityManager() {
             code={`import { 
   BapFileSigner,
   BapEncryptionSuite 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 function SecureFileManager() {
   const [mode, setMode] = useState('sign');

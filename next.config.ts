@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
+import createMDX from '@next/mdx';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['bsv-bap', '@bsv/sdk'],
   transpilePackages: ['bitcoin-auth', 'bitcoin-backup', 'bitcoin-image'],
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   webpack: (config, { isServer }) => {
     // Fix for bitcoin-auth and related packages
     if (!isServer) {
@@ -17,4 +21,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypeHighlight],
+  },
+});
+
+export default withMDX(nextConfig);
