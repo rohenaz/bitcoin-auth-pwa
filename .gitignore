@@ -31,8 +31,8 @@ yarn-error.log*
 .pnpm-debug.log*
 bun-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files
+.env*.local
 
 # vercel
 .vercel
@@ -41,9 +41,13 @@ bun-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# storybook
-storybook-static/
-*.storybook.log
+# playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# next-auth
+.auth.d.ts
 
 # claude/ai
 .claude/

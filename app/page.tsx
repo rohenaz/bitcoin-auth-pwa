@@ -58,12 +58,12 @@ export default function Home() {
       <div className="relative flex flex-col items-center justify-center min-h-screen px-4 text-center">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-400 text-sm backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
             </span>
-            Cryptographic Authentication for the Future
+            Professional Bitcoin Development Platform
           </div>
 
           <div className="space-y-4">
@@ -81,56 +81,117 @@ export default function Home() {
             {siteConfig.description}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button
-              type="button"
-              onClick={handleGetStarted}
-              disabled={loading}
-              className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-gray-800 disabled:to-gray-700 disabled:text-gray-600 rounded-lg font-medium text-lg transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl hover:shadow-blue-500/25"
-            >
-              <span className="relative z-10">
-                {loading ? 'Loading...' : hasBackup ? 'Continue to Sign In' : 'Get Started'}
-              </span>
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
-            </button>
-            
-            {hasBackup && (
-              <Link
-                href="/signup"
-                className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
+          <div className="flex flex-col gap-6 max-w-2xl mx-auto">
+            {/* Primary Action Button */}
+            <div className="relative group">
+              <button
+                type="button"
+                onClick={handleGetStarted}
+                disabled={loading}
+                className="relative w-full px-8 py-4 bg-gray-900/90 backdrop-blur-sm text-white rounded-xl font-medium text-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
               >
-                Create new identity instead
+                {/* Animated gradient border */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-conic from-blue-400 via-purple-500 to-pink-500 p-[2px] opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-[2px] bg-gray-900 rounded-[10px]" />
+                </div>
+                
+                {/* Rotating gradient overlay for border animation */}
+                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 rounded-xl bg-gradient-conic from-blue-400 via-purple-500 to-pink-500 animate-spin-slow" style={{
+                    mask: 'radial-gradient(farthest-side at center, transparent calc(100% - 2px), black calc(100% - 2px))',
+                    WebkitMask: 'radial-gradient(farthest-side at center, transparent calc(100% - 2px), black calc(100% - 2px))'
+                  }} />
+                </div>
+                
+                {/* Glow effect */}
+                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl bg-gradient-to-r from-blue-400/30 via-purple-500/30 to-pink-500/30 scale-110" />
+                
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  {loading ? 'Loading...' : hasBackup ? 'Continue to Sign In' : 'Get Started'}
+                </span>
+              </button>
+              
+              {hasBackup && (
+                <Link
+                  href="/signup"
+                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline whitespace-nowrap"
+                >
+                  Create new identity instead
+                </Link>
+              )}
+            </div>
+
+            {/* Developer Tools Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+              <Link
+                href="/components"
+                className="group relative px-6 py-3 bg-gray-900/50 backdrop-blur-sm text-gray-300 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] overflow-hidden"
+              >
+                {/* Subtle orange border animation */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500/40 via-yellow-500/40 to-orange-500/40 p-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-[1px] bg-gray-900/80 rounded-[7px]" />
+                </div>
+                
+                {/* Orange glow */}
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-md bg-orange-500/20" />
+                
+                <span className="relative z-10 flex items-center justify-center gap-2 group-hover:text-white transition-colors duration-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  Component Library
+                </span>
               </Link>
-            )}
-            
-            <Link
-              href="/showcase"
-              className="group relative px-8 py-4 bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-500 hover:to-yellow-500 rounded-lg font-medium text-lg transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl hover:shadow-orange-500/25"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-                View Component Showcase
-              </span>
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-600 to-yellow-600 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
-            </Link>
-            
-            <Link
-              href="/mcp-server"
-              className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-lg font-medium text-lg transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl hover:shadow-purple-500/25"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Explore MCP Server
-              </span>
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
-            </Link>
+              
+              <Link
+                href="/mcp-server"
+                className="group relative px-6 py-3 bg-gray-900/50 backdrop-blur-sm text-gray-300 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] overflow-hidden"
+              >
+                {/* Subtle purple border animation */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/40 via-blue-500/40 to-purple-500/40 p-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-[1px] bg-gray-900/80 rounded-[7px]" />
+                </div>
+                
+                {/* Purple glow */}
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-md bg-purple-500/20" />
+                
+                <span className="relative z-10 flex items-center justify-center gap-2 group-hover:text-white transition-colors duration-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
+                  </svg>
+                  MCP Server
+                </span>
+              </Link>
+
+              <a
+                href="https://marketplace.visualstudio.com/items?itemName=Satchmo.bitcoin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative px-6 py-3 bg-gray-900/50 backdrop-blur-sm text-gray-300 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] overflow-hidden"
+              >
+                {/* Subtle blue border animation */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/40 via-cyan-500/40 to-blue-500/40 p-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-[1px] bg-gray-900/80 rounded-[7px]" />
+                </div>
+                
+                {/* Blue glow */}
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-md bg-blue-500/20" />
+                
+                <span className="relative z-10 flex items-center justify-center gap-2 group-hover:text-white transition-colors duration-300">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  VS Code Extension
+                </span>
+              </a>
+
+            </div>
           </div>
 
-          {/* Trust Indicators */}
+          {/* Developer Trust Indicators */}
           <div className="flex items-center justify-center gap-8 text-sm text-gray-500 mt-12">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -140,18 +201,18 @@ export default function Home() {
               <span>Open Source</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <title>End-to-End Encrypted Icon</title>
-                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>End-to-End Encrypted</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <title>No Tracking Icon</title>
+              <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                <title>Production Ready Icon</title>
                 <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>No Tracking</span>
+              <span>Production Ready</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <title>TypeScript Icon</title>
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>TypeScript</span>
             </div>
           </div>
         </div>
@@ -163,10 +224,10 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
               <span className="bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-                Built for the Decentralized Future
+                Professional Bitcoin Development Tools
               </span>
             </h2>
-            <p className="text-xl text-gray-400">Everything you need for self-sovereign identity</p>
+            <p className="text-xl text-gray-400">Everything you need to build Bitcoin applications</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -180,9 +241,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Bitcoin Native</h3>
+                <h3 className="text-xl font-semibold mb-3">Bitcoin Development Tools</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Your Bitcoin keypair IS your identity. No separate accounts, just pure cryptographic ownership.
+                  Complete toolkit for building Bitcoin applications with authentication, wallets, and blockchain integration.
                 </p>
               </div>
             </div>
@@ -197,9 +258,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Zero Knowledge</h3>
+                <h3 className="text-xl font-semibold mb-3">Component Library</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Keys are encrypted client-side. We never see your private keys or passwords.
+                  Production-ready React components for Bitcoin authentication, wallets, and social features.
                 </p>
               </div>
             </div>
@@ -214,9 +275,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Cross-Device Sync</h3>
+                <h3 className="text-xl font-semibold mb-3">VS Code Integration</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Access your identity anywhere with encrypted cloud backups via OAuth providers.
+                  Professional Bitcoin development experience with syntax highlighting, snippets, and tools.
                 </p>
               </div>
             </div>
@@ -231,9 +292,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Signature Auth</h3>
+                <h3 className="text-xl font-semibold mb-3">MCP Server Support</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Every request is cryptographically signed. No passwords transmitted or stored.
+                  Model Context Protocol server for AI assistants to interact with Bitcoin blockchain and tools.
                 </p>
               </div>
             </div>
@@ -248,9 +309,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Instant Setup</h3>
+                <h3 className="text-xl font-semibold mb-3">Production Ready</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Generate your identity in seconds. No email verification or lengthy forms.
+                  Battle-tested components and tools ready for enterprise Bitcoin applications and real-world deployment.
                 </p>
               </div>
             </div>
@@ -267,7 +328,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Open Source</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Fully auditable code. No hidden backdoors or proprietary secrets.
+                  Fully open-source Bitcoin development platform. Contribute, customize, and build with transparency.
                 </p>
               </div>
             </div>

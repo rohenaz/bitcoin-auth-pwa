@@ -180,31 +180,37 @@ The template includes a minimal, mobile-first dark theme UI with:
 
 ## 🔧 Customization Guide
 
-### Styling
-- Edit `app/globals.css` for theme customization
-- Primary highlight color is defined as CSS variable
-- Uses Tailwind CSS for utility classes
+### Theming
+- Uses Radix Themes with BitcoinThemeProvider
+- 8 Bitcoin-inspired color themes available
+- Configure in `app/providers.tsx`
+- Edit `app/globals.css` for custom CSS
 
 ### Authentication Providers
 - Add/remove OAuth providers in `lib/auth.ts`
 - Configure provider credentials in `.env.local`
+- See `lib/env.ts` for enabled providers
 
 ### BAP Integration
 - Customize identity schema in `lib/bap.ts`
 - Modify profile display in dashboard components
+- Advanced BAP components available via bitcoin-auth-ui
 
 ### Storage
 - Default uses Upstash Redis (serverless)
 - Can be swapped for local Redis or other adapters
+- See `lib/redis.ts` for configuration
 
 ## 📦 Key Dependencies
 
+- **[bitcoin-auth-ui](https://github.com/b-open-io/bitcoin-auth-ui)** - Complete Bitcoin UI component library
 - **[bitcoin-auth](https://github.com/b-open-io/bitcoin-auth)** - Bitcoin signature authentication
 - **[bitcoin-backup](https://github.com/b-open-io/bitcoin-backup)** - Encrypted backup format
 - **[bsv-bap](https://github.com/bitcoin-sv/bap)** - Bitcoin Attestation Protocol
 - **[@bsv/sdk](https://github.com/bitcoin-sv/bsv-sdk)** - Bitcoin cryptographic operations
 - **[next-auth](https://next-auth.js.org/)** - Authentication framework
 - **[@upstash/redis](https://github.com/upstash/upstash-redis)** - Serverless Redis client
+- **[@radix-ui/themes](https://www.radix-ui.com/themes)** - Themeable component system
 
 ## 🚀 Deployment
 
@@ -290,6 +296,74 @@ MIT License - feel free to use this template for any project
 - Bitcoin SV ecosystem for identity protocols
 - NextAuth.js team for the authentication framework
 - Upstash for serverless Redis infrastructure
+
+## 🛠️ Common Integration Issues
+
+### 1. Missing BitcoinQueryProvider
+**Error:** `No QueryClient set, use QueryClientProvider to set one`
+**Solution:** Wrap components that use data fetching with `BitcoinQueryProvider`:
+```tsx
+<BitcoinAuthProvider config={{ apiUrl: '/api' }}>
+  <BitcoinQueryProvider>
+    <SendBSVButton />
+    <WalletOverview />
+  </BitcoinQueryProvider>
+</BitcoinAuthProvider>
+```
+
+### 2. SchemaType Usage Error
+**Error:** `'SchemaType' cannot be used as a value because it was exported using 'export type'`
+**Solution:** Use string literals instead:
+```tsx
+// ❌ Wrong
+identity: {
+  '@type': SchemaType.Person,
+  name: 'John'
+}
+
+// ✅ Correct
+identity: {
+  '@type': 'Person' as any,
+  name: 'John'
+}
+```
+
+### 3. Missing Required Props
+**Error:** Various TypeScript errors about missing required props
+**Solution:** Check component TypeScript definitions and include all required props:
+```tsx
+// ✅ Always include required props
+<OAuthConflictModal
+  isOpen={open}
+  provider="google"
+  currentBapId="current-user-id"  // Required!
+  existingBapId="existing-user-id"
+  onClose={() => setOpen(false)}
+  // ... other required props
+/>
+```
+
+### 4. Incorrect Callback Signatures
+**Error:** Promise return type mismatches
+**Solution:** Check callback function signatures in TypeScript definitions:
+```tsx
+// ✅ ProfilePublisher expects Promise<{ txid: string }>
+<ProfilePublisher
+  profile={profile}
+  onPublish={async (profileId) => {
+    // Do publish logic...
+    return { txid: 'transaction-hash' }; // Must return txid
+  }}
+/>
+```
+
+### 5. Build Errors with bitcoin-auth-ui
+**Solution:** Always run build after integration changes:
+```bash
+bun run build  # Will catch TypeScript errors early
+```
+
+For more examples, see the [Component Browser](/components) which demonstrates correct usage patterns for all components.
 
 ## 🎯 Use Cases
 

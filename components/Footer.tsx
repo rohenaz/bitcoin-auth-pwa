@@ -12,7 +12,7 @@ type IconProps = React.HTMLAttributes<SVGElement>;
 export const Icons = {
   logo: (props: IconProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" {...props}>
-      <title>Bitcoin Auth Logo</title>
+      <title>BigBlocks.dev Logo</title>
       <rect width="256" height="256" fill="none" />
       <line
         x1="208"
@@ -124,7 +124,7 @@ export function Footer() {
             </p>
             <div className="flex gap-4">
               <SocialLink
-                href="https://github.com/b-open-io/bitcoin-auth-pwa"
+                href="https://github.com/bigblocks-dev"
                 icon={<GithubIcon className="w-6 h-6" />}
                 label="GitHub"
               />
@@ -153,9 +153,9 @@ export function Footer() {
         <div className="pt-8 border-t border-gray-800 text-center text-sm text-gray-500 flex flex-col md:flex-row justify-between items-center">
           <p>{siteConfig.footer.copyright}</p>
           <div className="flex items-center mt-2 md:mt-0">
-            <span>Built with</span>
+            <span>Made with</span>
             <HeartIcon className="mx-1 h-4 w-4 text-red-500" />
-            <span>for the decentralized web.</span>
+            <span>by 1Sat team</span>
           </div>
         </div>
       </div>

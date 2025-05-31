@@ -3,7 +3,9 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
-  BitcoinAuthProvider, 
+  BitcoinAuthProvider,
+  BitcoinThemeProvider,
+  BitcoinQueryProvider,
   AuthButton,
   LoginForm,
   OAuthProviders,
@@ -24,8 +26,66 @@ import {
   BackupImport,
   MnemonicDisplay,
   IdentityGeneration,
+  // Market components
+  CreateListingButton,
+  BuyListingButton,
+  MarketTable,
+  QuickListButton,
+  QuickBuyButton,
+  CompactMarketTable,
+  // Social components
+  PostButton,
+  LikeButton,
+  FollowButton,
+  SocialFeed,
+  PostCard,
+  MessageDisplay,
+  // Wallet components
+  SendBSVButton,
+  WalletOverview,
+  DonateButton,
+  QuickDonateButton,
+  TokenBalance,
+  CompactWalletOverview,
+  QuickSendButton,
+  // Profile Management
+  ProfileCard,
+  ProfileEditor,
+  ProfileManager,
+  ProfilePopover,
+  ProfilePublisher,
+  ProfileSwitcher,
+  ProfileViewer,
+  CloudBackupManager,
+  // Developer Tools
+  ShamirSecretSharing,
+  KeyManager,
+  Type42KeyDerivation,
+  ArtifactDisplay,
+  ThemeDemo,
+  CyberpunkDemo,
+  // Layout components
+  AuthLayout,
+  CenteredLayout,
+  LoadingLayout,
+  ErrorLayout,
+  SuccessLayout,
+  AuthCard,
+  // Additional components
+  BackupDownload,
+  QRCodeRenderer,
+  OAuthConflictModal,
+  OAuthRestoreForm,
+  // Hooks
+  useBitcoinAuth,
+  useHandCash,
+  useYoursWallet,
+  useAuthMessages,
+  // Types
   type Step
 } from 'bitcoin-auth-ui';
+// Droplit components (local)
+import { TapButton, DataPushButton } from '../../droplit/components';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -44,7 +104,9 @@ import {
   Copy,
   Check,
   Filter,
-  Download
+  Download,
+  Fingerprint,
+  Palette
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { TerminalCodeBlock } from '@/components/TerminalCodeBlock';
@@ -58,7 +120,8 @@ const categoryIcons: Record<string, React.ElementType> = {
   'Shield': Shield,
   'Layers': Layers,
   'Layout': Layout,
-  'Code2': Code2
+  'Code2': Code2,
+  'Fingerprint': Fingerprint
 };
 
 export default function ShowcasePage() {
@@ -67,6 +130,53 @@ export default function ShowcasePage() {
   const [selectedComponent, setSelectedComponent] = useState<ComponentExample | null>(components[0] || null);
   const [copiedCode, setCopiedCode] = useState<string>('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  
+  // OAuth callback handling
+  const [oauthResult, setOauthResult] = useState<{
+    success: boolean;
+    provider: string;
+    code?: string;
+    error?: string;
+  } | null>(null);
+
+  // Check for OAuth callback parameters on mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const oauthSuccess = urlParams.get('oauth_success');
+      const oauthError = urlParams.get('oauth_error');
+      const provider = urlParams.get('provider');
+      const code = urlParams.get('code');
+
+      if (provider && (oauthSuccess || oauthError)) {
+        setOauthResult({
+          success: oauthSuccess === 'true',
+          provider,
+          code: code || undefined,
+          error: oauthError || undefined
+        });
+
+        // Auto-select the relevant OAuth component
+        if (provider === 'handcash') {
+          const handcashComponent = components.find(c => c.id === 'handcash-connector');
+          if (handcashComponent) {
+            setSelectedComponent(handcashComponent);
+            setExpandedCategories(prev => [...prev, 'oauth-wallets']);
+          }
+        } else if (provider === 'yours-wallet') {
+          const yoursComponent = components.find(c => c.id === 'yours-wallet-connector');
+          if (yoursComponent) {
+            setSelectedComponent(yoursComponent);
+            setExpandedCategories(prev => [...prev, 'oauth-wallets']);
+          }
+        }
+
+        // Clean URL after handling
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    }
+  }, []);
 
   // Get current component index and navigation helpers
   const currentIndex = selectedComponent ? components.findIndex(c => c.id === selectedComponent.id) : -1;
@@ -141,7 +251,8 @@ export default function ShowcasePage() {
 
   return (
     <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
-      <div className="min-h-screen bg-black text-white">
+      <BitcoinQueryProvider>
+        <div className="min-h-screen bg-black text-white">
         {/* Navigation Header */}
         <header className="border-b border-gray-800/50 sticky top-0 bg-black/95 backdrop-blur-sm z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -166,6 +277,7 @@ export default function ShowcasePage() {
               
               {/* Mobile menu button */}
               <button
+                type="button"
                 className="lg:hidden p-2"
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
               >
@@ -199,7 +311,7 @@ export default function ShowcasePage() {
               </h1>
               
               <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-                Explore all 35+ Bitcoin authentication components with live demos, 
+                Explore all 89 Bitcoin authentication components with live demos, 
                 props documentation, and copy-paste code examples.
               </p>
 
@@ -213,62 +325,85 @@ export default function ShowcasePage() {
                 <code className="px-6 py-3 bg-gray-900 rounded-lg text-orange-500 font-mono">
                   npm install bitcoin-auth-ui
                 </code>
+                
+                {/* Troubleshooting Note */}
+                <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h4 className="font-medium text-amber-400 mb-2">Next.js Configuration Required</h4>
+                      <p className="text-sm text-amber-400/80 leading-relaxed mb-3">
+                        If you encounter "Cannot find module" errors with bitcoin-auth dependencies, add this to your <code className="text-amber-300 bg-amber-500/20 px-1 rounded">next.config.ts</code>:
+                      </p>
+                      <pre className="text-xs bg-black/40 text-amber-300 p-3 rounded border border-amber-500/30 overflow-x-auto">
+{`const nextConfig = {
+  serverExternalPackages: ['bsv-bap', '@bsv/sdk'],
+  transpilePackages: ['bitcoin-auth', 'bitcoin-backup', 'bitcoin-image'],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false, net: false, tls: false,
+      };
+    }
+    return config;
+  },
+};`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Quick Access */}
-              <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-                <button
-                  onClick={() => {
-                    const authButton = components.find(c => c.id === 'auth-button');
-                    if (authButton) navigateToComponent(authButton);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-orange-500/50 rounded-lg transition-all group"
-                >
-                  <div className="text-orange-500 mb-2">
-                    <Zap className="w-6 h-6 mx-auto" />
-                  </div>
-                  <div className="text-sm font-medium">AuthButton</div>
-                  <div className="text-xs text-gray-500 mt-1">Drop-in auth</div>
-                </button>
-                <button
-                  onClick={() => {
-                    const flow = components.find(c => c.id === 'auth-flow-orchestrator');
-                    if (flow) navigateToComponent(flow);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-purple-500/50 rounded-lg transition-all group"
-                >
-                  <div className="text-purple-500 mb-2">
-                    <Workflow className="w-6 h-6 mx-auto" />
-                  </div>
-                  <div className="text-sm font-medium">Auth Flows</div>
-                  <div className="text-xs text-gray-500 mt-1">Complete flows</div>
-                </button>
-                <button
-                  onClick={() => {
-                    const oauth = components.find(c => c.id === 'oauth-providers');
-                    if (oauth) navigateToComponent(oauth);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 rounded-lg transition-all group"
-                >
-                  <div className="text-blue-500 mb-2">
-                    <Globe className="w-6 h-6 mx-auto" />
-                  </div>
-                  <div className="text-sm font-medium">OAuth</div>
-                  <div className="text-xs text-gray-500 mt-1">Cloud backup</div>
-                </button>
-                <button
-                  onClick={() => {
-                    const hook = components.find(c => c.id === 'use-bitcoin-auth');
-                    if (hook) navigateToComponent(hook);
-                  }}
-                  className="p-4 bg-gray-900/50 border border-gray-800 hover:border-green-500/50 rounded-lg transition-all group"
-                >
-                  <div className="text-green-500 mb-2">
-                    <Code2 className="w-6 h-6 mx-auto" />
-                  </div>
-                  <div className="text-sm font-medium">Hooks</div>
-                  <div className="text-xs text-gray-500 mt-1">React hooks</div>
-                </button>
+              <div className="mt-16 max-w-6xl mx-auto">
+                {/* All Categories Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {componentCategories.map((category, index) => {
+                    const Icon = categoryIcons[category.icon] || Package;
+                    const categoryComponents = filteredComponents.filter(c => c.category === category.id);
+                    const colorClasses = [
+                      { border: 'hover:border-orange-500/50', text: 'text-orange-500' },
+                      { border: 'hover:border-purple-500/50', text: 'text-purple-500' },
+                      { border: 'hover:border-blue-500/50', text: 'text-blue-500' },
+                      { border: 'hover:border-green-500/50', text: 'text-green-500' },
+                      { border: 'hover:border-cyan-500/50', text: 'text-cyan-500' },
+                      { border: 'hover:border-pink-500/50', text: 'text-pink-500' },
+                      { border: 'hover:border-yellow-500/50', text: 'text-yellow-500' },
+                      { border: 'hover:border-red-500/50', text: 'text-red-500' },
+                      { border: 'hover:border-indigo-500/50', text: 'text-indigo-500' },
+                      { border: 'hover:border-teal-500/50', text: 'text-teal-500' }
+                    ];
+                    const colorClass = colorClasses[index % colorClasses.length] || { border: 'hover:border-orange-500/50', text: 'text-orange-500' };
+                    
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          // Navigate to first component in category or expand category
+                          if (categoryComponents.length > 0) {
+                            const firstComponent = categoryComponents[0];
+                            if (firstComponent) {
+                              navigateToComponent(firstComponent);
+                            }
+                          }
+                        }}
+                        className={`p-4 bg-gray-900/50 border border-gray-800 ${colorClass.border} rounded-lg transition-all group`}
+                      >
+                        <div className={`${colorClass.text} mb-2`}>
+                          <Icon className="w-6 h-6 mx-auto" />
+                        </div>
+                        <div className="text-sm font-medium">{category.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {categoryComponents.length} component{categoryComponents.length !== 1 ? 's' : ''}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -309,6 +444,7 @@ export default function ShowcasePage() {
                   return (
                     <div key={category.id}>
                       <button
+                        type="button"
                         onClick={() => {
                           setExpandedCategories(prev =>
                             isExpanded
@@ -347,6 +483,7 @@ export default function ShowcasePage() {
                           <div className="ml-6 mt-1 space-y-1">
                             {categoryComponents.map(component => (
                               <button
+                                type="button"
                                 key={component.id}
                                 onClick={() => navigateToComponent(component)}
                                 className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm ${
@@ -378,6 +515,13 @@ export default function ShowcasePage() {
             <div
               className="fixed inset-0 bg-black/50 z-30 lg:hidden"
               onClick={() => setShowMobileMenu(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setShowMobileMenu(false);
+                }
+              }}
+              role="button"
+              tabIndex={0}
             />
           )}
 
@@ -394,7 +538,40 @@ export default function ShowcasePage() {
                   {/* Component Header */}
                   <div className="mb-8">
                     <h2 className="text-3xl font-bold mb-2">{selectedComponent.name}</h2>
-                    <p className="text-gray-400 text-lg">{selectedComponent.description}</p>
+                    <p className="text-gray-400 text-lg mb-4">{selectedComponent.description}</p>
+                    
+                    {/* Requirements Badges */}
+                    {selectedComponent.requirements && selectedComponent.requirements.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedComponent.requirements.map((req, index) => (
+                          <div
+                            key={index}
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                              req.type === 'provider' 
+                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                                : req.type === 'funding'
+                                ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30'
+                                : 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
+                            }`}
+                          >
+                            <span className="text-xs">
+                              {req.type === 'provider' ? '🔧' : req.type === 'funding' ? '💰' : '⚙️'}
+                            </span>
+                            {req.link ? (
+                              <a 
+                                href={req.link}
+                                className="hover:underline"
+                                title={req.description}
+                              >
+                                {req.name}
+                              </a>
+                            ) : (
+                              <span title={req.description}>{req.name}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Import Statement */}
@@ -404,6 +581,7 @@ export default function ShowcasePage() {
                         Installation
                       </h3>
                       <button
+                        type="button"
                         onClick={() => handleCopyCode(selectedComponent.importStatement, 'import')}
                         className="text-gray-400 hover:text-white transition-colors"
                       >
@@ -425,12 +603,20 @@ export default function ShowcasePage() {
                       {selectedComponent.id === 'auth-button' && (
                         <AuthButton>Sign In with Bitcoin</AuthButton>
                       )}
-                      {selectedComponent.id === 'login-form' && (
+                      {selectedComponent.id === 'login-form-basic' && (
                         <LoginForm 
                           mode="signin"
                           onSuccess={() => console.log('Demo success')}
                           onError={() => console.log('Demo error')}
                         />
+                      )}
+                      {selectedComponent.id === 'login-form-advanced' && (
+                        <div className="max-w-md mx-auto">
+                          <LoginForm
+                            mode="signin"
+                            onSuccess={(user) => console.log('Login success:', user)}
+                          />
+                        </div>
                       )}
                       {selectedComponent.id === 'oauth-providers' && (
                         <OAuthProviders
@@ -463,6 +649,7 @@ export default function ShowcasePage() {
                       {selectedComponent.id === 'modal' && (
                         <>
                           <button
+                            type="button"
                             onClick={() => setModalOpen(true)}
                             className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
                           >
@@ -522,21 +709,77 @@ export default function ShowcasePage() {
                         />
                       )}
                       {selectedComponent.id === 'handcash-connector' && (
-                        <HandCashConnector
-                          config={{
-                            appId: "demo-app-id",
-                            redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/handcash` : '',
-                            environment: "iae"
-                          }}
-                          onSuccess={(result) => console.log('HandCash connected:', result)}
-                          onError={(error) => console.error('HandCash error:', error)}
-                        />
+                        <div className="space-y-4">
+                          {oauthResult && oauthResult.provider === 'handcash' && (
+                            <div className={`p-4 rounded-lg border ${
+                              oauthResult.success 
+                                ? 'bg-green-500/10 border-green-500/50 text-green-400' 
+                                : 'bg-red-500/10 border-red-500/50 text-red-400'
+                            }`}>
+                              {oauthResult.success ? (
+                                <div>
+                                  <p className="font-medium">✅ HandCash OAuth Success!</p>
+                                  <p className="text-sm mt-1">Authorization code: {oauthResult.code?.substring(0, 20)}...</p>
+                                </div>
+                              ) : (
+                                <div>
+                                  <p className="font-medium">❌ HandCash OAuth Error</p>
+                                  <p className="text-sm mt-1">Error: {oauthResult.error}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <HandCashConnector
+                            config={{
+                              appId: "demo-app-id",
+                              redirectUrl: typeof window !== 'undefined' ? `${window.location.origin}/api/auth/callback/handcash` : '',
+                              environment: "iae"
+                            }}
+                            onSuccess={(result) => {
+                              console.log('HandCash connected:', result);
+                              setOauthResult({ success: true, provider: 'handcash', code: 'demo-result' });
+                            }}
+                            onError={(error: unknown) => {
+                              console.error('HandCash error:', error);
+                              const errorMessage = error instanceof Error ? error.message : String(error);
+                              setOauthResult({ success: false, provider: 'handcash', error: errorMessage });
+                            }}
+                          />
+                        </div>
                       )}
                       {selectedComponent.id === 'yours-wallet-connector' && (
-                        <YoursWalletConnector
-                          onSuccess={(result) => console.log('Yours Wallet connected:', result)}
-                          onError={(error) => console.error('Yours Wallet error:', error)}
-                        />
+                        <div className="space-y-4">
+                          {oauthResult && oauthResult.provider === 'yours-wallet' && (
+                            <div className={`p-4 rounded-lg border ${
+                              oauthResult.success 
+                                ? 'bg-green-500/10 border-green-500/50 text-green-400' 
+                                : 'bg-red-500/10 border-red-500/50 text-red-400'
+                            }`}>
+                              {oauthResult.success ? (
+                                <div>
+                                  <p className="font-medium">✅ Yours Wallet OAuth Success!</p>
+                                  <p className="text-sm mt-1">Authorization code: {oauthResult.code?.substring(0, 20)}...</p>
+                                </div>
+                              ) : (
+                                <div>
+                                  <p className="font-medium">❌ Yours Wallet OAuth Error</p>
+                                  <p className="text-sm mt-1">Error: {oauthResult.error}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <YoursWalletConnector
+                            onSuccess={(result) => {
+                              console.log('Yours Wallet connected:', result);
+                              setOauthResult({ success: true, provider: 'yours-wallet', code: 'demo-result' });
+                            }}
+                            onError={(error: unknown) => {
+                              console.error('Yours Wallet error:', error);
+                              const errorMessage = error instanceof Error ? error.message : String(error);
+                              setOauthResult({ success: false, provider: 'yours-wallet', error: errorMessage });
+                            }}
+                          />
+                        </div>
                       )}
                       {selectedComponent.id === 'auth-flow-orchestrator' && (
                         <div className="max-w-md mx-auto">
@@ -563,14 +806,6 @@ export default function ShowcasePage() {
                             showPasswordEntry={true}
                             onRestoreSuccess={(bapId) => console.log('Restore success:', bapId)}
                             onRestoreError={(error) => console.error('Restore error:', error)}
-                          />
-                        </div>
-                      )}
-                      {selectedComponent.id === 'login-form' && (
-                        <div className="max-w-md mx-auto">
-                          <LoginForm
-                            mode="signin"
-                            onSuccess={(user) => console.log('Login success:', user)}
                           />
                         </div>
                       )}
@@ -613,6 +848,401 @@ export default function ShowcasePage() {
                           <p className="text-sm text-gray-500 mt-2">Wrap your app with it and provide apiUrl configuration as shown in the code example.</p>
                         </div>
                       )}
+
+                      {/* Provider Components */}
+                      {selectedComponent.id === 'bitcoin-theme-provider' && (
+                        <div className="space-y-4">
+                          <div className="text-center py-8 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+                            <div className="text-orange-400 mb-4">
+                              <Palette className="w-12 h-12 mx-auto" />
+                            </div>
+                            <p className="text-gray-400">🎨 Theme Provider: This provider is already wrapping this demo!</p>
+                            <p className="text-sm text-gray-500 mt-2">The current theme system is powered by BitcoinThemeProvider with 8 color presets.</p>
+                          </div>
+                          <div className="text-center">
+                            <ThemeDemo />
+                          </div>
+                        </div>
+                      )}
+                      {selectedComponent.id === 'bitcoin-query-provider' && (
+                        <div id="bitcoin-query-provider" className="text-center py-8 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                          <div className="text-blue-400 mb-4">
+                            <Package className="w-12 h-12 mx-auto" />
+                          </div>
+                          <p className="text-gray-400">⚡ Query Provider: Enables React Query for market, wallet, and social components.</p>
+                          <p className="text-sm text-gray-500 mt-2">Wrap components that need data fetching with BitcoinQueryProvider.</p>
+                          <div className="mt-4 text-left bg-gray-900/50 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-yellow-400 mb-2">⚠️ Required For:</h4>
+                            <ul className="text-xs text-gray-300 space-y-1">
+                              <li>• SendBSVButton, WalletOverview, TokenBalance</li>
+                              <li>• PostButton, LikeButton, FollowButton</li>
+                              <li>• CreateListingButton, MarketTable</li>
+                              <li>• All components that fetch blockchain data</li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Profile Management Components */}
+                      {selectedComponent.id === 'profile-card' && (
+                        <div className="max-w-md mx-auto">
+                          <ProfileCard
+                            profile={{
+                              '@type': 'Person' as any,
+                              id: 'satoshi-demo',
+                              address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+                              isPublished: true,
+                              name: 'Satoshi Nakamoto',
+                              alternateName: 'satoshi',
+                              description: 'Creator of Bitcoin and digital currency pioneer',
+                              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=satoshi'
+                            }}
+                            showActions={true}
+                            onEdit={() => console.log('Edit profile')}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'profile-editor' && (
+                        <div className="max-w-md mx-auto">
+                          <ProfileEditor
+                            profile={{
+                              '@type': 'Person' as any,
+                              id: 'demo-user',
+                              address: '1DemoUserAddress...',
+                              isPublished: false,
+                              name: 'Demo User',
+                              alternateName: 'demo',
+                              description: 'A demo profile for editing'
+                            }}
+                            onSave={async (profile) => console.log('Saved profile:', profile)}
+                            onCancel={() => console.log('Cancelled editing')}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'profile-manager' && (
+                        <div className="text-center py-8 bg-indigo-500/5 border border-indigo-500/20 rounded-lg">
+                          <Package className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
+                          <p className="text-gray-400">👤 ProfileManager: Complete profile management interface</p>
+                          <p className="text-sm text-gray-500 mt-2">This component provides multi-profile support with create, edit, and delete operations.</p>
+                        </div>
+                      )}
+                      {selectedComponent.id === 'profile-popover' && (
+                        <div className="max-w-sm mx-auto">
+                          <ProfilePopover
+                            profile={{
+                              '@type': 'Person' as any,
+                              id: 'demo-popover-user',
+                              address: '1PopoverUserAddress...',
+                              isPublished: true,
+                              name: 'Demo Popover User',
+                              alternateName: 'demo-popover',
+                              description: 'Profile shown in popover demo',
+                              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=popover'
+                            }}
+                          >
+                            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                              Hover for Profile
+                            </button>
+                          </ProfilePopover>
+                        </div>
+                      )}
+                      {selectedComponent.id === 'profile-publisher' && (
+                        <div className="max-w-md mx-auto">
+                          <ProfilePublisher
+                            profile={{
+                              '@type': 'Person' as any,
+                              id: 'demo-publisher-user',
+                              address: '1PublisherUserAddress...',
+                              isPublished: false,
+                              name: 'Demo Publisher User',
+                              alternateName: 'demo-publisher',
+                              description: 'Profile ready to be published to blockchain'
+                            }}
+                            onPublish={async (profileId) => {
+                              console.log('Publishing profile:', profileId);
+                              // Simulate publishing delay
+                              await new Promise(resolve => setTimeout(resolve, 2000));
+                              console.log('Profile published successfully!');
+                              return { txid: 'demo-publish-tx-123' };
+                            }}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'profile-switcher' && (
+                        <div className="max-w-sm mx-auto">
+                          <ProfileSwitcher
+                            profiles={[
+                              { '@type': 'Person' as any, id: 'personal', address: '1PersonalProfile...', isPublished: true, name: 'Personal', alternateName: 'personal' },
+                              { '@type': 'Person' as any, id: 'work', address: '1WorkProfile...', isPublished: false, name: 'Work', alternateName: 'work' },
+                              { '@type': 'Organization' as any, id: 'company', address: '1CompanyProfile...', isPublished: true, name: 'Company', alternateName: 'company' }
+                            ]}
+                            activeProfileId="personal"
+                            onSwitch={(id: string) => console.log('Switched to profile:', id)}
+                            onCreate={() => console.log('Create new profile')}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'profile-viewer' && (
+                        <div className="max-w-md mx-auto">
+                          <ProfileViewer
+                            profile={{
+                              '@type': 'Person' as any,
+                              id: 'hal-finney',
+                              address: '1HalFinneyAddress...',
+                              isPublished: true,
+                              name: 'Hal Finney',
+                              alternateName: 'hal',
+                              description: 'Computer scientist and early Bitcoin adopter',
+                              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hal',
+                              url: 'https://example.com/hal'
+                            }}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'cloud-backup-manager' && (
+                        <div className="text-center py-8 bg-green-500/5 border border-green-500/20 rounded-lg">
+                          <Package className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                          <p className="text-gray-400">☁️ CloudBackupManager: Multi-provider backup management</p>
+                          <p className="text-sm text-gray-500 mt-2">Manage encrypted backups across Google Drive, GitHub, and Dropbox.</p>
+                        </div>
+                      )}
+
+                      {/* Wallet Components */}
+                      {selectedComponent.id === 'donate-button' && (
+                        <div className="text-center">
+                          <DonateButton />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'quick-donate-button' && (
+                        <div className="text-center">
+                          <QuickDonateButton />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'token-balance' && (
+                        <div className="text-center">
+                          <TokenBalance tokens={[]} />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'compact-wallet-overview' && (
+                        <div className="text-center">
+                          <CompactWalletOverview />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'quick-send-button' && (
+                        <div className="text-center">
+                          <QuickSendButton 
+                            amount="0.001"
+                            recipient="1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"
+                          />
+                        </div>
+                      )}
+
+                      {/* Developer Tools */}
+                      {selectedComponent.id === 'theme-demo' && (
+                        <div className="text-center">
+                          <ThemeDemo />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'cyberpunk-demo' && (
+                        <div className="text-center">
+                          <CyberpunkDemo />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'shamir-secret-sharing' && (
+                        <div className="text-center">
+                          <ShamirSecretSharing />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'key-manager' && (
+                        <div className="text-center">
+                          <KeyManager />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'type42-key-derivation' && (
+                        <div className="text-center">
+                          <Type42KeyDerivation />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'artifact-display' && (
+                        <div className="text-center py-8 bg-gray-500/5 border border-gray-500/20 rounded-lg">
+                          <Package className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                          <p className="text-gray-400">📄 ArtifactDisplay: Display various Bitcoin artifact types</p>
+                          <p className="text-sm text-gray-500 mt-2">Supports text, JSON, images, and other artifact formats.</p>
+                        </div>
+                      )}
+
+                      {/* Market Components */}
+                      {selectedComponent.id === 'quick-list-button' && (
+                        <div className="text-center">
+                          <QuickListButton />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'quick-buy-button' && (
+                        <div className="text-center">
+                          <QuickBuyButton listing={{} as any} />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'compact-market-table' && (
+                        <div className="text-center">
+                          <CompactMarketTable listings={[]} />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'create-listing-button' && (
+                        <div className="text-center">
+                          <CreateListingButton />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'buy-listing-button' && (
+                        <div className="text-center">
+                          <BuyListingButton listing={{} as any} />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'market-table' && (
+                        <div className="text-center">
+                          <MarketTable listings={[]} />
+                        </div>
+                      )}
+
+                      {/* Wallet Components */}
+                      {selectedComponent.id === 'send-bsv-button' && (
+                        <div className="text-center">
+                          <SendBSVButton />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'wallet-overview' && (
+                        <div className="text-center">
+                          <WalletOverview />
+                        </div>
+                      )}
+
+                      {/* Social Components */}
+                      {selectedComponent.id === 'social-feed' && (
+                        <div className="text-center">
+                          <SocialFeed posts={[]} />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'post-card' && (
+                        <div className="text-center">
+                          <PostCard post={{} as any} />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'like-button' && (
+                        <div className="text-center">
+                          <LikeButton txid="demo-post-123" />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'follow-button' && (
+                        <div className="text-center">
+                          <FollowButton idKey="demo-user-456" />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'post-button' && (
+                        <div className="text-center">
+                          <PostButton />
+                        </div>
+                      )}
+
+                      {/* Additional Components */}
+                      {selectedComponent.id === 'qr-code-renderer' && (
+                        <div className="text-center">
+                          <QRCodeRenderer
+                            data="bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.001"
+                            size={200}
+                          />
+                        </div>
+                      )}
+                      {selectedComponent.id === 'oauth-conflict-modal' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setModalOpen(true)}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                          >
+                            Show OAuth Conflict
+                          </button>
+                          <OAuthConflictModal
+                            isOpen={modalOpen}
+                            provider="google"
+                            currentBapId="current-demo-account"
+                            existingBapId="existing-account-123"
+                            onTransferComplete={() => {
+                              console.log('Account transferred');
+                              setModalOpen(false);
+                            }}
+                            onSwitchAccount={() => {
+                              console.log('Switched accounts');
+                              setModalOpen(false);
+                            }}
+                            onClose={() => setModalOpen(false)}
+                          />
+                        </>
+                      )}
+                      {selectedComponent.id === 'message-display' && (
+                        <MessageDisplay
+                          message={{
+                            txId: 'demo-message-123',
+                            content: 'Hello! This is a Bitcoin message.',
+                            contentType: 'text/plain' as const,
+                            timestamp: Date.now() - 1800000,
+                            app: 'bitcoin-auth-ui-demo',
+                            author: {
+                              idKey: 'demo-user-123',
+                              currentAddress: '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2',
+                              rootAddress: '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2',
+                              addresses: [],
+                              block: 800000,
+                              firstSeen: Date.now() - 864000000,
+                              timestamp: Date.now() - 1800000,
+                              valid: true,
+                              identity: {
+                                '@type': 'Person',
+                                alternateName: 'Demo User',
+                                description: 'A demo user for showcasing MessageDisplay'
+                              } as any
+                            }
+                          }}
+                          showTimestamp={true}
+                        />
+                      )}
+
+                      {/* Layout Components */}
+                      {selectedComponent.id === 'auth-card' && (
+                        <AuthCard>
+                          <h3 className="text-lg font-semibold mb-4">Demo Card Content</h3>
+                          <p className="text-gray-400 mb-4">This is an example of content inside an AuthCard component.</p>
+                          <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors">
+                            Action Button
+                          </button>
+                        </AuthCard>
+                      )}
+                      
+                      {/* Provider components */}
+                      {selectedComponent.category === 'providers' && (
+                        <div className="text-center py-8 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+                          <Package className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                          <p className="text-gray-400">⚙️ Provider Components: These wrap your entire app to provide context and configuration.</p>
+                          <p className="text-sm text-gray-500 mt-2">See the code example for proper app-level setup and configuration options.</p>
+                        </div>
+                      )}
+                      
+                      {/* Profile management components */}
+                      {selectedComponent.category === 'profile-management' && (
+                        <div className="text-center py-8 bg-indigo-500/5 border border-indigo-500/20 rounded-lg">
+                          <Package className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
+                          <p className="text-gray-400">👤 Profile Management: These components require authenticated user context with profile data.</p>
+                          <p className="text-sm text-gray-500 mt-2">See the code example for integration with user profiles and schema.org data.</p>
+                        </div>
+                      )}
+                      
+                      {/* Core utilities */}
+                      {selectedComponent.category === 'core-utilities' && (
+                        <div className="text-center py-8 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
+                          <Package className="w-12 h-12 text-cyan-500 mx-auto mb-4" />
+                          <p className="text-gray-400">🛠️ Core Utilities: These are classes and functions, not React components.</p>
+                          <p className="text-sm text-gray-500 mt-2">Use these utilities in your application logic. See code examples for usage patterns.</p>
+                        </div>
+                      )}
+                      
                       {/* Hook examples show code only since they can't be demoed visually */}
                       {selectedComponent.category === 'hooks' && (
                         <div className="text-center py-8 bg-purple-500/5 border border-purple-500/20 rounded-lg">
@@ -662,7 +1292,7 @@ export default function ShowcasePage() {
                           </thead>
                           <tbody>
                             {selectedComponent.props.map((prop, index) => (
-                              <tr key={prop.name} className={index < selectedComponent.props!.length - 1 ? 'border-b border-gray-800/50' : ''}>
+                              <tr key={prop.name} className={index < (selectedComponent.props?.length || 0) - 1 ? 'border-b border-gray-800/50' : ''}>
                                 <td className="px-4 py-3 text-sm font-mono text-orange-400">{prop.name}</td>
                                 <td className="px-4 py-3 text-sm font-mono text-blue-400">{prop.type}</td>
                                 <td className="px-4 py-3 text-sm">
@@ -693,10 +1323,10 @@ export default function ShowcasePage() {
                             <h4 className="font-medium mb-3">{variation.name}</h4>
                             {/* Render variation based on component type */}
                             {selectedComponent.id === 'auth-button' && (
-                              <AuthButton {...variation.props}>{variation.props.children as React.ReactNode}</AuthButton>
+                              <AuthButton {...variation.props}>{String(variation.props.children)}</AuthButton>
                             )}
                             {selectedComponent.id === 'loading-button' && (
-                              <LoadingButton {...variation.props}>{variation.props.children as React.ReactNode}</LoadingButton>
+                              <LoadingButton {...variation.props}>{String(variation.props.children)}</LoadingButton>
                             )}
                           </div>
                         ))}
@@ -709,6 +1339,7 @@ export default function ShowcasePage() {
                     <div className="w-24">
                       {previousComponent ? (
                         <button
+                          type="button"
                           onClick={goToPrevious}
                           className="group flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg transition-all"
                         >
@@ -716,7 +1347,7 @@ export default function ShowcasePage() {
                           <span className="text-sm font-medium">Previous</span>
                         </button>
                       ) : (
-                        <div className="w-24"></div>
+                        <div className="w-24" />
                       )}
                     </div>
                     
@@ -729,6 +1360,7 @@ export default function ShowcasePage() {
                     <div className="w-24 flex justify-end">
                       {nextComponent ? (
                         <button
+                          type="button"
                           onClick={goToNext}
                           className="group flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-lg transition-all"
                         >
@@ -736,7 +1368,7 @@ export default function ShowcasePage() {
                           <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                         </button>
                       ) : (
-                        <div className="w-24"></div>
+                        <div className="w-24" />
                       )}
                     </div>
                   </div>
@@ -775,7 +1407,8 @@ export default function ShowcasePage() {
             </div>
           </div>
         </footer>
-      </div>
+        </div>
+      </BitcoinQueryProvider>
     </BitcoinAuthProvider>
   );
 }

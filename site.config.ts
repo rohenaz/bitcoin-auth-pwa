@@ -5,17 +5,17 @@
 
 export const siteConfig = {
   // Basic site information
-  name: 'Bitcoin Auth PWA',
-  shortName: 'BitAuth',
-  description: 'Self-custodial Bitcoin authentication where your keys are your identity',
-  tagline: 'Your Keys, Your Identity',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://bitcoin-auth.com',
+  name: 'BigBlocks.dev',
+  shortName: 'BigBlocks',
+  description: 'Professional Bitcoin development platform with authentication components, tools, and production-ready libraries',
+  tagline: 'Powerful Bitcoin Components for Real Men',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://bigblocks.dev',
   
   // Branding
   logo: {
     light: '/logo-light.svg',
     dark: '/logo-dark.svg',
-    alt: 'Bitcoin Auth Logo'
+    alt: 'BigBlocks.dev Logo'
   },
   
   // Theme colors (can be overridden by Tailwind config)
@@ -35,35 +35,37 @@ export const siteConfig = {
   
   // SEO defaults
   seo: {
-    title: 'Bitcoin Auth PWA - Self-Custodial Authentication',
-    titleTemplate: '%s | Bitcoin Auth PWA',
-    description: 'Revolutionary self-custodial authentication where Bitcoin keypairs ARE your identity. No passwords, no usernames - just cryptographic proof.',
+    title: 'BigBlocks.dev - Bitcoin Development Platform',
+    titleTemplate: '%s | BigBlocks.dev',
+    description: 'Professional Bitcoin development platform with authentication components, MCP servers, VS Code tools, and production-ready libraries for building Bitcoin applications.',
     keywords: [
+      'bitcoin development',
+      'bitcoin tools',
       'bitcoin authentication',
-      'self-custodial auth',
-      'bitcoin identity',
-      'BAP protocol',
-      'decentralized authentication',
-      'passwordless login',
-      'bitcoin wallet auth',
-      'cryptographic identity'
+      'bitcoin components',
+      'MCP server',
+      'bitcoin vs code',
+      'bitcoin SDK',
+      'blockchain development',
+      'bitcoin API',
+      'developer tools'
     ],
     openGraph: {
       type: 'website',
       locale: 'en_US',
-      siteName: 'Bitcoin Auth PWA',
+      siteName: 'BigBlocks.dev',
       images: [
         {
           url: '/og-image.png',
           width: 1200,
           height: 630,
-          alt: 'Bitcoin Auth PWA'
+          alt: 'BigBlocks.dev - Bitcoin Development Platform'
         }
       ]
     },
     twitter: {
-      handle: '@bitcoinauth',
-      site: '@bitcoinauth',
+      handle: '@bigblocksdev',
+      site: '@bigblocksdev',
       cardType: 'summary_large_image',
     }
   },
@@ -102,19 +104,27 @@ export const siteConfig = {
   footer: {
     links: [
       {
-        title: 'Documentation',
-        href: 'https://github.com/your-org/bitcoin-auth-pwa/wiki'
+        title: 'Component Library',
+        href: '/components'
+      },
+      {
+        title: 'MCP Server',
+        href: '/mcp-server'
+      },
+      {
+        title: 'VS Code Extension',
+        href: 'https://marketplace.visualstudio.com/items?itemName=Satchmo.bitcoin'
+      },
+      {
+        title: 'Nodeless Infrastructure',
+        href: 'https://nodeless.network'
       },
       {
         title: 'GitHub',
-        href: 'https://github.com/your-org/bitcoin-auth-pwa'
-      },
-      {
-        title: 'BAP Protocol',
-        href: 'https://bap.network'
+        href: 'https://github.com/bigblocks-dev'
       }
     ],
-    copyright: `© ${new Date().getFullYear()} Bitcoin Auth PWA. All rights reserved.`
+    copyright: `© ${new Date().getFullYear()} BigBlocks.dev. All rights reserved.`
   },
   
   // Analytics (optional)
@@ -126,9 +136,9 @@ export const siteConfig = {
   
   // PWA configuration
   pwa: {
-    name: 'Bitcoin Auth PWA',
-    shortName: 'BitAuth',
-    description: 'Self-custodial Bitcoin authentication',
+    name: 'BigBlocks.dev',
+    shortName: 'BigBlocks',
+    description: 'Bitcoin Development Platform',
     themeColor: '#000000',
     backgroundColor: '#000000',
     display: 'standalone',

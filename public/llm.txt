@@ -1,0 +1,546 @@
+# Bitcoin Auth UI
+
+> Production-ready React component library for Bitcoin authentication and blockchain interactions. Built with TypeScript, Radix Themes, and optimized for BSV blockchain integration. The library provides 50+ components for Bitcoin-based identity, wallet functionality, social features, and marketplace interactions.
+
+## Overview
+
+Bitcoin Auth UI is a comprehensive React component library that implements Bitcoin-as-identity authentication, eliminating traditional passwords in favor of Bitcoin cryptographic keys. The library is built on Radix Themes for accessibility and professional design, with comprehensive TypeScript support and modular architecture.
+
+**Key Concepts:**
+- Bitcoin keypairs ARE the identity (no traditional passwords)
+- Automatic wallet activation based on backup type detection
+- Complete Radix Themes integration with Bitcoin-specific presets
+- Modular architecture: Authentication, Wallet, Market, Social (bSocial), Developer Tools
+- Environment-specific storage isolation via configurable namespaces
+
+**Current Version:** 0.2.0  
+**Package:** `npm install bitcoin-auth-ui`  
+**Repository:** https://github.com/b-open-io/bitcoin-auth-ui  
+**Documentation:** [docs/README.md](docs/README.md)  
+**Storybook:** Interactive component demos with 8 theme presets
+
+## Architecture & Dependencies
+
+**Core Technologies:**
+- **React 18/19** - Component framework
+- **TypeScript** - Type safety and development experience  
+- **Radix Themes** - Design system and component primitives
+- **BSV SDK** - Bitcoin SV blockchain integration
+- **React Query** - State management for blockchain data
+- **Bun** - Package manager and build tooling
+
+**Peer Dependencies (Required):**
+```bash
+npm install react react-dom @bsv/sdk bitcoin-auth bitcoin-backup bsv-bap @radix-ui/themes @tanstack/react-query
+```
+
+**Module Structure:**
+- `/components/` - Core UI components (50+ components)
+- `/bSocial/` - Bitcoin-powered social features
+- `/wallet/` - BSV wallet functionality  
+- `/market/` - NFT marketplace components
+- `/bap/` - BAP (Bitcoin Attestation Protocol) identity management
+- `/core/` - Authentication logic and providers
+- `/hooks/` - React hooks for Bitcoin interactions
+
+## Quick Setup
+
+### Basic Authentication Setup
+
+```tsx
+import { BitcoinThemeProvider, BitcoinAuthProvider, AuthButton } from 'bitcoin-auth-ui';
+import '@radix-ui/themes/styles.css';
+
+function App() {
+  return (
+    <BitcoinThemeProvider 
+      bitcoinTheme="blue"        // 'orange' | 'blue' | 'green' | 'purple' | 'red' | 'pink' | 'yellow' | 'indigo'
+      appearance="dark"          // 'light' | 'dark' | 'inherit'  
+      radius="medium"            // 'none' | 'small' | 'medium' | 'large' | 'full'
+    >
+      <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
+        <AuthButton />
+      </BitcoinAuthProvider>
+    </BitcoinThemeProvider>
+  );
+}
+```
+
+### Complete Authentication Flow
+
+```tsx
+import { BitcoinQueryProvider, BitcoinThemeProvider, BitcoinAuthProvider, AuthFlowOrchestrator } from 'bitcoin-auth-ui';
+
+function App() {
+  return (
+    <BitcoinQueryProvider>  {/* Required for wallet/market/social components */}
+      <BitcoinThemeProvider bitcoinTheme="orange" appearance="dark">
+        <BitcoinAuthProvider 
+          config={{
+            apiUrl: '/api',
+            storageNamespace: 'dev',  // Environment isolation
+            oauthProviders: ['google', 'github', 'x'],
+            onAuthSuccess: (user) => console.log('Authenticated:', user),
+            onWalletCapabilitiesDetected: (hasWallet, walletExtension) => {
+              if (hasWallet) console.log('Wallet features enabled!', walletExtension);
+            }
+          }}
+        >
+          <AuthFlowOrchestrator
+            flowType="unified"           // Smart flow detection
+            enableOAuth={true}           
+            enableFileImport={true}      
+            onSuccess={(user) => router.push('/dashboard')}
+          />
+        </BitcoinAuthProvider>
+      </BitcoinThemeProvider>
+    </BitcoinQueryProvider>
+  );
+}
+```
+
+### Automatic Wallet Activation
+
+Users with OneSatBackup files automatically get wallet functionality:
+
+```tsx
+import { useBitcoinAuth, SendBSVButton, WalletOverview } from 'bitcoin-auth-ui';
+
+function WalletComponent() {
+  const { hasWalletCapabilities, walletExtension, user } = useBitcoinAuth();
+  
+  if (!hasWalletCapabilities) {
+    return <div>Sign in with a wallet backup to enable wallet features</div>;
+  }
+  
+  // Wallet features automatically available when user has payPk in backup!
+  return (
+    <div>
+      <WalletOverview />
+      <SendBSVButton />
+      {/* All wallet components work automatically */}
+    </div>
+  );
+}
+```
+
+## Theme System (Radix Themes Integration)
+
+Bitcoin Auth UI uses Radix Themes with Bitcoin-specific enhancements:
+
+### Theme Configuration
+
+```tsx
+<BitcoinThemeProvider
+  bitcoinTheme="orange"          // Bitcoin-specific color presets
+  appearance="dark"              // Light/dark mode  
+  radius="medium"                // Border radius consistency
+  scaling="100%"                 // UI size scaling (90%-110%)
+  panelBackground="solid"        // Panel style
+  hasBackground={true}           // Background management
+  showThemePanel={true}          // Development theme panel
+>
+```
+
+### Bitcoin Theme Presets
+
+- **orange** - Classic Bitcoin orange (#f7931a)
+- **blue** - Professional blue (default)
+- **green** - Matrix green for cyberpunk aesthetic
+- **purple** - Modern purple accent
+- **red** - Alert/error state red
+- **pink** - Cyberpunk pink accent  
+- **yellow** - Bitcoin gold variant
+- **indigo** - Synthwave indigo for dark themes
+
+### Custom Theme Extension
+
+```tsx
+// Access full Radix Theme system
+<BitcoinThemeProvider 
+  bitcoinTheme="orange"
+  // Override any Radix Theme prop
+  grayColor="slate"
+  radius="large" 
+  scaling="105%"
+>
+```
+
+**Radix Integration Benefits:**
+- Professional accessibility (WCAG 2.1 AA compliant)
+- Consistent design tokens across all components
+- Dark/light mode with automatic color adaptation
+- Type-safe theme configuration
+- Easy customization without losing design consistency
+
+## Component Categories
+
+### 🔐 Authentication (8 components)
+Core authentication flows and user management:
+
+- **AuthButton** - Simple drop-in authentication button
+- **AuthFlowOrchestrator** - Complete authentication flow management  
+- **LoginForm** - Basic login form with password input
+- **SignupFlow** - Multi-step registration process
+- **OAuthProviders** - Social login integration (Google, GitHub, X/Twitter)
+- **OAuthRestoreFlow** - OAuth backup restoration
+- **OAuthConflictModal** - OAuth account conflict resolution
+- **IdentityGeneration** - Generate new Bitcoin identities
+
+### 📦 Backup & Recovery (6 components)
+Secure backup creation and recovery workflows:
+
+- **BackupDownload** - Generate encrypted backups
+- **BackupImport** - Import backup interface
+- **FileImport** - Generic file import with validation
+- **MnemonicDisplay** - BIP39 mnemonic management (view/verify/import)
+- **CloudBackupManager** - Cloud backup storage integration
+- **ShamirSecretSharing** - Split keys into shares for secure storage
+
+### 🛠️ Developer Tools (4 components)
+Advanced tools for key management and development:
+
+- **KeyManager** - Local key storage and management UI
+- **Type42KeyDerivation** - BRC-42 privacy-preserving key derivation
+- **ArtifactDisplay** - Display various Bitcoin artifacts
+- **DeviceLinkQR** - Device-to-device linking via QR codes
+
+### 🔌 Wallet Integrations (2 components)
+Connect to external wallet providers:
+
+- **HandCashConnector** - HandCash OAuth integration
+- **YoursWalletConnector** - Yours browser extension support
+
+### 💰 Wallet (4 components)
+Core wallet functionality:
+
+- **WalletOverview** - Complete wallet dashboard
+- **SendBSVButton** - Send Bitcoin transactions
+- **TokenBalance** - Display token balances
+- **DonateButton** - Bitcoin donation components
+
+### 🏪 Market (3 components)
+NFT marketplace functionality:
+
+- **MarketTable** - Display market listings
+- **CreateListingButton** - List items for sale
+- **BuyListingButton** - Purchase listed items
+
+### 💬 Social (8 components)
+Bitcoin-powered social interactions (bSocial):
+
+- **PostButton** - Create on-chain posts
+- **LikeButton** - Like posts on-chain
+- **FollowButton** - Follow users on-chain
+- **PostCard** - Display social posts
+- **SocialFeed** - Social media feed
+- **MessageDisplay** - Message components
+- **FriendsDialog** - Friend management
+- **BitcoinImage** - Bitcoin-authenticated images
+
+### 🎨 UI Components (8 components)
+Base UI components and utilities:
+
+- **Modal** - Modal dialogs with Radix primitives
+- **StepIndicator** - Multi-step progress visualization
+- **ErrorDisplay** - Consistent error message display
+- **WarningCard** - Warning notification components
+- **LoadingButton** - Button with loading states
+- **PasswordInput** - Secure password input with visibility toggle
+- **AuthLayout** - Authentication page layouts
+- **QRCodeRenderer** - QR code generation
+
+### 🔧 Providers (2 components)
+Context providers and configuration:
+
+- **BitcoinAuthProvider** - Main authentication provider
+- **BitcoinThemeProvider** - Radix Themes integration
+- **BitcoinQueryProvider** - React Query wrapper
+
+### 🪝 Hooks (6+ hooks)
+React hooks for Bitcoin interactions:
+
+- **useBitcoinAuth** - Main authentication hook
+- **useSendBSV** - Send Bitcoin transactions
+- **useSocialPost** - Create social posts
+- **useLikePost** - Like functionality
+- **useFollowUser** - Follow users
+- **useCreateListing** - Create market listings
+- **useBuyListing** - Purchase listings
+
+## Authentication Flow Types
+
+### Backup Type Detection
+
+The library automatically detects wallet capabilities based on backup format:
+
+**BapMasterBackup** (Identity-only):
+- Contains: `xprv`, `mnemonic`, `ids`
+- Enables: Authentication, profile management
+- Wallet Features: ❌
+
+**OneSatBackup** (Full wallet - automatic activation):
+- Contains: `payPk`, `ordPk`, `identityPk`  
+- Enables: Authentication, profile management, wallet features
+- Wallet Features: ✅ (automatic)
+
+**WifBackup** (Simple key):
+- Contains: `wif`
+- Enables: Basic authentication
+- Wallet Features: ❌
+
+### Flow Types
+
+```tsx
+<AuthFlowOrchestrator
+  flowType="unified"      // Smart flow detection
+  flowType="signin"       // Sign in only
+  flowType="signup"       // Sign up only
+  flowType="oauth-restore" // OAuth backup restoration
+  flowType="import"       // File import flow
+  flowType="device-link"  // Device linking flow
+/>
+```
+
+## Configuration
+
+### BitcoinAuthConfig
+
+```tsx
+interface BitcoinAuthConfig {
+  // API Configuration
+  apiUrl: string;                    // Required: '/api' or 'https://api.myapp.com'
+  apiKey?: string;                   // Optional API key
+  apiHeaders?: Record<string, string>; // Custom headers
+  
+  // Network Configuration  
+  network?: 'mainnet' | 'testnet' | 'localhost';
+  
+  // OAuth Providers
+  oauthProviders?: Array<'google' | 'github' | 'x' | 'handcash'>;
+  oauthRedirectUrl?: string;
+  
+  // Storage Configuration
+  storageAdapter?: 'localStorage' | 'sessionStorage' | 'memory' | StorageAdapter;
+  storageNamespace?: string;         // Environment isolation: 'dev', 'staging', 'prod'
+  
+  // Feature Flags
+  enableDeviceLink?: boolean;
+  enableBackupDownload?: boolean;
+  enableOAuthBackup?: boolean;
+  enableFileImport?: boolean;
+  
+  // Callbacks
+  onAuthSuccess?: (user: AuthUser) => void;
+  onAuthError?: (error: AuthError) => void;
+  onLogout?: () => void;
+  onWalletCapabilitiesDetected?: (hasWallet: boolean, walletExtension?: WalletUserExtension) => void;
+}
+```
+
+### Environment-Specific Configuration
+
+```tsx
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const config: BitcoinAuthConfig = {
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
+  network: isDevelopment ? 'testnet' : 'mainnet',
+  storageNamespace: isDevelopment ? 'dev' : 'prod',
+  oauthProviders: isDevelopment 
+    ? ['google', 'github'] 
+    : ['google', 'github', 'x'],
+};
+```
+
+## Backend API Requirements
+
+The library requires backend endpoints for full functionality:
+
+### Required Endpoints
+
+```
+POST /api/auth/[...nextauth]     # NextAuth.js integration
+GET  /api/auth/callback/oauth    # OAuth callback handling
+POST /api/backup                 # Backup storage/retrieval
+POST /api/users/create-from-backup # User creation
+GET  /api/users/connected-accounts # OAuth account status
+POST /api/device-link/generate   # Device linking
+POST /api/member-export/generate # Member profile export
+```
+
+### HandCash Integration (Backend Required)
+
+```javascript
+// Backend: HandCash OAuth handler
+const handcashConfig = {
+  appId: process.env.HANDCASH_APP_ID,
+  appSecret: process.env.HANDCASH_APP_SECRET,  // Backend only!
+  redirectUrl: process.env.HANDCASH_REDIRECT_URL,
+  environment: 'prod' // or 'iae'
+};
+```
+
+**Security Note:** HandCash appSecret must be stored backend-only for security.
+
+## Advanced Usage
+
+### Multi-Tenant Configuration
+
+```tsx
+const getTenantConfig = (tenant: string): BitcoinAuthConfig => ({
+  apiUrl: `https://${tenant}.api.myapp.com`,
+  storageNamespace: `${tenant}-prod`,
+  messages: {
+    signIn: { title: `Welcome to ${tenant}!` }
+  }
+});
+```
+
+### Custom Storage Adapter
+
+```tsx
+const customStorage: StorageAdapter = {
+  get: async (key: string) => { /* Custom get */ },
+  set: async (key: string, value: any) => { /* Custom set */ },
+  remove: async (key: string) => { /* Custom remove */ },
+  clear: async () => { /* Custom clear */ }
+};
+```
+
+### Component Customization
+
+All components accept standard React props and custom className for styling:
+
+```tsx
+<AuthButton 
+  variant="outline"              // Radix Button variants
+  size="3"                       // Radix size scale (1-4)
+  className="custom-auth-btn"    // Custom CSS classes
+  onSuccess={(user) => {}}       // Success callback
+/>
+```
+
+## File Structure
+
+```
+bitcoin-auth-ui/
+├── components/          # Core UI components (50+ components)
+├── bSocial/            # Social components (8 components)
+├── wallet/             # Wallet components (4 components)  
+├── market/             # Market components (3 components)
+├── bap/                # BAP identity components (3 components)
+├── core/               # Authentication logic
+├── hooks/              # React hooks
+├── docs/               # Comprehensive documentation
+├── .storybook/         # Storybook configuration
+└── types.ts           # TypeScript definitions
+```
+
+## Development Tools
+
+### Storybook Integration
+
+All components include comprehensive Storybook stories:
+
+```bash
+bun run storybook        # Start Storybook dev server
+bun run build-storybook  # Build static Storybook
+```
+
+**Storybook Features:**
+- 50+ component stories with multiple variants
+- Interactive theme controls (8 Bitcoin themes)
+- Real-time appearance mode switching
+- Accessibility testing integration
+- Dark theme with Bitcoin branding
+
+### CLI Tool
+
+```bash
+npx bitcoin-auth-ui init      # Initialize in existing project
+npx bitcoin-auth-ui add       # Add components interactively
+```
+
+### Testing
+
+```bash
+bun test                 # Run unit tests
+bun run type-check       # TypeScript validation
+bun run lint             # ESLint validation
+```
+
+## Common Integration Patterns
+
+### Next.js Integration
+
+```tsx
+// app/layout.tsx
+import '@radix-ui/themes/styles.css';
+import { BitcoinThemeProvider } from 'bitcoin-auth-ui';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BitcoinThemeProvider bitcoinTheme="blue" appearance="dark">
+          {children}
+        </BitcoinThemeProvider>
+      </body>
+    </html>
+  );
+}
+
+// app/auth/page.tsx
+import { BitcoinAuthProvider, AuthFlowOrchestrator } from 'bitcoin-auth-ui';
+
+export default function AuthPage() {
+  return (
+    <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
+      <AuthFlowOrchestrator flowType="unified" />
+    </BitcoinAuthProvider>
+  );
+}
+```
+
+### Vite Integration
+
+```tsx
+// main.tsx
+import '@radix-ui/themes/styles.css';
+import { BitcoinThemeProvider, BitcoinAuthProvider } from 'bitcoin-auth-ui';
+
+function App() {
+  return (
+    <BitcoinThemeProvider>
+      <BitcoinAuthProvider config={{ apiUrl: import.meta.env.VITE_API_URL }}>
+        <Router />
+      </BitcoinAuthProvider>
+    </BitcoinThemeProvider>
+  );
+}
+```
+
+## Key Resources
+
+- **[README.md](README.md)** - Main project documentation with getting started guide
+- **[docs/README.md](docs/README.md)** - Comprehensive component documentation hub
+- **[docs/getting-started/configuration.md](docs/getting-started/configuration.md)** - Complete configuration reference
+- **[docs/RADIX_IMPLEMENTATION_PLAN.md](docs/RADIX_IMPLEMENTATION_PLAN.md)** - Radix Themes migration strategy and architecture
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and migration guides
+- **[.storybook/README.md](.storybook/README.md)** - Storybook organization and development guide
+- **[package.json](package.json)** - Dependencies, scripts, and package configuration
+- **[components/BitcoinThemeProvider.tsx](components/BitcoinThemeProvider.tsx)** - Theme system implementation
+- **[core/AuthManager.ts](core/AuthManager.ts)** - Core authentication logic
+- **[hooks/useBitcoinAuth.ts](hooks/useBitcoinAuth.ts)** - Main authentication hook
+
+## Recent Updates (v0.2.0)
+
+- **Automatic Wallet Activation** - OneSatBackup users get instant wallet functionality
+- **Configurable Storage Namespaces** - Environment-specific storage isolation
+- **Enhanced ProfileCard** - Full schema.org Person/Organization support
+- **Complete Radix Themes Migration** - Professional, accessible UI components
+- **Developer Tools Suite** - Advanced key management and cryptographic operations
+- **Comprehensive Documentation** - Complete guides, API reference, and examples
+
+This library eliminates traditional password-based authentication by using Bitcoin cryptographic keys as user identity, providing a secure, decentralized authentication system with full wallet integration capabilities.

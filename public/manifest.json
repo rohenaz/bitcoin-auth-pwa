@@ -1,7 +1,7 @@
 {
-  "name": "Bitcoin Auth PWA",
-  "short_name": "BitAuth",
-  "description": "Self-custodial Bitcoin authentication where your keys are your identity",
+  "name": "BigBlocks.dev",
+  "short_name": "BigBlocks",
+  "description": "Professional Bitcoin development platform with authentication components and tools",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
