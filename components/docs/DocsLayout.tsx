@@ -15,7 +15,7 @@ export function DocsLayout({ children }: DocsLayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <Link href="/docs" className="text-xl font-bold text-orange-600">
-                Bitcoin Auth PWA Docs
+                BitcoinBlocks.dev Docs
               </Link>
               <nav className="hidden sm:flex space-x-6">
                 <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">

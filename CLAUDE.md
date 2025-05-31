@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚀 Bitcoin Auth UI Integration v0.2.2
+## 🚀 BigBlocks Integration v0.0.1
 
-This project uses the `bitcoin-auth-ui` npm package (v0.2.2) for all Bitcoin authentication components. The package provides a complete suite of production-ready components with advanced wallet capabilities.
+This project uses the `bigblocks` npm package (v0.0.1) for all Bitcoin authentication and UI components. The package provides a complete suite of production-ready components with advanced wallet capabilities.
 
 ### Current Integration Status:
 - **Core Authentication** ✅ - All auth flows working with v0.2.2 enhancements
@@ -79,7 +79,7 @@ bun storybook    # View local component stories
 ## 🔥 Go Faucet API Integration (EPIC!)
 
 ### Overview
-The `../go-faucet-api` provides a production-ready Bitcoin SV faucet service that can fund bitcoin-auth-ui components for live demos. This enables visitors to test funding-dependent components FOR FREE.
+The `../go-faucet-api` provides a production-ready Bitcoin SV faucet service that can fund bigblocks components for live demos. This enables visitors to test funding-dependent components FOR FREE.
 
 ### Architecture
 ```
@@ -92,14 +92,14 @@ go-faucet-api/
 ```
 
 ### Key Features
-- **Bitcoin Signed Message (BSM) Authentication** - Compatible with bitcoin-auth-ui
+- **Bitcoin Signed Message (BSM) Authentication** - Compatible with bigblocks
 - **Hierarchical Deterministic Wallets** - BRC-42 standard key derivation
 - **Real-time Activity Streaming** - Server-Sent Events for live updates
 - **Sophisticated UTXO Management** - Bucket-based selection and consolidation
 - **Multi-tenant Faucets** - Each user can create their own faucet instance
 - **Production Ready** - Encore.dev framework with MySQL and real-time monitoring
 
-### Integration with bitcoin-auth-ui
+### Integration with bigblocks
 
 **Funding Mode Configuration**:
 ```typescript
@@ -127,10 +127,10 @@ go-faucet-api/
 
 ### API Endpoints for Components
 
-**Authentication** (Compatible with bitcoin-auth-ui):
+**Authentication** (Compatible with bigblocks):
 - `POST /auth/register` - Register Bitcoin public key
 - `GET /auth/status` - Check auth status
-- Uses same BSM format as bitcoin-auth-ui components
+- Uses same BSM format as bigblocks components
 
 **Faucet Operations**:
 - `POST /faucets` - Create personal faucet instance
@@ -155,7 +155,7 @@ eventSource.onmessage = (event) => {
 3. **Real-time feedback** → SSE shows transaction confirmation
 4. **User sees result** → Live blockchain data updates
 
-### Benefits for bitcoin-auth-ui Showcase
+### Benefits for bigblocks Showcase
 - **Instant Demos**: No wallet setup required for visitors
 - **Real Transactions**: Actual Bitcoin SV blockchain interactions
 - **Live Feedback**: Real-time transaction confirmations via SSE
@@ -164,7 +164,7 @@ eventSource.onmessage = (event) => {
 
 ### Technical Compatibility
 - **Same Auth System**: BSM authentication works with both systems
-- **Compatible APIs**: Go Faucet API designed to support bitcoin-auth-ui patterns
+- **Compatible APIs**: Go Faucet API designed to support bigblocks patterns
 - **Real BSV**: Actual blockchain transactions, not mocked data
 - **Production Scale**: Encore.dev framework handles real traffic
 
@@ -173,12 +173,12 @@ This integration transforms the showcase from static demos to **live, interactiv
 ## 📋 Current Project Status Summary
 
 ### 🎯 What We've Accomplished
-1. **Upgraded to bitcoin-auth-ui v0.2.2** with wallet activation and donation components
+1. **Upgraded to bigblocks v0.0.1** with wallet activation and donation components
 2. **Created comprehensive showcase** with 8 major sections and 60+ components
 3. **Added advanced component sections**: Identity/BAP, Security, Wallet Connectors
 4. **Identified funding requirements** for 💰 components vs ✅ free components
 5. **Designed Go Faucet API integration** for live demo funding
-6. **Fixed React 19 compatibility** in bitcoin-auth-ui peer dependencies
+6. **Fixed React 19 compatibility** in bigblocks peer dependencies
 7. **Updated component APIs** (FollowButton: bapId → idKey)
 
 ### 🔄 Component Implementation Status
@@ -217,7 +217,7 @@ This integration transforms the showcase from static demos to **live, interactiv
 
 #### Phase 2: Go Faucet API Integration (CRITICAL)
 1. **Set up cloud wallet configuration**:
-   - Add CloudWalletConfig interface to bitcoin-auth-ui
+   - Add CloudWalletConfig interface to bigblocks
    - Implement Go Faucet API endpoint integration
    - Add fundingMode prop to all 💰 components
 
@@ -243,14 +243,14 @@ This integration transforms the showcase from static demos to **live, interactiv
    - Add Yours Wallet browser extension detection
 
 #### Phase 4: Component Library Improvements (ONGOING)
-1. **Submit bitcoin-auth-ui enhancements**:
+1. **Submit bigblocks enhancements**:
    - BapProvider context wrapper component
    - Enhanced ShamirSecretSharing with built-in WIF input
    - KeyManager with empty state and key generation
    - Demo mode props for all complex components
 
 2. **Fix peer dependency issues**:
-   - Publish bitcoin-auth-ui v0.2.3 with React 19 support
+   - Publish bigblocks v0.2.3 with React 19 support
    - Test compatibility with latest dependencies
 
 ### 📋 Massive TODO List
@@ -294,7 +294,7 @@ This is indeed a **massive amount of work** - we've identified the components bu
 - **Copy-Paste Ready**: All code examples work out of the box
 - **Production Ready**: Real components, not mockups or placeholders
 
-The showcase successfully demonstrates that bitcoin-auth-ui is a **complete, production-ready Bitcoin development platform** with both demo-friendly and enterprise-grade capabilities.
+The showcase successfully demonstrates that bigblocks is a **complete, production-ready Bitcoin development platform** with both demo-friendly and enterprise-grade capabilities.
 
 ## ✅ Dashboard Fully Restored
 
@@ -543,7 +543,7 @@ When users attempt to link an OAuth account that's already associated with anoth
 
 ## Component Library Reference
 
-### Core Components (`bitcoin-auth-ui` npm package)
+### Core Components (`bigblocks` npm package)
 
 #### Authentication Flow Components:
 - **AuthFlowOrchestrator** - Manages complete auth flows (unified/signin/signup/restore/import)
@@ -622,10 +622,10 @@ All components are fully typed with TypeScript interfaces exported from the main
 
 ### Migration Status: **SUCCESSFULLY COMPLETED** ✅
 
-The PWA has been **successfully migrated** to bitcoin-auth-ui v0.1.0. All breaking changes fixed and new features available.
+The PWA has been **successfully migrated** to bigblocks v0.1.0. All breaking changes fixed and new features available.
 
 #### ✅ Migration Completed:
-- **Package Update**: ✅ `bitcoin-auth-ui@0.0.6` → `bitcoin-auth-ui@0.1.0` 
+- **Package Update**: ✅ `bigblocks@0.0.6` → `bigblocks@0.1.0` 
 - **API Updates**: ✅ Fixed breaking changes (`EnhancedLoginForm` → `LoginForm`, HandCash config)
 - **Build Status**: ✅ 0 errors, 39/39 routes generated successfully  
 - **Code Quality**: ✅ 0 lint warnings/errors
@@ -669,7 +669,7 @@ bun dev
 
 **Current Integration (working):**
 ```tsx
-import { BitcoinAuthProvider } from 'bitcoin-auth-ui';
+import { BitcoinAuthProvider } from 'bigblocks';
 
 <BitcoinAuthProvider config={{ apiUrl: '/api' }}>
   {children}
@@ -681,7 +681,7 @@ import { BitcoinAuthProvider } from 'bitcoin-auth-ui';
 import { 
   BitcoinAuthProvider,
   BitcoinThemeProvider 
-} from 'bitcoin-auth-ui';
+} from 'bigblocks';
 
 // Wrap with theme provider for 8 Bitcoin color presets
 <BitcoinThemeProvider theme="bitcoin-orange" mode="dark">
@@ -701,7 +701,7 @@ import {
 - `app/showcase/page.tsx` - Live demos updated with LoginForm component
 - `app/components/page.tsx` - Component browser updated with new API
 - `app/mcp-server/page.tsx` - MCP documentation updated for HandCash changes  
-- `package.json` - Updated to bitcoin-auth-ui@0.1.0
+- `package.json` - Updated to bigblocks@0.1.0
 
 **🆕 Ready for New Feature Backend APIs:**
 ```
@@ -759,4 +759,4 @@ import {
 
 **🚀 Status: MIGRATION COMPLETE - ALL v0.1.0 FEATURES AVAILABLE**
 
-The PWA has successfully migrated to bitcoin-auth-ui v0.1.0 with zero disruption to existing functionality. All new features are now available for integration! ✨
+The PWA has successfully migrated to bigblocks v0.1.0 with zero disruption to existing functionality. All new features are now available for integration! ✨

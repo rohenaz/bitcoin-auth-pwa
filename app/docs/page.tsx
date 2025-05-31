@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export default function DocsHomePage() {
   return (
     <>
-      <h1>Bitcoin Auth PWA Documentation</h1>
+      <h1>BitcoinBlocks.dev Documentation</h1>
       <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
         Complete guide to Bitcoin-based authentication and component library
       </p>
@@ -98,6 +98,6 @@ export default function App() {
 }
 
 export const metadata: Metadata = {
-  title: 'Bitcoin Auth PWA Documentation',
+  title: 'BitcoinBlocks.dev Documentation',
   description: 'Complete guide to Bitcoin-based authentication and component library',
 };

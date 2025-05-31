@@ -1267,6 +1267,44 @@ export const components: ComponentExample[] = [
       { name: 'onFriendAction', type: '(action: string, friend: SocialFriend) => void', required: false, description: 'Friend action handler' }
     ]
   },
+  {
+    id: 'compact-post-button',
+    name: 'CompactPostButton',
+    description: 'Compact social post button for creating posts with minimal UI footprint',
+    category: 'social',
+    importStatement: "import { CompactPostButton } from 'bigblocks';",
+    codeExample: `<CompactPostButton
+  onSuccess={(result) => console.log('Post created:', result)}
+  onError={(error) => console.error('Post error:', error)}
+  placeholder="Share your thoughts..."
+  maxLength={280}
+/>`,
+    props: [
+      { name: 'onSuccess', type: '(result: PostResult) => void', required: false, description: 'Success callback after posting' },
+      { name: 'onError', type: '(error: Error) => void', required: false, description: 'Error callback' },
+      { name: 'placeholder', type: 'string', required: false, description: 'Input placeholder text' },
+      { name: 'maxLength', type: 'number', required: false, description: 'Maximum post length' }
+    ]
+  },
+  {
+    id: 'compact-message-button',
+    name: 'CompactMessageButton',
+    description: 'Compact message button for sending encrypted messages between users',
+    category: 'social',
+    importStatement: "import { CompactMessageButton } from 'bigblocks';",
+    codeExample: `<CompactMessageButton
+  recipientBapId="user123"
+  recipientName="Alice"
+  onSuccess={(result) => console.log('Message sent:', result)}
+  onError={(error) => console.error('Message error:', error)}
+/>`,
+    props: [
+      { name: 'recipientBapId', type: 'string', required: true, description: 'Recipient BAP identity ID' },
+      { name: 'recipientName', type: 'string', required: false, description: 'Display name of recipient' },
+      { name: 'onSuccess', type: '(result: MessageResult) => void', required: false, description: 'Success callback after sending' },
+      { name: 'onError', type: '(error: Error) => void', required: false, description: 'Error callback' }
+    ]
+  },
   
   // Wallet Components (Additional)
   {
@@ -1780,6 +1818,62 @@ const encrypted = await encrypt('Secret message');
 
 // Decrypt data
 const decrypted = await decrypt(encrypted);`,
+    props: []
+  },
+  {
+    id: 'use-social',
+    name: 'useSocial',
+    description: 'Combined hook for all social operations (posts, likes, follows, friends)',
+    category: 'hooks',
+    importStatement: "import { useSocial } from 'bigblocks';",
+    codeExample: `const { 
+  post,
+  follow,
+  like,
+  friends,
+  friendRequests,
+  isLoading
+} = useSocial();
+
+// Create a post
+await post.create('Hello Bitcoin!');
+
+// Follow a user
+await follow.followUser('user123');
+
+// Like a post
+await like.likePost('post456');
+
+// Get friends list
+console.log(friends.data);`,
+    props: []
+  },
+  {
+    id: 'use-marketplace',
+    name: 'useMarketplace',
+    description: 'Combined hook for marketplace operations (listings, buying, selling)',
+    category: 'hooks',
+    importStatement: "import { useMarketplace } from 'bigblocks';",
+    codeExample: `const { 
+  listings,
+  createListing,
+  buyListing,
+  isLoading,
+  error
+} = useMarketplace();
+
+// Create a listing
+await createListing({
+  title: 'Rare NFT',
+  price: 1000000,
+  description: 'Amazing artwork'
+});
+
+// Buy a listing
+await buyListing('listing789');
+
+// Access current listings
+console.log(listings);`,
     props: []
   },
 

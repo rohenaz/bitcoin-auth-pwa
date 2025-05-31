@@ -1,6 +1,6 @@
 # Authentication Configuration System
 
-This directory contains centralized configuration for all authentication-related features in the Bitcoin Auth PWA.
+This directory contains centralized configuration for all authentication-related features in BitcoinBlocks.dev.
 
 ## Structure
 

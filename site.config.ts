@@ -1,6 +1,6 @@
 /**
  * Site configuration for branding, SEO, and customization
- * Update these values to customize your Bitcoin Auth PWA instance
+ * Update these values to customize your BitcoinBlocks.dev instance
  */
 
 export const siteConfig = {

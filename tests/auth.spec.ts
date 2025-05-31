@@ -6,7 +6,7 @@ test.describe('Bitcoin Auth Flow', () => {
     
     // Check for main elements
     await expect(page).toHaveTitle(/Bitcoin Auth/);
-    await expect(page.getByRole('heading', { name: 'Bitcoin Auth PWA', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'BitcoinBlocks.dev', level: 1 })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
   });
 
@@ -20,7 +20,7 @@ test.describe('Bitcoin Auth Flow', () => {
     await expect(page).toHaveURL('/signup');
     
     // Should show the signup page heading
-    await expect(page.getByRole('heading', { name: 'Welcome to Bitcoin Auth', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome to BitcoinBlocks.dev', level: 1 })).toBeVisible();
   });
 
   test('should create new identity', async ({ page }) => {

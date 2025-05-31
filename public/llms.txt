@@ -1,10 +1,10 @@
-# Bitcoin Auth PWA - LLM Instructions
+# BitcoinBlocks.dev - LLM Instructions
 
 This file provides structured information about the Bitcoin Authentication Progressive Web App for AI assistants and LLMs.
 
 ## Project Overview
 
-Bitcoin Auth PWA is a production-ready Bitcoin authentication system where users' Bitcoin keypairs ARE their identity. No traditional usernames or passwords - just pure cryptographic authentication.
+BitcoinBlocks.dev is a production-ready Bitcoin authentication system where users' Bitcoin keypairs ARE their identity. No traditional usernames or passwords - just pure cryptographic authentication.
 
 ## Technology Stack
 

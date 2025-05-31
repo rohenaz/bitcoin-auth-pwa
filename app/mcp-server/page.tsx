@@ -483,7 +483,7 @@ export default function ${selectedVariant.name.replace(/\s+/g, '')}() {
                 Get Started with BSV-MCP
               </a>
               <a
-                href="/showcase"
+                href="/quickstart"
                 className="px-8 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
               >
                 View Component Library

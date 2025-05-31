@@ -12,7 +12,7 @@ export function Navigation({ className = '' }: NavigationProps) {
   
   const links = [
     { href: '/', label: 'Home' },
-    { href: '/showcase', label: 'Components' },
+    { href: '/quickstart', label: 'Components' },
     { href: '/mcp-server', label: 'MCP Server' },
     { href: '/dashboard', label: 'Dashboard' }
   ];

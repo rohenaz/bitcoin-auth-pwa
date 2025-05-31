@@ -23,10 +23,9 @@ function checkFile(filePath, description) {
   if (fs.existsSync(filePath)) {
     log(GREEN, `✅ ${description}`);
     return true;
-  } else {
+  }
     log(RED, `❌ ${description}`);
     return false;
-  }
 }
 
 function checkFileContent(filePath, searchText, description) {
@@ -35,14 +34,12 @@ function checkFileContent(filePath, searchText, description) {
     if (content.includes(searchText)) {
       log(GREEN, `✅ ${description}`);
       return true;
-    } else {
+    }
       log(YELLOW, `⚠️  ${description} - Content not found`);
       return false;
-    }
-  } else {
+  }
     log(RED, `❌ ${description} - File not found`);
     return false;
-  }
 }
 
 function getCurrentVersion() {
@@ -54,7 +51,7 @@ function getCurrentVersion() {
   return 'package.json not found';
 }
 
-console.log(BLUE + '🔍 Bitcoin Auth PWA Health Check\n' + RESET);
+console.log(BLUE + '🔍 BitcoinBlocks.dev Health Check\n' + RESET);
 
 // Check current version
 const currentVersion = getCurrentVersion();
@@ -73,7 +70,7 @@ console.log();
 // Check core files
 log(BLUE, '📁 Core Files Check:');
 checkFile('package.json', 'Package configuration exists');
-checkFile('app/showcase/page.tsx', 'Showcase page exists');
+  checkFile('app/quickstart/page.tsx', 'Quickstart page exists');
 checkFile('app/components/page.tsx', 'Components page exists');
 checkFile('app/layout.tsx', 'Main layout exists');
 // Migration guide moved to internal/ (gitignored)
@@ -83,26 +80,26 @@ console.log();
 
 // Check current imports
 log(BLUE, '📥 Import Patterns Check:');
-checkFileContent('app/showcase/page.tsx', 'from \'bigblocks\'', 'Showcase uses bigblocks imports');
-checkFileContent('app/showcase/page.tsx', 'BitcoinAuthProvider', 'BitcoinAuthProvider import found');
+  checkFileContent('app/quickstart/page.tsx', 'from \'bigblocks\'', 'Quickstart uses bigblocks imports');
+  checkFileContent('app/quickstart/page.tsx', 'BitcoinAuthProvider', 'BitcoinAuthProvider import found');
 checkFileContent('app/components/page.tsx', 'from \'bigblocks\'', 'Components page uses bigblocks imports');
 
 console.log();
 
 // Check current functionality
 log(BLUE, '🔧 Current Functionality Check:');
-checkFileContent('app/showcase/page.tsx', 'AuthFlowOrchestrator', 'Auth flow demo present');
-checkFileContent('app/showcase/page.tsx', 'LoginForm', 'Login form demo present');
-checkFileContent('app/showcase/page.tsx', 'FileImport', 'File import demo present');
-checkFileContent('app/showcase/page.tsx', 'DeviceLinkQR', 'Device link demo present');
-checkFileContent('app/showcase/page.tsx', 'MnemonicDisplay', 'Mnemonic display demo present');
+  checkFileContent('app/quickstart/page.tsx', 'AuthFlowOrchestrator', 'Auth flow demo present');
+  checkFileContent('app/quickstart/page.tsx', 'LoginForm', 'Login form demo present');
+  checkFileContent('app/quickstart/page.tsx', 'FileImport', 'File import demo present');
+  checkFileContent('app/quickstart/page.tsx', 'DeviceLinkQR', 'Device link demo present');
+  checkFileContent('app/quickstart/page.tsx', 'MnemonicDisplay', 'Mnemonic display demo present');
 
 console.log();
 
 // Check backend requirements documentation
 log(BLUE, '📋 Documentation Check:');
-checkFileContent('app/showcase/page.tsx', 'Required Backend Endpoints', 'Backend requirements documented');
-checkFileContent('app/showcase/page.tsx', 'Client-Side Only', 'Client-side components marked');
+  checkFileContent('app/quickstart/page.tsx', 'Required Backend Endpoints', 'Backend requirements documented');
+  checkFileContent('app/quickstart/page.tsx', 'Client-Side Only', 'Client-side components marked');
 
 console.log();
 
@@ -114,7 +111,7 @@ const isMigrationComplete = currentVersion.includes('0.1.') || currentVersion ==
 
 const checks = [
   fs.existsSync('package.json'),
-  fs.existsSync('app/showcase/page.tsx'),
+      fs.existsSync('app/quickstart/page.tsx'),
   fs.existsSync('app/components/page.tsx'),
   isMigrationReady || isMigrationComplete
 ];

@@ -303,13 +303,13 @@ export default App`}
                 </h3>
                 <div className="space-y-4">
                   <p className="text-gray-300">
-                    The <strong>bitcoin-auth-pwa</strong> repository is the canonical working example. 
+                    The <strong>BitcoinBlocks.dev</strong> repository is the canonical working example. 
                     Check these files for exact setup:
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <a
-                      href="https://github.com/bitcoin-auth/bitcoin-auth-pwa/blob/main/app/providers.tsx"
+                      href="https://github.com/bitcoin-auth/BitcoinBlocks.dev/blob/main/app/providers.tsx"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
@@ -318,7 +318,7 @@ export default App`}
                       <span className="text-sm">app/providers.tsx</span>
                     </a>
                     <a
-                      href="https://github.com/bitcoin-auth/bitcoin-auth-pwa/blob/main/app/globals.css"
+                      href="https://github.com/bitcoin-auth/BitcoinBlocks.dev/blob/main/app/globals.css"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
@@ -327,7 +327,7 @@ export default App`}
                       <span className="text-sm">app/globals.css</span>
                     </a>
                     <a
-                      href="https://github.com/bitcoin-auth/bitcoin-auth-pwa/blob/main/app/layout.tsx"
+                      href="https://github.com/bitcoin-auth/BitcoinBlocks.dev/blob/main/app/layout.tsx"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
@@ -336,7 +336,7 @@ export default App`}
                       <span className="text-sm">app/layout.tsx</span>
                     </a>
                     <a
-                      href="https://github.com/bitcoin-auth/bitcoin-auth-pwa/blob/main/package.json"
+                      href="https://github.com/bitcoin-auth/BitcoinBlocks.dev/blob/main/package.json"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
