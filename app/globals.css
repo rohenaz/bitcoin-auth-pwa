@@ -1,5 +1,7 @@
 @import '@radix-ui/themes/styles.css';
 @import "tailwindcss";
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
 
 :root {
   --background: #ffffff;

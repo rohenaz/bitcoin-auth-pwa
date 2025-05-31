@@ -45,8 +45,6 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^19.1.0",
     "react-syntax-highlighter": "^15.6.1",
-    "rehype-highlight": "^7.0.2",
-    "remark-gfm": "^4.0.1",
     "schema-dts": "^1.1.5"
   },
   "devDependencies": {

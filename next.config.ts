@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
-import createMDX from '@next/mdx';
-import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
+import { createMDX } from 'fumadocs-mdx/next';
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['bsv-bap', '@bsv/sdk'],
@@ -21,11 +19,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withMDX = createMDX({
-  options: {
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [rehypeHighlight],
-  },
-});
+const withMDX = createMDX();
 
 export default withMDX(nextConfig);
