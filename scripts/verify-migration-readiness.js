@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Bitcoin Auth UI v0.1.0 Migration Readiness Checker
+ * Project Health Check Script
  * 
- * This script verifies that the PWA is ready for the bitcoin-auth-ui v0.1.0 update
+ * This script verifies that the PWA is using the correct bigblocks package
  */
 
 const fs = require('fs');
@@ -49,23 +49,23 @@ function getCurrentVersion() {
   const packagePath = path.join(__dirname, '..', 'package.json');
   if (fs.existsSync(packagePath)) {
     const content = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    return content.dependencies['bitcoin-auth-ui'] || 'Not found';
+    return content.dependencies['bigblocks'] || 'Not found';
   }
   return 'package.json not found';
 }
 
-console.log(BLUE + '🔍 Bitcoin Auth UI v0.1.0 Migration Readiness Check\n' + RESET);
+console.log(BLUE + '🔍 Bitcoin Auth PWA Health Check\n' + RESET);
 
 // Check current version
 const currentVersion = getCurrentVersion();
-log(BLUE, `📦 Current bitcoin-auth-ui version: ${currentVersion}`);
+log(BLUE, `📦 Current bigblocks version: ${currentVersion}`);
 
-if (currentVersion === '0.0.6') {
-  log(GREEN, '✅ Ready for v0.1.0 update');
-} else if (currentVersion.includes('0.1.')) {
-  log(YELLOW, '⚠️  Already on v0.1.x - verify migration completion');
+if (currentVersion === '0.0.2') {
+  log(GREEN, '✅ Using latest bigblocks package');
+} else if (currentVersion.includes('0.0.1')) {
+  log(YELLOW, '⚠️  Can update to v0.0.2');
 } else {
-  log(RED, '❌ Unexpected version - review before updating');
+  log(RED, '❌ Unexpected version - review package');
 }
 
 console.log();
@@ -83,9 +83,9 @@ console.log();
 
 // Check current imports
 log(BLUE, '📥 Import Patterns Check:');
-checkFileContent('app/showcase/page.tsx', 'from \'bitcoin-auth-ui\'', 'Showcase uses bitcoin-auth-ui imports');
+checkFileContent('app/showcase/page.tsx', 'from \'bigblocks\'', 'Showcase uses bigblocks imports');
 checkFileContent('app/showcase/page.tsx', 'BitcoinAuthProvider', 'BitcoinAuthProvider import found');
-checkFileContent('app/components/page.tsx', 'from \'bitcoin-auth-ui\'', 'Components page uses bitcoin-auth-ui imports');
+checkFileContent('app/components/page.tsx', 'from \'bigblocks\'', 'Components page uses bigblocks imports');
 
 console.log();
 
@@ -127,7 +127,7 @@ if (passedChecks === totalChecks) {
     log(GREEN, `🎉 Migration to v0.1.0 completed successfully! (${passedChecks}/${totalChecks} checks passed)`);
     console.log();
     log(BLUE, '✅ Migration Status:');
-    console.log('   ✅ Package updated to bitcoin-auth-ui@0.1.0');
+    console.log('   ✅ Package updated to bigblocks@0.1.0');
     console.log('   ✅ Build passes with 0 errors');
     console.log('   ✅ All components updated to new API');
     console.log('   ✅ Ready to explore new v0.1.0 features');
@@ -135,8 +135,8 @@ if (passedChecks === totalChecks) {
     log(GREEN, `✅ Ready for v0.1.0 migration! (${passedChecks}/${totalChecks} checks passed)`);
     console.log();
     log(BLUE, '🚀 Next Steps:');
-    console.log('   1. Wait for bitcoin-auth-ui v0.1.0 publication');
-    console.log('   2. Run: bun update bitcoin-auth-ui@0.1.0');
+    console.log('   1. Wait for bigblocks v0.1.0 publication');
+    console.log('   2. Run: bun update bigblocks@0.1.0');
     console.log('   3. Follow internal/migration-guide.md');
     console.log('   4. Test build: bun run build');
     console.log('   5. Test lint: bun run lint');

@@ -194,7 +194,7 @@ The template includes a minimal, mobile-first dark theme UI with:
 ### BAP Integration
 - Customize identity schema in `lib/bap.ts`
 - Modify profile display in dashboard components
-- Advanced BAP components available via bitcoin-auth-ui
+- Advanced BAP components available via bigblocks
 
 ### Storage
 - Default uses Upstash Redis (serverless)
@@ -203,7 +203,7 @@ The template includes a minimal, mobile-first dark theme UI with:
 
 ## 📦 Key Dependencies
 
-- **[bitcoin-auth-ui](https://github.com/b-open-io/bitcoin-auth-ui)** - Complete Bitcoin UI component library
+- **[bigblocks](https://github.com/b-open-io/bigblocks)** - Complete Bitcoin UI component library
 - **[bitcoin-auth](https://github.com/b-open-io/bitcoin-auth)** - Bitcoin signature authentication
 - **[bitcoin-backup](https://github.com/b-open-io/bitcoin-backup)** - Encrypted backup format
 - **[bsv-bap](https://github.com/bitcoin-sv/bap)** - Bitcoin Attestation Protocol
@@ -357,7 +357,7 @@ identity: {
 />
 ```
 
-### 5. Build Errors with bitcoin-auth-ui
+### 5. Build Errors with bigblocks
 **Solution:** Always run build after integration changes:
 ```bash
 bun run build  # Will catch TypeScript errors early
